@@ -37,7 +37,7 @@ import dev.jdtech.jellyfin.models.User
             FindroidTrickplayInfoDto::class,
             FindroidSegmentDto::class,
         ],
-    version = 8,
+    version = 9,
     autoMigrations =
         [
             AutoMigration(from = 2, to = 3),
@@ -63,5 +63,19 @@ val MIGRATION_6_7 =
             db.execSQL(
                 "CREATE TABLE segments (`itemId` TEXT NOT NULL, `type` TEXT NOT NULL, `startTicks` INTEGER NOT NULL, `endTicks` INTEGER NOT NULL, PRIMARY KEY(`itemId`, `type`), FOREIGN KEY(`itemId`) REFERENCES `episodes`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )"
             )
+        }
+    }
+
+val MIGRATION_8_9 =
+    object : Migration(startVersion = 8, endVersion = 9) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("PRAGMA defer_foreign_keys = TRUE")
+            db.execSQL(
+                "UPDATE mediastreams SET sourceId = 'local-' || (SELECT itemId FROM sources WHERE sources.id = mediastreams.sourceId) || '-' || sourceId WHERE EXISTS (SELECT 1 FROM sources WHERE sources.id = mediastreams.sourceId AND sources.type = 'LOCAL')"
+            )
+            db.execSQL(
+                "UPDATE trickplayInfos SET sourceId = 'local-' || (SELECT itemId FROM sources WHERE sources.id = trickplayInfos.sourceId) || '-' || sourceId WHERE EXISTS (SELECT 1 FROM sources WHERE sources.id = trickplayInfos.sourceId AND sources.type = 'LOCAL')"
+            )
+            db.execSQL("UPDATE sources SET id = 'local-' || itemId || '-' || id WHERE type = 'LOCAL'")
         }
     }

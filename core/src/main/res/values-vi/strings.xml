@@ -21,7 +21,6 @@
     <string name="next_up">Tiếp theo</string>
     <string name="libraries">Thư viện</string>
     <string name="no_favorites">Bạn chưa có gì trong mục ưa thích cả</string>
-    <string name="no_downloads">Bạn chưa tải gì về cả</string>
     <string name="search">Tìm kiếm</string>
     <string name="no_search_results">Không có kết quả</string>
     <string name="device_name">Tên thiết bị</string>
@@ -59,11 +58,8 @@
     <string name="sort_by_options_0">Tiêu đề</string>
     <string name="sort_by_options_3">Ngày được thêm vào</string>
     <string name="sort_by_options_2">Phân loại phim bởi phụ huynh</string>
-    <string name="offline_mode_icon">Biểu tượng Chế độ Ngoại tuyến</string>
-    <string name="offline_mode_go_online">Trực tuyến trở lại</string>
     <string name="size">Kích thước</string>
     <string name="downloading_error">Lỗi trong khi tải về</string>
-    <string name="no_server_connection">Không có kết nối tới máy chủ Jellyfin, để xem ngoại tuyến xin hãy bật Chế độ Ngoại tuyến</string>
     <string name="internal">Nội</string>
     <string name="not_enough_storage">Nội dùng này yêu cầu %1$s bộ nhớ trống nhưng chỉ có %2$s là có sẵn</string>
     <string name="privacy_policy_notice">Bằng việc sử dụng Findroid, bạn đồng ý với <a href="https://raw.githubusercontent.com/jarnedemeulemeester/findroid/main/PRIVACY">Chính sách quyền Riêng tư</a> rằng chúng tôi không thu thập bất cứ dữ liệu nào</string>
@@ -84,8 +80,6 @@
     <string name="select_storage_location">Chọn vị trí để lưu trữ</string>
     <string name="storage_unavailable">Vị trí để lưu trữ hiện không có sẵn</string>
     <string name="title_settings">Cài đặt</string>
-    <string name="title_download">Tải xuống</string>
-    <string name="offline_mode">Chế độ ngoại tuyến</string>
     <string name="show_stacktrace">Hiển thị nhật ký lỗi chi tiết</string>
     <string name="not_set">Chưa thiết lập</string>
     <string name="play">Phát</string>

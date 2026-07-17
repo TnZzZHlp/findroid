@@ -52,7 +52,6 @@
     <string name="extra_info_summary">Wyświetla szczegółowe informacje o audio, wideo i napisach</string>
     <string name="amoled_theme">Ciemny motyw AMOLED</string>
     <string name="amoled_theme_summary">Użyj motywu AMOLED z czystym czarnym tłem</string>
-    <string name="offline_mode">Tryb offline</string>
     <string name="app_language">Język aplikacji</string>
     <string name="picture_in_picture_gesture">Gest domowy obrazu w obrazie</string>
     <string name="picture_in_picture">Obraz w obrazie</string>
@@ -76,7 +75,6 @@
     <string name="home_continue_watching">Wyświetlaj oglądaj dalej</string>
     <string name="home_next_up">Wyświetl następny</string>
     <string name="home_latest">Wyświetl najnowszą pozycję</string>
-    <string name="offline_mode_summary">Oglądaj filmy i seriale bez połączenia z serwerem</string>
     <string name="mb">MB</string>
     <string name="ms">ms</string>
     <string name="seconds">s</string>

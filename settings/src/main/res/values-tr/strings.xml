@@ -71,8 +71,6 @@
     <string name="picture_in_picture">Resim içinde Resim</string>
     <string name="picture_in_picture_gesture">Resim içinde Resim ana ekran hareketi</string>
     <string name="picture_in_picture_gesture_summary">Video oynamaya devam ederken Resim İçinde Resim modune girmek için ana ekrana kaydırma hareketini kullan</string>
-    <string name="offline_mode">Çevrimdışı modu</string>
-    <string name="offline_mode_summary">Sunucuya bağlantı olmadan film ve dizileri izle</string>
     <string name="dynamic_colors_summary">Varsayılan olarak Material You Dinamik renkleri kullan (sadece android 12+ cihazlarda kullanılabilir)</string>
     <string name="extra_info">Ek bilgileri göster</string>
     <string name="extra_info_summary">Ses, Video ve Altyazılar hakkında detaylı bilgileri göster</string>

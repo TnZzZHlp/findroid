@@ -42,7 +42,6 @@
     <string name="seek_back_increment">Délka posunout zpět</string>
     <string name="amoled_theme_summary">Použít motiv AMOLED s čistě černým pozadím</string>
     <string name="pref_player_mpv_ao">Výstup zvuku</string>
-    <string name="offline_mode">Offline režim</string>
     <string name="extra_info_summary">Zobrazí podrobné informace o zvuku, videu a titulcích</string>
     <string name="settings_category_download">Stažené</string>
     <string name="settings_connect_timeout">Časový limit připojení</string>
@@ -62,7 +61,6 @@
     <string name="users">Uživatelé</string>
     <string name="picture_in_picture_gesture">Obraz v obraze pomocí gesta domovské obrazovky</string>
     <string name="picture_in_picture_gesture_summary">Pomocí tlačítka Domů nebo gesta přejde během přehrávání videa do režimu obraz v obraze</string>
-    <string name="offline_mode_summary">Sledujte filmy a seriály bez připojení k serveru</string>
     <string name="mb">MB</string>
     <string name="ms">ms</string>
     <string name="seconds">s</string>

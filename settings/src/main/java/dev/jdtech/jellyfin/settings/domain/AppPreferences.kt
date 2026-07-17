@@ -98,9 +98,6 @@ class AppPreferences @Inject constructor(val sharedPreferences: SharedPreference
     val sortBy = Preference("pref_sort_by", "SortName")
     val sortOrder = Preference("pref_sort_order", "Ascending")
 
-    // Offline mode
-    val offlineMode = Preference("pref_offline_mode", false)
-
     inline fun <reified T> getValue(preference: Preference<T>): T {
         return try {
             @Suppress("UNCHECKED_CAST")

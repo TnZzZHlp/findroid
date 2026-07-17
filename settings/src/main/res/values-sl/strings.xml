@@ -48,7 +48,6 @@
     <string name="mpv_player_summary">Za predvajanje videoposnetkov uporabite poskusni predvajalnik mpv player. mpv podpora več kodekov za video, zvok in podnapise.</string>
     <string name="player_gestures_vb_summary">Povlecite gor in dol na desni strani zaslona, da spremenite glasnost, in na levi strani, da spremenite svetlost</string>
     <string name="settings_connect_timeout">Časovna omejitev povezave</string>
-    <string name="offline_mode">Način brez povezave</string>
     <string name="extra_info">Prikaži dodatne informacije</string>
     <string name="extra_info_summary">Prikaže podrobne informacije o zvoku, videu in podnapisih</string>
     <string name="app_language">Jezik aplikacije</string>

@@ -24,6 +24,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import coil3.compose.AsyncImage
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyMovie
+import dev.jdtech.jellyfin.core.presentation.utils.containerTransform
+import dev.jdtech.jellyfin.core.presentation.utils.containerTransformOnClick
+import dev.jdtech.jellyfin.core.presentation.utils.rememberContainerTransformKey
 import dev.jdtech.jellyfin.film.presentation.home.HomeAction
 import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.models.FindroidMovie
@@ -33,6 +36,9 @@ import dev.jdtech.jellyfin.presentation.theme.spacings
 
 @Composable
 fun HomeCarouselItem(item: FindroidItem, onAction: (HomeAction) -> Unit) {
+    val transformKey = rememberContainerTransformKey(item.id)
+    val transformedOnClick =
+        containerTransformOnClick(transformKey) { onAction(HomeAction.OnItemClick(item)) }
     val colorStops =
         arrayOf(
             0.0f to Color.Black.copy(alpha = 0.1f),
@@ -42,9 +48,10 @@ fun HomeCarouselItem(item: FindroidItem, onAction: (HomeAction) -> Unit) {
 
     Box(
         modifier =
-            Modifier.aspectRatio(1.77f).clip(MaterialTheme.shapes.large).clickable {
-                onAction(HomeAction.OnItemClick(item))
-            }
+            Modifier.aspectRatio(1.77f)
+                .containerTransform(transformKey)
+                .clip(MaterialTheme.shapes.large)
+                .clickable(onClick = transformedOnClick)
     ) {
         AsyncImage(
             model = item.images.backdrop,

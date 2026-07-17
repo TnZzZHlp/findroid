@@ -19,7 +19,6 @@
     <string name="next_up">Naslednjo</string>
     <string name="libraries">Knjižnice</string>
     <string name="no_favorites">Nimate priljubljenih</string>
-    <string name="no_downloads">Ničesar niste prenesli</string>
     <string name="search">Iskanje</string>
     <string name="no_search_results">Ni rezultatov iskanja</string>
     <string name="device_name">Naziv naprave</string>
@@ -61,12 +60,10 @@
     <string name="track_selection">[%1$s] %2$s (%3$s)</string>
     <string name="cancel_download_message">Ali ste prepričani, da želite preklicati prenos\?</string>
     <string name="size">Velikost</string>
-    <string name="offline_mode_go_online">Izhod iz načina brez povezave</string>
     <string name="downloading_error">Napaka med prenosom</string>
     <string name="internal">Notranjo</string>
     <string name="external">Zunanjo</string>
     <string name="not_enough_storage">Ta element zahteva %1$s prostega prostora za shranjevanje, vendar je na voljo samo %2$s</string>
-    <string name="no_server_connection">Ni povezave s strežnikom Jellyfin, za gledanje brez povezave omogočite način brez povezave</string>
     <string name="storage_name">%1$s (%2$d MB prosto)</string>
     <string name="video">Video</string>
     <string name="audio">Zvok</string>
@@ -81,10 +78,7 @@
     <string name="preparing_download">Priprava prenosa</string>
     <string name="season_number">Sezona %1$d</string>
     <string name="episode_number">Epizoda %1$d</string>
-    <string name="offline_mode_icon">Ikona načina brez povezave</string>
-    <string name="offline_mode">Način brez povezave</string>
     <string name="title_settings">Nastavitve</string>
-    <string name="title_download">Prenosi</string>
     <string name="show_stacktrace">Pokaži sled sklada</string>
     <string name="mark_as_played">Označi kot pogledano</string>
     <string name="collection_no_media">Ta zbirka ne vsebuje medije</string>

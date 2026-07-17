@@ -9,7 +9,6 @@ import dev.jdtech.jellyfin.api.JellyfinApi
 import dev.jdtech.jellyfin.database.ServerDatabaseDao
 import dev.jdtech.jellyfin.repository.JellyfinRepository
 import dev.jdtech.jellyfin.repository.JellyfinRepositoryImpl
-import dev.jdtech.jellyfin.repository.JellyfinRepositoryOfflineImpl
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
 import javax.inject.Singleton
 
@@ -29,33 +28,11 @@ object RepositoryModule {
         return JellyfinRepositoryImpl(application, jellyfinApi, serverDatabase, appPreferences)
     }
 
-    @Singleton
-    @Provides
-    fun provideJellyfinRepositoryOfflineImpl(
-        application: Application,
-        jellyfinApi: JellyfinApi,
-        serverDatabase: ServerDatabaseDao,
-        appPreferences: AppPreferences,
-    ): JellyfinRepositoryOfflineImpl {
-        println("Creating new jellyfinRepositoryOfflineImpl")
-        return JellyfinRepositoryOfflineImpl(
-            application,
-            jellyfinApi,
-            serverDatabase,
-            appPreferences,
-        )
-    }
-
     @Provides
     fun provideJellyfinRepository(
         jellyfinRepositoryImpl: JellyfinRepositoryImpl,
-        jellyfinRepositoryOfflineImpl: JellyfinRepositoryOfflineImpl,
-        appPreferences: AppPreferences,
     ): JellyfinRepository {
         println("Creating new JellyfinRepository")
-        return when (appPreferences.getValue(appPreferences.offlineMode)) {
-            true -> jellyfinRepositoryOfflineImpl
-            false -> jellyfinRepositoryImpl
-        }
+        return jellyfinRepositoryImpl
     }
 }

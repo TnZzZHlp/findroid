@@ -8,7 +8,6 @@
     <string name="episode_name_extended">S%1$d:E%2$d - %3$s</string>
     <string name="next_up">Do obejrzenia</string>
     <string name="no_favorites">Nie masz ulubionych</string>
-    <string name="no_downloads">Nic nie pobrałeś</string>
     <string name="search">Szukaj</string>
     <string name="no_search_results">Nie znaleziono</string>
     <string name="device_name">Nazwa urządzenia</string>
@@ -66,12 +65,9 @@
     <string name="video">Wideo</string>
     <string name="episode_name_with_end">%1$d-%2$d. %3$s</string>
     <string name="episode_name_extended_with_end">S%1$d:E%2$d-%3$d - %4$s</string>
-    <string name="offline_mode_icon">Ikona trybu offline</string>
     <string name="downloaded_indicator">Wskaźnik pobierania</string>
-    <string name="offline_mode_go_online">Przejdź online</string>
     <string name="downloading_error">Błąd podczas pobierania</string>
     <string name="not_enough_storage">Ten element wymaga %1$s wolnego miejsca, ale dostępne jest tylko %2$s</string>
-    <string name="no_server_connection">Brak połączenia z serwerem Jellyfin, aby oglądać offline, włącz tryb offline</string>
     <string name="select_storage_location">Wybierz miejsce przechowywania</string>
     <string name="storage_unavailable">Lokalizacja przechowywania jest niedostępna</string>
     <string name="internal">Wewnętrznie</string>
@@ -92,11 +88,9 @@
     <string name="add_to_favorites">Dodaj do ulubionych</string>
     <string name="remove_from_favorites">Usuń z ulubionych</string>
     <string name="title_settings">Ustawienia</string>
-    <string name="title_download">Pobrane</string>
     <string name="season_number">Sezon %1$d</string>
     <string name="episode_number">Odcinek %1$d</string>
     <string name="sort_by_options_6">Losowo</string>
-    <string name="offline_mode">Tryb offline</string>
     <string name="not_set">Nie ustawione</string>
     <string name="none">Żadne</string>
     <string name="manage_servers">Zarządzaj serwerami</string>

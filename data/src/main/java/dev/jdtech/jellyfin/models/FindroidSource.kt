@@ -17,6 +17,12 @@ data class FindroidSource(
     val downloadId: Long? = null,
 )
 
+fun FindroidSource.isPlayableLocalFile(): Boolean {
+    return type == FindroidSourceType.LOCAL &&
+        !path.endsWith(".download") &&
+        File(path).isFile
+}
+
 suspend fun MediaSourceInfo.toFindroidSource(
     jellyfinRepository: JellyfinRepository,
     itemId: UUID,

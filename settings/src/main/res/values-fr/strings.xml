@@ -53,7 +53,6 @@
     <string name="amoled_theme">Thème foncé OLED</string>
     <string name="amoled_theme_summary">Utiliser le thème foncé AMOLED avec un fond purement noir</string>
     <string name="app_language">Langue de l\'application</string>
-    <string name="offline_mode">Mode hors ligne</string>
     <string name="picture_in_picture">Fenêtre flottante</string>
     <string name="picture_in_picture_gesture">Geste de retour à l\'accueil depuis la fenêtre flottante</string>
     <string name="picture_in_picture_gesture_summary">Lors de la lecture, utiliser le bouton d\'accueil ou la navigation gestuelle pour lancer la fenêtre flottante</string>
@@ -77,7 +76,6 @@
     <string name="home_continue_watching">Afficher \"Reprendre la lecture\"</string>
     <string name="home_next_up">Afficher \"À suivre\"</string>
     <string name="home_latest">Afficher \"Derniers ajouts\"</string>
-    <string name="offline_mode_summary">Regarder des films et séries sans connexion au serveur</string>
     <string name="mb">Mo</string>
     <string name="ms">ms</string>
     <string name="seconds">s</string>

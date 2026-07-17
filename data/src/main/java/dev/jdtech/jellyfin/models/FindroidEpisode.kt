@@ -43,8 +43,18 @@ suspend fun BaseItemDto.toFindroidEpisode(
 ): FindroidEpisode? {
     val sources = mutableListOf<FindroidSource>()
     sources.addAll(mediaSources?.map { it.toFindroidSource(jellyfinRepository, id) } ?: emptyList())
+    val trickplayInfos =
+        trickplay
+            ?.mapValues { it.value[it.value.keys.max()]!!.toFindroidTrickplayInfo() }
+            ?.toMutableMap() ?: mutableMapOf()
     if (database != null) {
-        sources.addAll(database.getSources(id).map { it.toFindroidSource(database) })
+        val localSources = database.getSources(id).map { it.toFindroidSource(database) }
+        sources.addAll(localSources)
+        for (source in localSources) {
+            database.getTrickplayInfo(source.id)?.toFindroidTrickplayInfo()?.let {
+                trickplayInfos[source.id] = it
+            }
+        }
     }
     return try {
         FindroidEpisode(
@@ -72,8 +82,7 @@ suspend fun BaseItemDto.toFindroidEpisode(
             missing = locationType == LocationType.VIRTUAL,
             images = toFindroidImages(jellyfinRepository),
             chapters = toFindroidChapters(),
-            trickplayInfo =
-                trickplay?.mapValues { it.value[it.value.keys.max()]!!.toFindroidTrickplayInfo() },
+            trickplayInfo = trickplayInfos,
         )
     } catch (_: NullPointerException) {
         null

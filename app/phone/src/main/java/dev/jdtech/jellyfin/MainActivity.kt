@@ -5,13 +5,11 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
-import dev.jdtech.jellyfin.presentation.utils.LocalOfflineMode
 import dev.jdtech.jellyfin.viewmodels.MainViewModel
 
 @AndroidEntryPoint
@@ -29,14 +27,12 @@ class MainActivity : AppCompatActivity() {
             FindroidTheme(dynamicColor = state.isDynamicColors) {
                 val navController = rememberNavController()
                 if (!state.isLoading) {
-                    CompositionLocalProvider(LocalOfflineMode provides state.isOfflineMode) {
-                        NavigationRoot(
-                            navController = navController,
-                            hasServers = state.hasServers,
-                            hasCurrentServer = state.hasCurrentServer,
-                            hasCurrentUser = state.hasCurrentUser,
-                        )
-                    }
+                    NavigationRoot(
+                        navController = navController,
+                        hasServers = state.hasServers,
+                        hasCurrentServer = state.hasCurrentServer,
+                        hasCurrentUser = state.hasCurrentUser,
+                    )
                 }
             }
         }

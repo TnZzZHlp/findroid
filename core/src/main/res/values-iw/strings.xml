@@ -26,7 +26,6 @@
     <string name="search">חיפוש</string>
     <string name="no_search_results">אין תוצאות חיפוש</string>
     <string name="series_poster">כרזת סדרה</string>
-    <string name="no_downloads">אין לך הורדות</string>
     <string name="device_name">שם מכשיר</string>
     <string name="view_details">הצג פרטים</string>
     <string name="view_details_underlined"><u>הצג פרטים</u></string>
@@ -65,7 +64,6 @@
     <string name="unknown_error">שגיאה לא ידועה</string>
     <string name="sort_by_options_5">תאריך שחרור</string>
     <string name="size">גודל</string>
-    <string name="offline_mode_icon">סמל מצב לא מקוון</string>
     <string name="not_enough_storage">פריט זה דורש %1$s של מקום פנוי אבל רק %2$s זמינים</string>
     <string name="select_storage_location">בחר מיקום אחסון</string>
     <string name="storage_unavailable">מיקום אחסון לא זמין</string>
@@ -75,9 +73,7 @@
     <string name="cancel_download">בטל הורדה</string>
     <string name="cancel_download_message">האם אתה בטוח שברצונך לבטל את ההורדה\?</string>
     <string name="stop_download">עצור הורדה</string>
-    <string name="offline_mode_go_online">עבור למצב מקוון</string>
     <string name="downloading_error">אירעה שגיאה במהלך ההורדה</string>
-    <string name="no_server_connection">אין חיבור לשרת ה-Jellyfin, כדי לצפות במצב לא מקוון, הפעל מצב לא מקוון</string>
     <string name="privacy_policy_notice">על ידי שימוש ב-Findroid הנך מסכים עם <a href="https://raw.githubusercontent.com/jarnedemeulemeester/findroid/main/PRIVACY">מדיניות הפרטיות</a> אשר מציינת כי איננו אוספים שום נתונים</string>
     <string name="episode_name_with_end">%1$d-%2$d. %3$s</string>
     <string name="episode_name_extended_with_end">ע%1$d:פ%2$d-%3$d - %4$s</string>

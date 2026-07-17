@@ -22,7 +22,6 @@
     <string name="episode_name_extended">С%1$d:Е%2$d - %3$s</string>
     <string name="next_up">Следва</string>
     <string name="no_favorites">Вие нямате любими</string>
-    <string name="no_downloads">Вие нямате нищо свалено</string>
     <string name="search">Търсене</string>
     <string name="close">Затворете</string>
     <string name="share">Споделете</string>
@@ -49,7 +48,6 @@
     <string name="episode_name_with_end">%1$d-%2$d. %3$s</string>
     <string name="episode_name_extended_with_end">S%1$d:E%2$d-%3$d - %4$s</string>
     <string name="image_description_backdrop">Фон на %1$s</string>
-    <string name="no_server_connection">Няма връзка към Jellyfin сървъра, за да гледате офлайн пуснете Режим без Интернет</string>
     <string name="privacy_policy_notice">При ползването на Findroid, вие се съгласявате с <a href="https://raw.githubusercontent.com/jarnedemeulemeester/findroid/main/PRIVACY">Политиката за поверителност</a> , която гласи, че не събираме никаква информация</string>
     <string name="app_description">Неофициално приложение за Jellyfin с \"native\" елементи</string>
     <string name="person_detail_title">Детайли</string>
@@ -57,8 +55,6 @@
     <string name="sort_by_options_3">Дата Добавен</string>
     <string name="subtitle_chip_text">Затворени субтитри</string>
     <string name="temp">временно</string>
-    <string name="offline_mode_icon">Режим без Интернет иконка</string>
-    <string name="offline_mode_go_online">Свържи се с Интернет</string>
     <string name="select_storage_location">Изберете локация на диска</string>
     <string name="libraries">Библиотеки</string>
     <string name="downloaded_indicator">Индикатор за сваленост</string>
@@ -91,8 +87,6 @@
     <string name="unmark_as_played">Махни маркирано като гледано</string>
     <string name="watch_trailer">Гледай трейлър</string>
     <string name="add_to_favorites">Добави към любими</string>
-    <string name="title_download">Изтегляния</string>
-    <string name="offline_mode">Офлайн режим</string>
     <string name="none">Няма</string>
     <string name="title_settings">Настройки</string>
     <string name="show_stacktrace">Покажи стек трасировка</string>

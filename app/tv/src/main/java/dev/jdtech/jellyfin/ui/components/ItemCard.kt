@@ -27,6 +27,9 @@ import androidx.tv.material3.Text
 import dev.jdtech.jellyfin.core.R
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyEpisode
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyMovie
+import dev.jdtech.jellyfin.core.presentation.utils.containerTransform
+import dev.jdtech.jellyfin.core.presentation.utils.containerTransformOnClick
+import dev.jdtech.jellyfin.core.presentation.utils.rememberContainerTransformKey
 import dev.jdtech.jellyfin.models.FindroidEpisode
 import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
@@ -39,6 +42,7 @@ fun ItemCard(
     onClick: (FindroidItem) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val transformKey = rememberContainerTransformKey(item.id)
     val width =
         when (direction) {
             Direction.HORIZONTAL -> 260
@@ -46,7 +50,7 @@ fun ItemCard(
         }
     Column(modifier = modifier.width(width.dp)) {
         Surface(
-            onClick = { onClick(item) },
+            onClick = containerTransformOnClick(transformKey) { onClick(item) },
             shape = ClickableSurfaceDefaults.shape(shape = RoundedCornerShape(10.dp)),
             border =
                 ClickableSurfaceDefaults.border(
@@ -54,6 +58,7 @@ fun ItemCard(
                         Border(BorderStroke(4.dp, Color.White), shape = RoundedCornerShape(10.dp))
                 ),
             scale = ClickableSurfaceScale.None,
+            modifier = Modifier.containerTransform(transformKey),
         ) {
             Box {
                 ItemPoster(item = item, direction = direction)

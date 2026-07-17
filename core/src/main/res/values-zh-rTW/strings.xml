@@ -55,7 +55,6 @@
     <string name="title_favorite">收藏夾</string>
     <string name="error_loading_data">載入資料時發生錯誤</string>
     <string name="episode_watched_indicator">影集觀看指標</string>
-    <string name="no_downloads">你還沒有下載任何東西</string>
     <string name="view_details">查看詳情</string>
     <string name="view_details_underlined"><u>查看詳情</u></string>
     <string name="sort_by">排序方式</string>
@@ -64,7 +63,6 @@
     <string name="episode_name_extended_with_end">第%1$d季：第%2$d-%3$d集 - %4$s</string>
     <string name="downloading_error">下載時出錯</string>
     <string name="size">大小</string>
-    <string name="no_server_connection">未連接到 Jellyfin 服務器，要離線觀看請啟用離線模式</string>
     <string name="not_enough_storage">此項目需要 %1$s 的免費儲存空間，但只有 %2$s 可用</string>
     <string name="select_storage_location">選擇儲存位置</string>
     <string name="storage_unavailable">儲存位置不可用</string>
@@ -80,8 +78,6 @@
     <string name="privacy_policy_notice">使用 Findroid 即表示您同意 <a href="https://raw.githubusercontent.com/jarnedemeulemeester/findroid/main/PRIVACY">隱私政策</a>，其中聲明我們不收集任何數據</string>
     <string name="cancel_download">取消下載</string>
     <string name="downloaded_indicator">下載指示器</string>
-    <string name="offline_mode_icon">離線模式圖標</string>
-    <string name="offline_mode_go_online">聯機</string>
     <string name="external">外部的</string>
     <string name="temp">臨時文件</string>
     <string name="live_tv">電視直播</string>
@@ -93,12 +89,10 @@
     <string name="remove_from_favorites">從收藏夾中刪除</string>
     <string name="collection_no_media">該集合不包含任何媒體</string>
     <string name="title_settings">設定</string>
-    <string name="title_download">下載</string>
     <string name="show_stacktrace">顯示堆椄追蹤</string>
     <string name="season_number">第 %1$d 季</string>
     <string name="episode_number">第 %1$d 集</string>
     <string name="runtime_minutes_left">%1$d 分鐘剩餘</string>
-    <string name="offline_mode">離線模式</string>
     <string name="delete_download">刪除下載</string>
     <string name="delete_download_message">你確定要從設備中刪除此下載檔案吗？</string>
     <string name="not_set">未設置</string>

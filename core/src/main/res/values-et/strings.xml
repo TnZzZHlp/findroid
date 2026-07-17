@@ -8,7 +8,6 @@
     <string name="title_media">Meedia</string>
     <string name="title_favorite">Lemmikud</string>
     <string name="title_settings">Seaded</string>
-    <string name="title_download">Allalaadimised</string>
     <string name="view_all">Kuva kõik</string>
     <string name="error_loading_data">Viga andmete laadimisel</string>
     <string name="show_stacktrace">Kuva veajälg</string>
@@ -35,7 +34,6 @@
     <string name="series_poster">Sarja plakat</string>
     <string name="collection_no_media">See kogumik ei sisalda meediat</string>
     <string name="no_favorites">Sul pole lemmikuid</string>
-    <string name="no_downloads">Sul pole midagi alla laaditud</string>
     <string name="search">Otsi</string>
     <string name="no_search_results">Otsingutulemusi pole</string>
     <string name="device_name">Seadme nimi</string>
@@ -75,12 +73,8 @@
     <string name="audio">Heli</string>
     <string name="subtitle">Subtiitrid</string>
     <string name="subtitle_chip_text">CC</string>
-    <string name="offline_mode">Võrguühenduseta režiim</string>
-    <string name="offline_mode_icon">Võrguühenduseta režiimi ikoon</string>
-    <string name="offline_mode_go_online">Mine võrku</string>
     <string name="downloading_error">Viga allalaadimisel</string>
     <string name="not_enough_storage">See üksus nõuab %1$s salvestusruumi, aga saadaval on ainult %2$s</string>
-    <string name="no_server_connection">Jellyfini serveriga pole ühendust, võrguühenduseta vaatamiseks luba võrguühenduseta režiim</string>
     <string name="select_storage_location">Valige salvestuskoht</string>
     <string name="storage_unavailable">Salvestuskoht pole saadaval</string>
     <string name="internal">Sisemälu</string>

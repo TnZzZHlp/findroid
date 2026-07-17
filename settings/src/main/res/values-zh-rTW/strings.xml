@@ -52,7 +52,6 @@
     <string name="amoled_theme">AMOLED 深色主題</string>
     <string name="app_language">程式界面語言</string>
     <string name="extra_info_summary">顯示有關音訊、視訊和字幕的詳細資訊</string>
-    <string name="offline_mode">離線模式</string>
     <string name="player_gestures_seek">搜尋手勢</string>
     <string name="picture_in_picture">畫中畫</string>
     <string name="picture_in_picture_gesture">畫中畫首頁手勢</string>
@@ -99,5 +98,4 @@
     <string name="media_segments_type_recap">测試</string>
     <string name="media_segments_type_outro">收尾</string>
     <string name="media_segments_type_intro">開頁</string>
-    <string name="offline_mode_summary">离線模式摘要</string>
 </resources>

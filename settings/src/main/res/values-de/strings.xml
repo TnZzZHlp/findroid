@@ -53,7 +53,6 @@
     <string name="player_gestures_seek">Such-Geste</string>
     <string name="extra_info">Extra Infos anzeigen</string>
     <string name="app_language">App Sprache</string>
-    <string name="offline_mode">Offline-Modus</string>
     <string name="picture_in_picture">Bild-in-Bild</string>
     <string name="player_start_maximized">Maximiert starten</string>
     <string name="player_start_maximized_summary">Video standardmäßig maximiert öffnen</string>
@@ -74,7 +73,6 @@
     <string name="home_continue_watching">Weitersehen anzeigen</string>
     <string name="home_next_up">Als nächstes anzeigen</string>
     <string name="home_latest">Neueste Inhalte anzeigen</string>
-    <string name="offline_mode_summary">Filme und Serien ohne Verbindung zum Server ansehen</string>
     <string name="mb">MB</string>
     <string name="ms">ms</string>
     <string name="seconds">s</string>

@@ -26,13 +26,18 @@ import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.presentation.theme.spacings
+import dev.jdtech.jellyfin.core.presentation.utils.containerTransform
+import dev.jdtech.jellyfin.core.presentation.utils.containerTransformOnClick
+import dev.jdtech.jellyfin.core.presentation.utils.rememberContainerTransformKey
 import dev.jdtech.jellyfin.settings.R as SettingsR
 import dev.jdtech.jellyfin.settings.presentation.models.PreferenceCategory
 
 @Composable
 fun SettingsCategoryCard(preference: PreferenceCategory, modifier: Modifier = Modifier) {
+    val transformKey = rememberContainerTransformKey(preference)
     Surface(
-        onClick = { preference.onClick(preference) },
+        onClick =
+            containerTransformOnClick(transformKey) { preference.onClick(preference) },
         enabled = preference.enabled,
         shape = ClickableSurfaceDefaults.shape(shape = RoundedCornerShape(10.dp)),
         colors =
@@ -46,7 +51,7 @@ fun SettingsCategoryCard(preference: PreferenceCategory, modifier: Modifier = Mo
                     Border(BorderStroke(4.dp, Color.White), shape = RoundedCornerShape(10.dp))
             ),
         scale = ClickableSurfaceScale.None,
-        modifier = modifier,
+        modifier = modifier.containerTransform(transformKey),
     ) {
         Row(
             modifier = Modifier.padding(MaterialTheme.spacings.default),

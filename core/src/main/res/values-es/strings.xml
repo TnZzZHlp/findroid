@@ -25,7 +25,6 @@
     <string name="next_up">Siguiente</string>
     <string name="series_poster">Póster de la serie</string>
     <string name="no_favorites">No tienes favoritos</string>
-    <string name="no_downloads">No tienes descargas</string>
     <string name="search">Buscar</string>
     <string name="no_search_results">Búsqueda sin resultados</string>
     <string name="device_name">Nombre del dispositivo</string>
@@ -64,11 +63,8 @@
     <string name="subtitle">Subtítulos</string>
     <string name="subtitle_chip_text">CC</string>
     <string name="temp">temporáneo</string>
-    <string name="offline_mode_icon">Icono de Modo sin conexión</string>
-    <string name="offline_mode_go_online">Conectarse</string>
     <string name="downloading_error">Error al descargar</string>
     <string name="not_enough_storage">Este elemento requiere %1$s libres en el almacenamiento pero solo hay disponibles %2$s</string>
-    <string name="no_server_connection">No se puede conectar con el servidor de Jellyfin, para ver sin conexión, activa el Modo sin conexión</string>
     <string name="select_storage_location">Seleccionar ubicación de almacenamiento</string>
     <string name="storage_unavailable">La ubicación de almacenamiento no está disponible</string>
     <string name="preparing_download">Preparando la descarga</string>
@@ -93,9 +89,7 @@
     <string name="remove_from_favorites">Quitar de favoritos</string>
     <string name="sort_by_options_6">Aleatorio</string>
     <string name="show_stacktrace">Mostrar pila de llamadas</string>
-    <string name="offline_mode">Modo sin conexión</string>
     <string name="not_set">No establecido</string>
-    <string name="title_download">Descargas</string>
     <string name="title_settings">Preferencias</string>
     <string name="season_number">Temporada %1$d</string>
     <string name="episode_number">Episodio %1$d</string>

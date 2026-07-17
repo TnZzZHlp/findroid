@@ -52,7 +52,6 @@
     <string name="extra_info">Mostra più informazioni</string>
     <string name="amoled_theme">Tema scuro AMOLED</string>
     <string name="amoled_theme_summary">Usa il tema AMOLED con lo sfondo nero</string>
-    <string name="offline_mode">Modalità Offline</string>
     <string name="app_language">Lingua applicazione</string>
     <string name="picture_in_picture">Immagine nell\'immagine</string>
     <string name="picture_in_picture_gesture">Gesto/pulsante home</string>
@@ -77,7 +76,6 @@
     <string name="home_continue_watching">Mostra continua a guardare</string>
     <string name="home_next_up">Mostra prossimo</string>
     <string name="home_latest">Mostra ultimi aggiunti</string>
-    <string name="offline_mode_summary">Guarda film e serie senza connessione al server</string>
     <string name="mb">MB</string>
     <string name="ms">ms</string>
     <string name="seconds">s</string>

@@ -52,7 +52,6 @@
     <string name="app_language">Alkalmazás nyelve</string>
     <string name="extra_info">Extra információk megjelenítése</string>
     <string name="extra_info_summary">Jeleníts meg extra infokat a hangról, a videóról és a feliratokról</string>
-    <string name="offline_mode">Offline mód</string>
     <string name="player_gestures_seek">Gesztus keresése</string>
     <string name="picture_in_picture">Kép a képben</string>
     <string name="picture_in_picture_gesture">Kép a képben otthoni gesztus</string>

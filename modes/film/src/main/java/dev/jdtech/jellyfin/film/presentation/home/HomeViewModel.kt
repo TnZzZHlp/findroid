@@ -40,6 +40,10 @@ constructor(
     private val uiTextContinueWatching = UiText.StringResource(FilmR.string.continue_watching)
     private val uiTextNextUp = UiText.StringResource(FilmR.string.next_up)
 
+    init {
+        loadData()
+    }
+
     fun loadData() {
         Timber.i("Loading data")
         viewModelScope.launch(Dispatchers.Default) {

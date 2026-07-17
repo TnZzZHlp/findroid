@@ -29,7 +29,7 @@ suspend fun BaseItemDto.toFindroidItem(
 ): FindroidItem? {
     return when (type) {
         BaseItemKind.MOVIE -> toFindroidMovie(jellyfinRepository, serverDatabase)
-        BaseItemKind.EPISODE -> toFindroidEpisode(jellyfinRepository)
+        BaseItemKind.EPISODE -> toFindroidEpisode(jellyfinRepository, serverDatabase)
         BaseItemKind.SEASON -> toFindroidSeason(jellyfinRepository)
         BaseItemKind.SERIES -> toFindroidShow(jellyfinRepository)
         BaseItemKind.BOX_SET -> toFindroidBoxSet(jellyfinRepository)
@@ -45,7 +45,5 @@ fun FindroidItem.isDownloading(): Boolean {
 }
 
 fun FindroidItem.isDownloaded(): Boolean {
-    return sources
-        .filter { it.type == FindroidSourceType.LOCAL }
-        .any { !it.path.endsWith(".download") }
+    return sources.any { it.isPlayableLocalFile() }
 }

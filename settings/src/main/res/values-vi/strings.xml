@@ -48,7 +48,6 @@
     <string name="settings_connect_timeout">Thời gian kết nối hết hạn</string>
     <string name="player_gestures_seek_summary">Vuốt ngang để tua tới hoặc tua lui</string>
     <string name="player_gestures_seek">Cử chỉ tua</string>
-    <string name="offline_mode">Chế độ Ngoại tuyến</string>
     <string name="extra_info">Hiện thị thêm thông tin</string>
     <string name="extra_info_summary">Hiển thị thêm các thông tin về âm thanh, video và phụ đề</string>
     <string name="amoled_theme">Chủ đề màu tối (AMOLED)</string>

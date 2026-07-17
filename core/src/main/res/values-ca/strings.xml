@@ -5,7 +5,6 @@
     <string name="title_media">Mitjans</string>
     <string name="title_favorite">Preferits</string>
     <string name="title_settings">Configuració</string>
-    <string name="title_download">Baixades</string>
     <string name="genres">Gèneres</string>
     <string name="director">Director</string>
     <string name="writers">Guionistes</string>
@@ -16,7 +15,6 @@
     <string name="libraries">Llibreries</string>
     <string name="collection_no_media">Aquesta col·lecció no conté cap mitjà multimèdia</string>
     <string name="no_favorites">No hi ha cap preferit</string>
-    <string name="no_downloads">No hi ha cap baixada</string>
     <string name="device_name">Nom del dispositiu</string>
     <string name="error_preparing_player_items">Error en preparar els elements del reproductor.</string>
     <string name="view_details">Veure\'n els detalls</string>
@@ -25,10 +23,8 @@
     <string name="search_hint">Cerca pel·lícules, sèries, episodis…</string>
     <string name="size">Mida</string>
     <string name="subtitle">Subtítols</string>
-    <string name="offline_mode">Mode fora de línia</string>
     <string name="downloading_error">Error durant la baixada</string>
     <string name="not_enough_storage">Aquest element requereix %1$s d\'emmagatzematge lliure però només hi ha %2$s disponibles</string>
-    <string name="no_server_connection">No hi ha connexió al servidor Jellyfin: per mirar fora de línia, activa el mode fora de línia</string>
     <string name="select_storage_location">Selecciona la ubicació d\'emmagatzematge</string>
     <string name="storage_unavailable">La ubicació d\'emmagatzematge no està disponible</string>
     <string name="download_failed">No s\'ha pogut baixar</string>

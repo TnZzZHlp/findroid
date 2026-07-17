@@ -65,7 +65,6 @@
     <string name="theme_system">Seguir al sistema</string>
     <string name="theme_light">Claro</string>
     <string name="theme_dark">Oscuro</string>
-    <string name="offline_mode">Modo desconectado</string>
     <string name="extra_info">Mostrar info extra</string>
     <string name="app_language">Idioma de la aplicación</string>
     <string name="users">Usuarios</string>

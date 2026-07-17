@@ -27,6 +27,9 @@ import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import coil3.compose.AsyncImage
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyMovie
+import dev.jdtech.jellyfin.core.presentation.utils.containerTransform
+import dev.jdtech.jellyfin.core.presentation.utils.containerTransformOnClick
+import dev.jdtech.jellyfin.core.presentation.utils.rememberContainerTransformKey
 import dev.jdtech.jellyfin.film.presentation.home.HomeAction
 import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.models.FindroidMovie
@@ -36,6 +39,7 @@ import dev.jdtech.jellyfin.presentation.theme.spacings
 
 @Composable
 fun HomeCarouselItem(item: FindroidItem, onAction: (HomeAction) -> Unit) {
+    val transformKey = rememberContainerTransformKey(item.id)
     val colorStops =
         arrayOf(
             0.0f to Color.Black.copy(alpha = 0.1f),
@@ -44,7 +48,8 @@ fun HomeCarouselItem(item: FindroidItem, onAction: (HomeAction) -> Unit) {
         )
 
     Surface(
-        onClick = { onAction(HomeAction.OnItemClick(item)) },
+        onClick =
+            containerTransformOnClick(transformKey) { onAction(HomeAction.OnItemClick(item)) },
         shape = ClickableSurfaceDefaults.shape(shape = MaterialTheme.shapes.large),
         border =
             ClickableSurfaceDefaults.border(
@@ -52,6 +57,7 @@ fun HomeCarouselItem(item: FindroidItem, onAction: (HomeAction) -> Unit) {
                     Border(BorderStroke(4.dp, Color.White), shape = MaterialTheme.shapes.large)
             ),
         scale = ClickableSurfaceScale.None,
+        modifier = Modifier.containerTransform(transformKey),
     ) {
         Box {
             AsyncImage(

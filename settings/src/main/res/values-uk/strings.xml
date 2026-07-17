@@ -36,7 +36,6 @@
     <string name="pref_player_mpv_vo">Виведення відео</string>
     <string name="pref_player_mpv_ao">Виведення аудіо</string>
     <string name="extra_info">Відображати додаткову інформацію</string>
-    <string name="offline_mode">Режим офлайн</string>
     <string name="title_settings">Налаштунки</string>
     <string name="settings_preferred_audio_language">Бажана мова аудіо</string>
     <string name="settings_category_player">Програвач</string>
@@ -74,7 +73,6 @@
     <string name="picture_in_picture">Картинка в картинці</string>
     <string name="picture_in_picture_gesture">Жест для картинки в картинці на головній сторінці</string>
     <string name="picture_in_picture_gesture_summary">Використайте кнопку \"головна\" або жест для того, щоби ввійти в режим картинки в картинці під час перегляду відео</string>
-    <string name="offline_mode_summary">Дивіться фільми та шоу без з\'єднання з сервером</string>
     <string name="ms">мс</string>
     <string name="seconds">с</string>
     <string name="save">Зберегти</string>

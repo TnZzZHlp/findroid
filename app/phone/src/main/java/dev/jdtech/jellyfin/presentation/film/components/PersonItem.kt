@@ -18,15 +18,24 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyPerson
+import dev.jdtech.jellyfin.core.presentation.utils.containerTransform
+import dev.jdtech.jellyfin.core.presentation.utils.containerTransformOnClick
+import dev.jdtech.jellyfin.core.presentation.utils.rememberContainerTransformKey
 import dev.jdtech.jellyfin.models.FindroidItemPerson
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.presentation.theme.spacings
 
 @Composable
 fun PersonItem(person: FindroidItemPerson, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val transformKey = rememberContainerTransformKey(person.id)
+    val transformedOnClick = containerTransformOnClick(transformKey, onClick)
     Column(
         modifier =
-            modifier.width(110.dp).clip(MaterialTheme.shapes.small).clickable(onClick = onClick)
+            modifier
+                .width(110.dp)
+                .containerTransform(transformKey)
+                .clip(MaterialTheme.shapes.small)
+                .clickable(onClick = transformedOnClick)
     ) {
         AsyncImage(
             model = person.image.uri,

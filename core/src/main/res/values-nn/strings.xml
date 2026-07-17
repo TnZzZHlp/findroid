@@ -8,7 +8,6 @@
     <string name="title_media">Min media</string>
     <string name="title_favorite">Favorittar</string>
     <string name="title_settings">Innstillingar</string>
-    <string name="title_download">Nedlastingar</string>
     <string name="view_all">Sjå alle</string>
     <string name="error_loading_data">Feil ved lasting av data</string>
     <string name="show_stacktrace">Vis stacktrace</string>
@@ -35,7 +34,6 @@
     <string name="series_poster">Serieplakat</string>
     <string name="collection_no_media">Denne samlinga inneheld ingen media</string>
     <string name="no_favorites">Du har ingen favorittar</string>
-    <string name="no_downloads">Du har ingenting nedlasta</string>
     <string name="search">Søk</string>
     <string name="no_search_results">Ingen søkeresultat</string>
     <string name="device_name">Einingnamn</string>
@@ -76,12 +74,8 @@
     <string name="subtitle">Undertekstar</string>
     <string name="subtitle_chip_text">CC</string>
     <string name="temp">midlertidig</string>
-    <string name="offline_mode">Frakobla modus</string>
-    <string name="offline_mode_icon">Ikon for frakobla modus</string>
-    <string name="offline_mode_go_online">Gå på nett</string>
     <string name="downloading_error">Feil under nedlasting</string>
     <string name="not_enough_storage">Dette elementet krev %1$s ledig lagringsplass, men berre %2$s er tilgjengeleg</string>
-    <string name="no_server_connection">Ingen kontakt med Jellyfin-servaren. Aktiver frakobla modus for å sjå innhald utan nett.</string>
     <string name="select_storage_location">Vel lagringsstad</string>
     <string name="storage_unavailable">Lagringsstaden er ikkje tilgjengeleg</string>
     <string name="internal">Intern</string>

@@ -52,7 +52,6 @@
     <string name="player_gestures_zoom_summary">צבוט כדי להציג את הוידאו במסך מלא</string>
     <string name="seek_back_increment">גודל קפיצה אחורה (מילי שניות)</string>
     <string name="dynamic_colors_summary">השתמש בצבעים דינמיים של Material You (זמין רק בגרסת אנדרואיד 12 ומעלה)</string>
-    <string name="offline_mode">מצב לא מקוון</string>
     <string name="app_language">שפת היישומון</string>
     <string name="picture_in_picture">תמונה-בתוך-תמונה</string>
     <string name="picture_in_picture_gesture_summary">השתמש בכפתור הבית או במחווה כדי להכנס למצב תמונה-בתוך-תמונה כאשר הוידאו פועל</string>

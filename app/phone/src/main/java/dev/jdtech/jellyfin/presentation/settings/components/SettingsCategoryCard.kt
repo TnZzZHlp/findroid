@@ -16,6 +16,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import dev.jdtech.jellyfin.core.R as CoreR
+import dev.jdtech.jellyfin.core.presentation.utils.containerTransform
+import dev.jdtech.jellyfin.core.presentation.utils.containerTransformOnClick
+import dev.jdtech.jellyfin.core.presentation.utils.rememberContainerTransformKey
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.presentation.theme.spacings
 import dev.jdtech.jellyfin.settings.R as SettingsR
@@ -23,10 +26,12 @@ import dev.jdtech.jellyfin.settings.presentation.models.PreferenceCategory
 
 @Composable
 fun SettingsCategoryCard(preference: PreferenceCategory, modifier: Modifier = Modifier) {
+    val transformKey = rememberContainerTransformKey(preference)
     SettingsBaseCard(
         preference = preference,
-        onClick = { preference.onClick(preference) },
-        modifier = modifier,
+        onClick =
+            containerTransformOnClick(transformKey) { preference.onClick(preference) },
+        modifier = modifier.containerTransform(transformKey),
     ) {
         Row(
             modifier = Modifier.padding(MaterialTheme.spacings.medium),

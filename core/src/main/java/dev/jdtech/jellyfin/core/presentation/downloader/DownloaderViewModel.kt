@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.models.FindroidSourceType
+import dev.jdtech.jellyfin.models.isPlayableLocalFile
 import dev.jdtech.jellyfin.models.isDownloading
 import dev.jdtech.jellyfin.utils.Downloader
 import javax.inject.Inject
@@ -34,7 +35,9 @@ class DownloaderViewModel @Inject constructor(private val downloader: Downloader
         viewModelScope.launch {
             if (item.isDownloading()) {
                 val source =
-                    item.sources.firstOrNull { it.type == FindroidSourceType.LOCAL }
+                    item.sources.firstOrNull {
+                        it.type == FindroidSourceType.LOCAL && it.path.endsWith(".download")
+                    }
                         ?: return@launch
                 this@DownloaderViewModel.downloadId = source.downloadId
                 pollDownloadProgress(source.downloadId)
@@ -48,7 +51,7 @@ class DownloaderViewModel @Inject constructor(private val downloader: Downloader
             val (downloadId, uiText) =
                 downloader.downloadItem(
                     item = item,
-                    sourceId = item.sources.first().id,
+                    sourceId = item.sources.first { it.type == FindroidSourceType.REMOTE }.id,
                     storageIndex = storageIndex,
                 )
             if (downloadId != -1L) {
@@ -79,7 +82,7 @@ class DownloaderViewModel @Inject constructor(private val downloader: Downloader
         viewModelScope.launch {
             downloader.deleteItem(
                 item = item,
-                source = item.sources.first { it.type == FindroidSourceType.LOCAL },
+                source = item.sources.first { it.isPlayableLocalFile() },
             )
             eventsChannel.send(DownloaderEvent.Deleted)
         }

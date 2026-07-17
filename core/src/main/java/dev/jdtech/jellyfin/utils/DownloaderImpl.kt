@@ -19,6 +19,7 @@ import dev.jdtech.jellyfin.models.FindroidSource
 import dev.jdtech.jellyfin.models.FindroidSources
 import dev.jdtech.jellyfin.models.FindroidTrickplayInfo
 import dev.jdtech.jellyfin.models.UiText
+import dev.jdtech.jellyfin.models.localSourceId
 import dev.jdtech.jellyfin.models.toFindroidEpisodeDto
 import dev.jdtech.jellyfin.models.toFindroidMediaStreamDto
 import dev.jdtech.jellyfin.models.toFindroidMovieDto
@@ -56,9 +57,11 @@ class DownloaderImpl(
         sourceId: String,
         storageIndex: Int,
     ): Pair<Long, UiText?> = coroutineScope {
+        var enqueuedDownloadId: Long? = null
         try {
             val source =
                 jellyfinRepository.getMediaSources(item.id, true).first { it.id == sourceId }
+            val localSourceId = localSourceId(item.id, source.id)
             val segments = jellyfinRepository.getSegments(item.id)
             val trickplayInfo =
                 if (item is FindroidSources) {
@@ -104,6 +107,7 @@ class DownloaderImpl(
                     )
                     .setDestinationUri(path)
             val downloadId = downloadManager.enqueue(request)
+            enqueuedDownloadId = downloadId
 
             when (item) {
                 is FindroidMovie -> {
@@ -133,25 +137,37 @@ class DownloaderImpl(
                 }
             }
 
-            val sourceDto = source.toFindroidSourceDto(item.id, path.path.orEmpty())
+            database.getSources(item.id).map { it.toFindroidSource(database) }.forEach {
+                deleteSource(item.id, it)
+            }
+            val sourceDto =
+                source.toFindroidSourceDto(
+                    itemId = item.id,
+                    path = path.path.orEmpty(),
+                    localSourceId = localSourceId,
+                )
 
             database.insertSource(sourceDto.copy(downloadId = downloadId))
             database.insertUserData(item.toFindroidUserDataDto(jellyfinRepository.getUserId()))
 
-            downloadExternalMediaStreams(item, source, storageIndex)
+            downloadExternalMediaStreams(item, source, localSourceId, storageIndex)
 
             segments.forEach { database.insertSegment(it.toFindroidSegmentsDto(item.id)) }
 
             if (trickplayInfo != null) {
-                downloadTrickplayData(item.id, sourceId, trickplayInfo)
+                downloadTrickplayData(item.id, localSourceId, trickplayInfo)
             }
 
             startImagesDownloader(item)
             return@coroutineScope Pair(downloadId, null)
         } catch (e: Exception) {
+            enqueuedDownloadId?.let { downloadManager.remove(it) }
             try {
-                val source = jellyfinRepository.getMediaSources(item.id).first { it.id == sourceId }
-                deleteItem(item, source)
+                database
+                    .getSources(item.id)
+                    .firstOrNull { it.path.endsWith(".download") }
+                    ?.toFindroidSource(database)
+                    ?.let { deleteItem(item, it) }
             } catch (_: Exception) {}
             Timber.e(e)
             return@coroutineScope Pair(
@@ -165,9 +181,6 @@ class DownloaderImpl(
     override suspend fun cancelDownload(item: FindroidItem, downloadId: Long) {
         val source =
             database.getSourceByDownloadId(downloadId)?.toFindroidSource(database) ?: return
-        if (source.downloadId != null) {
-            downloadManager.remove(source.downloadId!!)
-        }
         deleteItem(item, source)
     }
 
@@ -195,19 +208,24 @@ class DownloaderImpl(
             }
         }
 
-        database.deleteSource(source.id)
-        File(source.path).delete()
-
-        val mediaStreams = database.getMediaStreamsBySourceId(source.id)
-        for (mediaStream in mediaStreams) {
-            File(mediaStream.path).delete()
-        }
-        database.deleteMediaStreamsBySourceId(source.id)
+        deleteSource(item.id, source)
 
         database.deleteUserData(item.id)
 
         File(context.filesDir, "trickplay/${item.id}").deleteRecursively()
         File(context.filesDir, "images/${item.id}").deleteRecursively()
+    }
+
+    private fun deleteSource(itemId: UUID, source: FindroidSource) {
+        source.downloadId?.let { downloadManager.remove(it) }
+        File(source.path).delete()
+        database.getMediaStreamsBySourceId(source.id).forEach { mediaStream ->
+            mediaStream.downloadId?.let { downloadManager.remove(it) }
+            File(mediaStream.path).delete()
+        }
+        database.deleteMediaStreamsBySourceId(source.id)
+        database.deleteSource(source.id)
+        File(context.filesDir, "trickplay/$itemId/${source.id}").deleteRecursively()
     }
 
     override suspend fun getProgress(downloadId: Long?): Pair<Int, Int> {
@@ -250,6 +268,7 @@ class DownloaderImpl(
     private fun downloadExternalMediaStreams(
         item: FindroidItem,
         source: FindroidSource,
+        localSourceId: String,
         storageIndex: Int = 0,
     ) {
         val storageLocation = context.getExternalFilesDirs(null)[storageIndex]
@@ -260,7 +279,11 @@ class DownloaderImpl(
                     File(storageLocation, "downloads/${item.id}.${source.id}.$id.download")
                 )
             database.insertMediaStream(
-                mediaStream.toFindroidMediaStreamDto(id, source.id, streamPath.path.orEmpty())
+                mediaStream.toFindroidMediaStreamDto(
+                    id,
+                    localSourceId,
+                    streamPath.path.orEmpty(),
+                )
             )
             val request =
                 DownloadManager.Request(mediaStream.path!!.toUri())
@@ -280,7 +303,7 @@ class DownloaderImpl(
 
     private suspend fun downloadTrickplayData(
         itemId: UUID,
-        sourceId: String,
+        localSourceId: String,
         trickplayInfo: FindroidTrickplayInfo,
     ) {
         val maxIndex =
@@ -296,7 +319,7 @@ class DownloaderImpl(
                 byteArrays.add(byteArray)
             }
         }
-        saveTrickplayData(itemId, sourceId, trickplayInfo, byteArrays)
+        saveTrickplayData(itemId, localSourceId, trickplayInfo, byteArrays)
     }
 
     private fun saveTrickplayData(

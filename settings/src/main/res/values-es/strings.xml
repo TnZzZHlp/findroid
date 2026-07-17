@@ -52,7 +52,6 @@
     <string name="amoled_theme_summary">Usa un tema de fondo negro puro para pantallas AMOLED</string>
     <string name="extra_info_summary">Muestra información detallada de audio, video y subtítulos</string>
     <string name="extra_info">Mostrar info extra</string>
-    <string name="offline_mode">Modo sin conexión</string>
     <string name="app_language">Idioma de la aplicación</string>
     <string name="player_start_maximized_summary">Abrir por defecto el vídeo en modo maximizado</string>
     <string name="player_start_maximized">Iniciar maximizado</string>
@@ -76,7 +75,6 @@
     <string name="home_continue_watching">Mostrar seguir viendo</string>
     <string name="home_next_up">Mostrar siguiente</string>
     <string name="home_latest">Mostrar últimos elementos</string>
-    <string name="offline_mode_summary">Ver películas y series sin conexión al servidor</string>
     <string name="mb">MB</string>
     <string name="ms">ms</string>
     <string name="seconds">s</string>

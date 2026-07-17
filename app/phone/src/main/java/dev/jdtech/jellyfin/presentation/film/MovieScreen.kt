@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -55,7 +54,6 @@ import dev.jdtech.jellyfin.presentation.film.components.OverviewText
 import dev.jdtech.jellyfin.presentation.film.components.VideoMetadataBar
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.presentation.theme.spacings
-import dev.jdtech.jellyfin.presentation.utils.LocalOfflineMode
 import dev.jdtech.jellyfin.presentation.utils.rememberSafePadding
 import dev.jdtech.jellyfin.utils.ObserveAsEvents
 import java.util.UUID
@@ -72,14 +70,14 @@ fun MovieScreen(
 ) {
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
-    val isOfflineMode = LocalOfflineMode.current
-
     val state by viewModel.state.collectAsStateWithLifecycle()
     val downloaderState by downloaderViewModel.state.collectAsStateWithLifecycle()
 
     LaunchedEffect(true) { viewModel.loadMovie(movieId = movieId) }
 
-    LaunchedEffect(state.movie) { state.movie?.let { movie -> downloaderViewModel.update(movie) } }
+    LaunchedEffect(state.movie) {
+        state.movie?.let { movie -> downloaderViewModel.update(movie) }
+    }
 
     ObserveAsEvents(downloaderViewModel.events) { event ->
         when (event) {
@@ -87,11 +85,7 @@ fun MovieScreen(
                 viewModel.loadMovie(movieId = movieId)
             }
             is DownloaderEvent.Deleted -> {
-                if (isOfflineMode) {
-                    navigateBack()
-                } else {
-                    viewModel.loadMovie(movieId = movieId)
-                }
+                viewModel.loadMovie(movieId = movieId)
             }
         }
     }
@@ -271,7 +265,7 @@ private fun MovieScreenLayout(
                 }
                 Spacer(Modifier.height(paddingBottom))
             }
-        } ?: run { CircularProgressIndicator(modifier = Modifier.align(Alignment.Center)) }
+        }
 
         ItemTopBar(
             hasBackButton = true,

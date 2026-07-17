@@ -16,12 +16,19 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import dev.jdtech.jellyfin.core.R as CoreR
+import dev.jdtech.jellyfin.core.presentation.utils.containerTransform
+import dev.jdtech.jellyfin.core.presentation.utils.containerTransformOnClick
+import dev.jdtech.jellyfin.core.presentation.utils.rememberContainerTransformKey
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.presentation.theme.spacings
 
 @Composable
 fun FavoritesCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
-    OutlinedCard(onClick = onClick, modifier = modifier) {
+    val transformKey = rememberContainerTransformKey("favorites")
+    OutlinedCard(
+        onClick = containerTransformOnClick(transformKey, onClick),
+        modifier = modifier.containerTransform(transformKey),
+    ) {
         Row(
             modifier = Modifier.padding(MaterialTheme.spacings.medium),
             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.small),

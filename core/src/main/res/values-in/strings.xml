@@ -6,7 +6,6 @@
     <string name="remove">Hapus</string>
     <string name="cancel">Batal</string>
     <string name="external">Eksternal</string>
-    <string name="title_download">Unduhan</string>
     <string name="view_all">Lihat semua</string>
     <string name="error_loading_data">Kesalahan memuat data</string>
     <string name="show_stacktrace">Tampilkan stacktrace</string>
@@ -28,7 +27,6 @@
     <string name="series_poster">Poster serial</string>
     <string name="collection_no_media">Koleksi ini tidak berisi media apa pun</string>
     <string name="no_favorites">Anda tidak memiliki favorit</string>
-    <string name="no_downloads">Anda tidak memiliki yang telah diunduh</string>
     <string name="search">Cari</string>
     <string name="no_search_results">Tidak ada hasil pencarian</string>
     <string name="device_name">Nama perangkat</string>
@@ -54,7 +52,6 @@
     <string name="sort_by_options_1">Rating IMDB</string>
     <string name="sort_by_options_2">Rating Orang Tua</string>
     <string name="sort_by_options_3">Tanggal Ditambahkan</string>
-    <string name="offline_mode">Mode Luring</string>
     <string name="sort_by_options_4">Tanggal Diputar</string>
     <string name="sort_by_options_5">Tanggal Rilis</string>
     <string name="sort_by_options_6">Acak</string>
@@ -70,11 +67,8 @@
     <string name="subtitle">Subtitle</string>
     <string name="subtitle_chip_text">CC</string>
     <string name="temp">temp</string>
-    <string name="offline_mode_icon">Ikon Mode Luring</string>
-    <string name="offline_mode_go_online">Kembali daring</string>
     <string name="downloading_error">Kesalahan ketika mengunduh</string>
     <string name="not_enough_storage">Item ini memerlukan %1$s ruang penyimpanan kosong, tetapi hanya tersedia %2$s</string>
-    <string name="no_server_connection">Tidak ada koneksi ke server Jellyfin, untuk menonton secara offline aktifkan Mode Luring</string>
     <string name="select_storage_location">Pilih lokasi penyimpanan</string>
     <string name="title_home">Beranda</string>
     <string name="title_media">Media Saya</string>

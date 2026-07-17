@@ -8,7 +8,6 @@
     <string name="title_media">メディア</string>
     <string name="title_favorite">お気に入り</string>
     <string name="title_settings">設定</string>
-    <string name="title_download">ダウンロード</string>
     <string name="view_all">すべて表示</string>
     <string name="error_loading_data">データの読み込みエラー</string>
     <string name="show_stacktrace">スタックトレースを表示</string>
@@ -35,7 +34,6 @@
     <string name="series_poster">シリーズポスター</string>
     <string name="collection_no_media">このコレクションにはメディアが含まれていません</string>
     <string name="no_favorites">お気に入りはありません</string>
-    <string name="no_downloads">ダウンロードされたものはありません</string>
     <string name="search">検索</string>
     <string name="no_search_results">検索結果はありません</string>
     <string name="device_name">デバイス名</string>
@@ -76,12 +74,8 @@
     <string name="subtitle">字幕</string>
     <string name="subtitle_chip_text">クローズドキャプション</string>
     <string name="temp">一時ファイル</string>
-    <string name="offline_mode">オフラインモード</string>
-    <string name="offline_mode_icon">オフラインモードアイコン</string>
-    <string name="offline_mode_go_online">オンラインに切り替え</string>
     <string name="downloading_error">ダウンロード中にエラーが発生しました</string>
     <string name="not_enough_storage">この項目には %1$s の空き容量が必要ですが、利用可能なのは %2$s だけです</string>
-    <string name="no_server_connection">Jellyfin サーバーに接続できません。オフライン視聴をするには、オフラインモードを有効にしてください</string>
     <string name="select_storage_location">保存先を選択</string>
     <string name="storage_unavailable">保存先が利用できません</string>
     <string name="internal">内部</string>

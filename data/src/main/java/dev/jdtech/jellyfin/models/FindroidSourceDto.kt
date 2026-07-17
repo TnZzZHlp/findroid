@@ -14,12 +14,20 @@ data class FindroidSourceDto(
     val downloadId: Long? = null,
 )
 
-fun FindroidSource.toFindroidSourceDto(itemId: UUID, path: String): FindroidSourceDto {
+fun FindroidSource.toFindroidSourceDto(
+    itemId: UUID,
+    path: String,
+    localSourceId: String,
+): FindroidSourceDto {
     return FindroidSourceDto(
-        id = id,
+        id = localSourceId,
         itemId = itemId,
         name = name,
         type = FindroidSourceType.LOCAL,
         path = path,
     )
+}
+
+fun localSourceId(itemId: UUID, remoteSourceId: String): String {
+    return "local-$itemId-$remoteSourceId"
 }

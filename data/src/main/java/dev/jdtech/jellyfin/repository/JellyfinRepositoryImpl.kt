@@ -26,6 +26,7 @@ import dev.jdtech.jellyfin.models.toFindroidSeason
 import dev.jdtech.jellyfin.models.toFindroidSegment
 import dev.jdtech.jellyfin.models.toFindroidShow
 import dev.jdtech.jellyfin.models.toFindroidSource
+import dev.jdtech.jellyfin.models.isPlayableLocalFile
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
 import java.io.File
 import java.util.UUID
@@ -71,34 +72,54 @@ class JellyfinRepositoryImpl(
 
     override suspend fun getEpisode(itemId: UUID): FindroidEpisode =
         withContext(Dispatchers.IO) {
-            jellyfinApi.userLibraryApi
-                .getItem(itemId, jellyfinApi.userId!!)
-                .content
-                .toFindroidEpisode(this@JellyfinRepositoryImpl, database)!!
+            try {
+                jellyfinApi.userLibraryApi
+                    .getItem(itemId, jellyfinApi.userId!!)
+                    .content
+                    .toFindroidEpisode(this@JellyfinRepositoryImpl, database)!!
+            } catch (error: Exception) {
+                database.getEpisodeOrNull(itemId)?.takeIf { hasPlayableLocalSource(itemId) }
+                    ?.toFindroidEpisode(database, jellyfinApi.userId!!) ?: throw error
+            }
         }
 
     override suspend fun getMovie(itemId: UUID): FindroidMovie =
         withContext(Dispatchers.IO) {
-            jellyfinApi.userLibraryApi
-                .getItem(itemId, jellyfinApi.userId!!)
-                .content
-                .toFindroidMovie(this@JellyfinRepositoryImpl, database)
+            try {
+                jellyfinApi.userLibraryApi
+                    .getItem(itemId, jellyfinApi.userId!!)
+                    .content
+                    .toFindroidMovie(this@JellyfinRepositoryImpl, database)
+            } catch (error: Exception) {
+                database.getMovieOrNull(itemId)?.takeIf { hasPlayableLocalSource(itemId) }
+                    ?.toFindroidMovie(database, jellyfinApi.userId!!) ?: throw error
+            }
         }
 
     override suspend fun getShow(itemId: UUID): FindroidShow =
         withContext(Dispatchers.IO) {
-            jellyfinApi.userLibraryApi
-                .getItem(itemId, jellyfinApi.userId!!)
-                .content
-                .toFindroidShow(this@JellyfinRepositoryImpl)
+            try {
+                jellyfinApi.userLibraryApi
+                    .getItem(itemId, jellyfinApi.userId!!)
+                    .content
+                    .toFindroidShow(this@JellyfinRepositoryImpl)
+            } catch (error: Exception) {
+                database.getShowOrNull(itemId)?.takeIf { hasPlayableLocalEpisode(itemId) }
+                    ?.toFindroidShow(database, jellyfinApi.userId!!) ?: throw error
+            }
         }
 
     override suspend fun getSeason(itemId: UUID): FindroidSeason =
         withContext(Dispatchers.IO) {
-            jellyfinApi.userLibraryApi
-                .getItem(itemId, jellyfinApi.userId!!)
-                .content
-                .toFindroidSeason(this@JellyfinRepositoryImpl)
+            try {
+                jellyfinApi.userLibraryApi
+                    .getItem(itemId, jellyfinApi.userId!!)
+                    .content
+                    .toFindroidSeason(this@JellyfinRepositoryImpl)
+            } catch (error: Exception) {
+                database.getSeasonOrNull(itemId)?.takeIf { hasPlayableLocalEpisodeInSeason(itemId) }
+                    ?.toFindroidSeason(database, jellyfinApi.userId!!) ?: throw error
+            }
         }
 
     override suspend fun getLibraries(): List<FindroidCollection> =
@@ -110,10 +131,18 @@ class JellyfinRepositoryImpl(
 
     override suspend fun getItem(itemId: UUID): FindroidItem? =
         withContext(Dispatchers.IO) {
-            jellyfinApi.userLibraryApi
-                .getItem(itemId = itemId, userId = jellyfinApi.userId!!)
-                .content
-                .toFindroidItem(this@JellyfinRepositoryImpl)
+            try {
+                jellyfinApi.userLibraryApi
+                    .getItem(itemId = itemId, userId = jellyfinApi.userId!!)
+                    .content
+                    .toFindroidItem(this@JellyfinRepositoryImpl, database)
+            } catch (error: Exception) {
+                database.getMovieOrNull(itemId)?.takeIf { hasPlayableLocalSource(itemId) }
+                    ?.toFindroidMovie(database, jellyfinApi.userId!!)
+                    ?: database.getEpisodeOrNull(itemId)?.takeIf { hasPlayableLocalSource(itemId) }
+                        ?.toFindroidEpisode(database, jellyfinApi.userId!!)
+                    ?: throw error
+            }
         }
 
     override suspend fun getItems(
@@ -247,31 +276,50 @@ class JellyfinRepositoryImpl(
                 .mapNotNull { it.toFindroidItem(this@JellyfinRepositoryImpl, database) }
         }
 
-    override suspend fun getSeasons(seriesId: UUID, offline: Boolean): List<FindroidSeason> =
+    override suspend fun getSeasons(seriesId: UUID, localOnly: Boolean): List<FindroidSeason> =
         withContext(Dispatchers.IO) {
-            if (!offline) {
-                jellyfinApi.showsApi.getSeasons(seriesId, jellyfinApi.userId!!).content.items.map {
-                    it.toFindroidSeason(this@JellyfinRepositoryImpl)
-                }
+            if (localOnly) {
+                getLocalSeasons(seriesId)
             } else {
-                database.getSeasonsByShowId(seriesId).map {
-                    it.toFindroidSeason(database, jellyfinApi.userId!!)
+                try {
+                    jellyfinApi.showsApi
+                        .getSeasons(seriesId, jellyfinApi.userId!!)
+                        .content
+                        .items
+                        .map { it.toFindroidSeason(this@JellyfinRepositoryImpl) }
+                } catch (error: Exception) {
+                    getLocalSeasons(seriesId).ifEmpty { throw error }
                 }
             }
         }
 
     override suspend fun getNextUp(seriesId: UUID?): List<FindroidEpisode> =
         withContext(Dispatchers.IO) {
-            jellyfinApi.showsApi
-                .getNextUp(
-                    jellyfinApi.userId!!,
-                    limit = 24,
-                    seriesId = seriesId,
-                    enableResumable = false,
-                )
-                .content
-                .items
-                .mapNotNull { it.toFindroidEpisode(this@JellyfinRepositoryImpl) }
+            try {
+                jellyfinApi.showsApi
+                    .getNextUp(
+                        jellyfinApi.userId!!,
+                        limit = 24,
+                        seriesId = seriesId,
+                        enableResumable = false,
+                    )
+                    .content
+                    .items
+                    .mapNotNull { it.toFindroidEpisode(this@JellyfinRepositoryImpl, database) }
+            } catch (error: Exception) {
+                val localNextUp = getLocalNextUp(seriesId)
+                val hasLocalEpisodes =
+                    if (seriesId != null) {
+                        hasPlayableLocalEpisode(seriesId)
+                    } else {
+                        database
+                            .getEpisodesByServerId(
+                                appPreferences.getValue(appPreferences.currentServer)!!
+                            )
+                            .any { hasPlayableLocalSource(it.id) }
+                    }
+                if (hasLocalEpisodes) localNextUp else throw error
+            }
         }
 
     override suspend fun getEpisodes(
@@ -280,34 +328,41 @@ class JellyfinRepositoryImpl(
         fields: List<ItemFields>?,
         startItemId: UUID?,
         limit: Int?,
-        offline: Boolean,
+        localOnly: Boolean,
     ): List<FindroidEpisode> =
         withContext(Dispatchers.IO) {
-            if (!offline) {
-                jellyfinApi.showsApi
-                    .getEpisodes(
-                        seriesId,
-                        jellyfinApi.userId!!,
-                        seasonId = seasonId,
-                        fields = fields,
-                        startItemId = startItemId,
-                        limit = limit,
-                    )
-                    .content
-                    .items
-                    .mapNotNull { it.toFindroidEpisode(this@JellyfinRepositoryImpl, database) }
+            if (localOnly) {
+                getLocalEpisodes(seasonId, startItemId, limit)
             } else {
-                database.getEpisodesBySeasonId(seasonId).map {
-                    it.toFindroidEpisode(database, jellyfinApi.userId!!)
+                try {
+                    jellyfinApi.showsApi
+                        .getEpisodes(
+                            seriesId,
+                            jellyfinApi.userId!!,
+                            seasonId = seasonId,
+                            fields = fields,
+                            startItemId = startItemId,
+                            limit = limit,
+                        )
+                        .content
+                        .items
+                        .mapNotNull {
+                            it.toFindroidEpisode(this@JellyfinRepositoryImpl, database)
+                        }
+                } catch (error: Exception) {
+                    getLocalEpisodes(seasonId, startItemId, limit).ifEmpty { throw error }
                 }
             }
         }
 
     override suspend fun getMediaSources(itemId: UUID, includePath: Boolean): List<FindroidSource> =
         withContext(Dispatchers.IO) {
-            val sources = mutableListOf<FindroidSource>()
-            sources.addAll(
-                jellyfinApi.mediaInfoApi
+            val localSources = getPlayableLocalSources(itemId)
+            if (localSources.isNotEmpty()) {
+                return@withContext localSources
+            }
+
+            jellyfinApi.mediaInfoApi
                     .getPostedPlaybackInfo(
                         itemId,
                         PlaybackInfoDto(
@@ -333,9 +388,6 @@ class JellyfinRepositoryImpl(
                     .content
                     .mediaSources
                     .map { it.toFindroidSource(this@JellyfinRepositoryImpl, itemId, includePath) }
-            )
-            sources.addAll(database.getSources(itemId).map { it.toFindroidSource(database) })
-            sources
         }
 
     override suspend fun getStreamUrl(itemId: UUID, mediaSourceId: String): String =
@@ -552,21 +604,73 @@ class JellyfinRepositoryImpl(
     override suspend fun getUserConfiguration(): UserConfiguration =
         withContext(Dispatchers.IO) { jellyfinApi.userApi.getCurrentUser().content.configuration!! }
 
-    override suspend fun getDownloads(): List<FindroidItem> =
-        withContext(Dispatchers.IO) {
-            val items = mutableListOf<FindroidItem>()
-            items.addAll(
-                database
-                    .getMoviesByServerId(appPreferences.getValue(appPreferences.currentServer)!!)
-                    .map { it.toFindroidMovie(database, jellyfinApi.userId!!) }
-            )
-            items.addAll(
+    private fun getPlayableLocalSources(itemId: UUID): List<FindroidSource> {
+        return database
+            .getSources(itemId)
+            .map { it.toFindroidSource(database) }
+            .filter { it.isPlayableLocalFile() }
+    }
+
+    private fun hasPlayableLocalSource(itemId: UUID): Boolean {
+        return getPlayableLocalSources(itemId).isNotEmpty()
+    }
+
+    private fun hasPlayableLocalEpisode(seriesId: UUID): Boolean {
+        return database.getEpisodesByShowId(seriesId).any { hasPlayableLocalSource(it.id) }
+    }
+
+    private fun hasPlayableLocalEpisodeInSeason(seasonId: UUID): Boolean {
+        return database.getEpisodesBySeasonId(seasonId).any { hasPlayableLocalSource(it.id) }
+    }
+
+    private fun getLocalSeasons(seriesId: UUID): List<FindroidSeason> {
+        return database
+            .getSeasonsByShowId(seriesId)
+            .filter { hasPlayableLocalEpisodeInSeason(it.id) }
+            .map { it.toFindroidSeason(database, jellyfinApi.userId!!) }
+    }
+
+    private fun getLocalEpisodes(
+        seasonId: UUID,
+        startItemId: UUID?,
+        limit: Int?,
+    ): List<FindroidEpisode> {
+        var episodes =
+            database
+                .getEpisodesBySeasonId(seasonId)
+                .filter { hasPlayableLocalSource(it.id) }
+                .map { it.toFindroidEpisode(database, jellyfinApi.userId!!) }
+        if (startItemId != null) {
+            episodes = episodes.dropWhile { it.id != startItemId }
+        }
+        if (limit != null) {
+            episodes = episodes.take(limit)
+        }
+        return episodes
+    }
+
+    private fun getLocalNextUp(seriesId: UUID?): List<FindroidEpisode> {
+        val showIds =
+            if (seriesId != null) {
+                listOf(seriesId)
+            } else {
                 database
                     .getShowsByServerId(appPreferences.getValue(appPreferences.currentServer)!!)
-                    .map { it.toFindroidShow(database, jellyfinApi.userId!!) }
-            )
-            items
+                    .map { it.id }
+            }
+        return showIds.mapNotNull { showId ->
+            val episodes =
+                database
+                    .getEpisodesByShowId(showId)
+                    .filter { hasPlayableLocalSource(it.id) }
+                    .map { it.toFindroidEpisode(database, jellyfinApi.userId!!) }
+            val lastPlayedIndex = episodes.indexOfLast { it.played }
+            val nextEpisode =
+                if (lastPlayedIndex == -1) episodes.firstOrNull()
+                else episodes.getOrNull(lastPlayedIndex + 1)
+            nextEpisode?.takeIf { it.playbackPositionTicks == 0L }
         }
+    }
 
     override fun getUserId(): UUID {
         return jellyfinApi.userId!!

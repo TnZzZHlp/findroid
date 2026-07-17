@@ -46,7 +46,6 @@
     <string name="jellyfin_banner">Bannière Jellyfin</string>
     <string name="check_button_description">Marquer comme vu ou non vu</string>
     <string name="favorite_button_description">Favori</string>
-    <string name="no_downloads">Vous n’avez rien téléchargé</string>
     <string name="episode_name_extended">S%1$d:E%2$d - %3$s</string>
     <string name="app_description">Application Jellyfin native tierce</string>
     <string name="image_description_poster">Affiche de %1$s</string>
@@ -72,14 +71,11 @@
     <string name="select_storage_location">Sélectionner l’emplacement de stockage</string>
     <string name="storage_unavailable">L’emplacement de stockage est indisponible</string>
     <string name="storage_name">%1$s (%2$d Mo libres)</string>
-    <string name="offline_mode_icon">Icône du mode hors ligne</string>
-    <string name="offline_mode_go_online">Passer en ligne</string>
     <string name="downloading_error">Erreur lors du téléchargement</string>
     <string name="not_enough_storage">Cet élément nécessite %1$s d’espace libre mais seulement %2$s est disponible</string>
     <string name="cancel_download">Annuler le téléchargement</string>
     <string name="stop_download">Arrêter le téléchargement</string>
     <string name="internal">Interne</string>
-    <string name="no_server_connection">Aucune connexion au serveur Jellyfin. Pour regarder hors ligne, activez le mode hors ligne</string>
     <string name="cancel_download_message">Êtes-vous sûr de vouloir annuler le téléchargement ?</string>
     <string name="preparing_download">Préparation du téléchargement</string>
     <string name="downloaded_indicator">Indicateur de téléchargement</string>
@@ -93,9 +89,7 @@
     <string name="remove_from_favorites">Retirer des favoris</string>
     <string name="sort_by_options_6">Aléatoire</string>
     <string name="title_settings">Paramètres</string>
-    <string name="title_download">Téléchargements</string>
     <string name="not_set">Non défini</string>
-    <string name="offline_mode">Mode hors ligne</string>
     <string name="season_number">Saison %1$d</string>
     <string name="episode_number">Épisode %1$d</string>
     <string name="show_stacktrace">Afficher la trace d’erreur</string>

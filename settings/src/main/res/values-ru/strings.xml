@@ -52,7 +52,6 @@
     <string name="player_gestures_seek">Жест перемотки</string>
     <string name="amoled_theme">Тёмная тема AMOLED</string>
     <string name="amoled_theme_summary">Использовать тему AMOLED с чистым чёрным фоном</string>
-    <string name="offline_mode">Офлайн-Режим</string>
     <string name="app_language">Язык приложения</string>
     <string name="settings_category_interface">Интерфейс</string>
     <string name="pref_player_trickplay">Миниатюры при перемотке</string>

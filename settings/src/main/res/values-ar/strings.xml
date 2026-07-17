@@ -60,8 +60,6 @@
     <string name="picture_in_picture">نافذة صورة منبثقة</string>
     <string name="picture_in_picture_gesture">إيماءة النافذة المنبثقة</string>
     <string name="picture_in_picture_gesture_summary">استخدم زر النافذة الرئيسية أو الإيماءة لعرض الصورة داخل نافذة منبثقة أثناء عرض الفيديو</string>
-    <string name="offline_mode">­وضع عدم الاتصال</string>
-    <string name="offline_mode_summary">مشاهدة الأفلام والمسلسلات بدون اتصال بالخادم</string>
     <string name="theme">الثمة</string>
     <string name="theme_system">حسب النظام</string>
     <string name="theme_light">فاتح</string>

@@ -31,6 +31,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.toRoute
 import androidx.window.core.layout.WindowSizeClass
 import dev.jdtech.jellyfin.core.R as CoreR
+import dev.jdtech.jellyfin.core.presentation.utils.ContainerTransformHost
+import dev.jdtech.jellyfin.core.presentation.utils.ContainerTransformScreen
 import dev.jdtech.jellyfin.models.CollectionType
 import dev.jdtech.jellyfin.models.FindroidBoxSet
 import dev.jdtech.jellyfin.models.FindroidCollection
@@ -41,7 +43,6 @@ import dev.jdtech.jellyfin.models.FindroidMovie
 import dev.jdtech.jellyfin.models.FindroidSeason
 import dev.jdtech.jellyfin.models.FindroidShow
 import dev.jdtech.jellyfin.presentation.film.CollectionScreen
-import dev.jdtech.jellyfin.presentation.film.DownloadsScreen
 import dev.jdtech.jellyfin.presentation.film.EpisodeScreen
 import dev.jdtech.jellyfin.presentation.film.FavoritesScreen
 import dev.jdtech.jellyfin.presentation.film.HomeScreen
@@ -60,7 +61,6 @@ import dev.jdtech.jellyfin.presentation.setup.login.LoginScreen
 import dev.jdtech.jellyfin.presentation.setup.servers.ServersScreen
 import dev.jdtech.jellyfin.presentation.setup.users.UsersScreen
 import dev.jdtech.jellyfin.presentation.setup.welcome.WelcomeScreen
-import dev.jdtech.jellyfin.presentation.utils.LocalOfflineMode
 import java.util.UUID
 import kotlinx.serialization.Serializable
 
@@ -79,8 +79,6 @@ import kotlinx.serialization.Serializable
 @Serializable data object HomeRoute
 
 @Serializable data object MediaRoute
-
-@Serializable data object DownloadsRoute
 
 @Serializable
 data class LibraryRoute(
@@ -126,13 +124,6 @@ val mediaTab =
         icon = CoreR.drawable.ic_library,
         route = MediaRoute,
     )
-val downloadsTab =
-    TabBarItem(
-        title = CoreR.string.title_download,
-        icon = CoreR.drawable.ic_download,
-        route = DownloadsRoute,
-    )
-
 @Composable
 fun NavigationRoot(
     navController: NavHostController,
@@ -140,8 +131,6 @@ fun NavigationRoot(
     hasCurrentServer: Boolean,
     hasCurrentUser: Boolean,
 ) {
-    val isOfflineMode = LocalOfflineMode.current
-
     val startDestination =
         when {
             hasServers && hasCurrentServer && hasCurrentUser -> HomeRoute
@@ -150,11 +139,7 @@ fun NavigationRoot(
             else -> WelcomeRoute
         }
 
-    val navigationItems =
-        when (isOfflineMode) {
-            false -> listOf(homeTab, mediaTab, downloadsTab)
-            true -> listOf(homeTab, downloadsTab)
-        }
+    val navigationItems = listOf(homeTab, mediaTab)
     val navigationItemClassNames = navigationItems.map { it.route::class.qualifiedName }
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -221,25 +206,28 @@ fun NavigationRoot(
         layoutType = customNavSuiteType,
         state = navigationSuiteScaffoldState,
     ) {
-        NavHost(
-            navController = navController,
-            startDestination = startDestination,
-            enterTransition = { fadeIn(tween(300)) },
-            exitTransition = { fadeOut(tween(300)) },
-        ) {
+        ContainerTransformHost {
+            NavHost(
+                navController = navController,
+                startDestination = startDestination,
+                enterTransition = { fadeIn(tween(300)) },
+                exitTransition = { fadeOut(tween(300)) },
+            ) {
             composable<WelcomeRoute> {
                 WelcomeScreen(onContinueClick = { navController.safeNavigate(ServersRoute) })
             }
             composable<ServersRoute> {
-                ServersScreen(
-                    navigateToUsers = { navController.safeNavigate(UsersRoute) },
-                    navigateToAddresses = { serverId ->
-                        navController.safeNavigate(ServerAddressesRoute(serverId))
-                    },
-                    onAddClick = { navController.safeNavigate(AddServerRoute) },
-                    onBackClick = { navController.safePopBackStack() },
-                    showBack = navController.previousBackStackEntry != null,
-                )
+                ContainerTransformScreen(consumePendingTransform = true) {
+                    ServersScreen(
+                        navigateToUsers = { navController.safeNavigate(UsersRoute) },
+                        navigateToAddresses = { serverId ->
+                            navController.safeNavigate(ServerAddressesRoute(serverId))
+                        },
+                        onAddClick = { navController.safeNavigate(AddServerRoute) },
+                        onBackClick = { navController.safePopBackStack() },
+                        showBack = navController.previousBackStackEntry != null,
+                    )
+                }
             }
             composable<AddServerRoute> {
                 AddServerScreen(
@@ -255,21 +243,23 @@ fun NavigationRoot(
                 )
             }
             composable<UsersRoute> {
-                UsersScreen(
-                    navigateToHome = { navigateHome(navController) },
-                    onChangeServerClick = {
-                        navController.safeNavigate(ServersRoute) {
-                            popUpTo(ServersRoute) { inclusive = false }
-                            launchSingleTop = true
-                        }
-                    },
-                    onAddClick = { navController.safeNavigate(LoginRoute()) },
-                    onBackClick = { navController.safePopBackStack() },
-                    onPublicUserClick = { username ->
-                        navController.safeNavigate(LoginRoute(username = username))
-                    },
-                    showBack = navController.previousBackStackEntry != null,
-                )
+                ContainerTransformScreen(consumePendingTransform = true) {
+                    UsersScreen(
+                        navigateToHome = { navigateHome(navController) },
+                        onChangeServerClick = {
+                            navController.safeNavigate(ServersRoute) {
+                                popUpTo(ServersRoute) { inclusive = false }
+                                launchSingleTop = true
+                            }
+                        },
+                        onAddClick = { navController.safeNavigate(LoginRoute()) },
+                        onBackClick = { navController.safePopBackStack() },
+                        onPublicUserClick = { username ->
+                            navController.safeNavigate(LoginRoute(username = username))
+                        },
+                        showBack = navController.previousBackStackEntry != null,
+                    )
+                }
             }
             composable<LoginRoute> { backStackEntry ->
                 val route: LoginRoute = backStackEntry.toRoute()
@@ -291,7 +281,8 @@ fun NavigationRoot(
                 )
             }
             composable<HomeRoute> {
-                HomeScreen(
+                ContainerTransformScreen {
+                    HomeScreen(
                     onLibraryClick = {
                         navController.safeNavigate(
                             LibraryRoute(
@@ -318,151 +309,171 @@ fun NavigationRoot(
                     onItemClick = { item ->
                         navigateToItem(navController = navController, item = item)
                     },
-                )
+                    )
+                }
             }
             composable<MediaRoute> {
-                MediaScreen(
+                ContainerTransformScreen {
+                    MediaScreen(
                     onItemClick = { item ->
                         navigateToItem(navController = navController, item = item)
                     },
                     onFavoritesClick = { navController.safeNavigate(FavoritesRoute) },
                     searchExpanded = searchExpanded,
                     onSearchExpand = { searchExpanded = it },
-                )
-            }
-            composable<DownloadsRoute> {
-                DownloadsScreen(
-                    onItemClick = { item ->
-                        navigateToItem(navController = navController, item = item)
-                    }
-                )
+                    )
+                }
             }
             composable<LibraryRoute> { backStackEntry ->
                 val route: LibraryRoute = backStackEntry.toRoute()
-                LibraryScreen(
-                    libraryId = UUID.fromString(route.libraryId),
-                    libraryName = route.libraryName,
-                    libraryType = route.libraryType,
-                    onItemClick = { item ->
-                        navigateToItem(navController = navController, item = item)
-                    },
-                    navigateBack = { navController.safePopBackStack() },
-                )
+                ContainerTransformScreen(consumePendingTransform = true) {
+                    LibraryScreen(
+                        libraryId = UUID.fromString(route.libraryId),
+                        libraryName = route.libraryName,
+                        libraryType = route.libraryType,
+                        onItemClick = { item ->
+                            navigateToItem(navController = navController, item = item)
+                        },
+                        navigateBack = { navController.safePopBackStack() },
+                    )
+                }
             }
             composable<CollectionRoute> { backStackEntry ->
                 val route: CollectionRoute = backStackEntry.toRoute()
-                CollectionScreen(
-                    collectionId = UUID.fromString(route.collectionId),
-                    collectionName = route.collectionName,
-                    onItemClick = { item ->
-                        navigateToItem(navController = navController, item = item)
-                    },
-                    navigateBack = { navController.safePopBackStack() },
-                )
+                ContainerTransformScreen(consumePendingTransform = true) {
+                    CollectionScreen(
+                        collectionId = UUID.fromString(route.collectionId),
+                        collectionName = route.collectionName,
+                        onItemClick = { item ->
+                            navigateToItem(navController = navController, item = item)
+                        },
+                        navigateBack = { navController.safePopBackStack() },
+                    )
+                }
             }
             composable<FavoritesRoute> {
-                FavoritesScreen(
-                    onItemClick = { item ->
-                        navigateToItem(navController = navController, item = item)
-                    },
-                    navigateBack = { navController.safePopBackStack() },
-                )
+                ContainerTransformScreen(consumePendingTransform = true) {
+                    FavoritesScreen(
+                        onItemClick = { item ->
+                            navigateToItem(navController = navController, item = item)
+                        },
+                        navigateBack = { navController.safePopBackStack() },
+                    )
+                }
             }
             composable<MovieRoute> { backStackEntry ->
                 val route: MovieRoute = backStackEntry.toRoute()
-                MovieScreen(
-                    movieId = UUID.fromString(route.movieId),
-                    navigateBack = { navController.safePopBackStack() },
-                    navigateHome = { navigateHome(navController) },
-                    navigateToPerson = { personId ->
-                        navController.safeNavigate(PersonRoute(personId.toString()))
-                    },
-                )
+                ContainerTransformScreen(consumePendingTransform = true) {
+                    MovieScreen(
+                        movieId = UUID.fromString(route.movieId),
+                        navigateBack = { navController.safePopBackStack() },
+                        navigateHome = { navigateHome(navController) },
+                        navigateToPerson = { personId ->
+                            navController.safeNavigate(PersonRoute(personId.toString()))
+                        },
+                    )
+                }
             }
             composable<ShowRoute> { backStackEntry ->
                 val route: ShowRoute = backStackEntry.toRoute()
-                ShowScreen(
-                    showId = UUID.fromString(route.showId),
-                    navigateBack = { navController.safePopBackStack() },
-                    navigateHome = { navigateHome(navController) },
-                    navigateToItem = { item ->
-                        navigateToItem(navController = navController, item = item)
-                    },
-                    navigateToPerson = { personId ->
-                        navController.safeNavigate(PersonRoute(personId.toString()))
-                    },
-                )
+                ContainerTransformScreen(consumePendingTransform = true) {
+                    ShowScreen(
+                        showId = UUID.fromString(route.showId),
+                        navigateBack = { navController.safePopBackStack() },
+                        navigateHome = { navigateHome(navController) },
+                        navigateToItem = { item ->
+                            navigateToItem(navController = navController, item = item)
+                        },
+                        navigateToPerson = { personId ->
+                            navController.safeNavigate(PersonRoute(personId.toString()))
+                        },
+                    )
+                }
             }
             composable<SeasonRoute> { backStackEntry ->
                 val route: SeasonRoute = backStackEntry.toRoute()
-                SeasonScreen(
-                    seasonId = UUID.fromString(route.seasonId),
-                    navigateBack = { navController.safePopBackStack() },
-                    navigateHome = { navigateHome(navController) },
-                    navigateToItem = { item ->
-                        navigateToItem(navController = navController, item = item)
-                    },
-                    navigateToSeries = { seriesId ->
-                        navController.safeNavigate(ShowRoute(showId = seriesId.toString())) {
-                            popUpTo(ShowRoute(showId = seriesId.toString()))
-                            launchSingleTop = true
-                        }
-                    },
-                )
+                ContainerTransformScreen(consumePendingTransform = true) {
+                    SeasonScreen(
+                        seasonId = UUID.fromString(route.seasonId),
+                        navigateBack = { navController.safePopBackStack() },
+                        navigateHome = { navigateHome(navController) },
+                        navigateToItem = { item ->
+                            navigateToItem(navController = navController, item = item)
+                        },
+                        navigateToSeries = { seriesId ->
+                            navController.safeNavigate(ShowRoute(showId = seriesId.toString())) {
+                                popUpTo(ShowRoute(showId = seriesId.toString()))
+                                launchSingleTop = true
+                            }
+                        },
+                    )
+                }
             }
             composable<EpisodeRoute> { backStackEntry ->
                 val route: EpisodeRoute = backStackEntry.toRoute()
-                EpisodeScreen(
-                    episodeId = UUID.fromString(route.episodeId),
-                    navigateBack = { navController.safePopBackStack() },
-                    navigateHome = { navigateHome(navController) },
-                    navigateToPerson = { personId ->
-                        navController.safeNavigate(PersonRoute(personId.toString()))
-                    },
-                    navigateToSeason = { seasonId ->
-                        navController.safeNavigate(SeasonRoute(seasonId = seasonId.toString())) {
-                            popUpTo(SeasonRoute(seasonId = seasonId.toString()))
-                            launchSingleTop = true
-                        }
-                    },
-                )
+                ContainerTransformScreen(consumePendingTransform = true) {
+                    EpisodeScreen(
+                        episodeId = UUID.fromString(route.episodeId),
+                        navigateBack = { navController.safePopBackStack() },
+                        navigateHome = { navigateHome(navController) },
+                        navigateToPerson = { personId ->
+                            navController.safeNavigate(PersonRoute(personId.toString()))
+                        },
+                        navigateToSeason = { seasonId ->
+                            navController.safeNavigate(SeasonRoute(seasonId = seasonId.toString())) {
+                                popUpTo(SeasonRoute(seasonId = seasonId.toString()))
+                                launchSingleTop = true
+                            }
+                        },
+                    )
+                }
             }
             composable<PersonRoute> { backStackEntry ->
                 val route: PersonRoute = backStackEntry.toRoute()
-                PersonScreen(
-                    personId = UUID.fromString(route.personId),
-                    navigateBack = { navController.safePopBackStack() },
-                    navigateHome = { navigateHome(navController) },
-                    navigateToItem = { item ->
-                        navigateToItem(navController = navController, item = item)
-                    },
-                )
+                ContainerTransformScreen(consumePendingTransform = true) {
+                    PersonScreen(
+                        personId = UUID.fromString(route.personId),
+                        navigateBack = { navController.safePopBackStack() },
+                        navigateHome = { navigateHome(navController) },
+                        navigateToItem = { item ->
+                            navigateToItem(navController = navController, item = item)
+                        },
+                    )
+                }
             }
             composable<SettingsRoute> { backStackEntry ->
                 val route: SettingsRoute = backStackEntry.toRoute()
-                SettingsScreen(
-                    indexes = route.indexes,
-                    navigateToSettings = { indexes ->
-                        navController.safeNavigate(SettingsRoute(indexes = indexes))
-                    },
-                    navigateToSettingsFileEdit = { filePath ->
-                        navController.safeNavigate(SettingsFileEditRoute(filePath = filePath))
-                    },
-                    navigateToServers = { navController.safeNavigate(ServersRoute) },
-                    navigateToUsers = { navController.safeNavigate(UsersRoute) },
-                    navigateToAbout = { navController.safeNavigate(AboutRoute) },
-                    navigateBack = { navController.safePopBackStack() },
-                )
+                ContainerTransformScreen(consumePendingTransform = true) {
+                    SettingsScreen(
+                        indexes = route.indexes,
+                        navigateToSettings = { indexes ->
+                            navController.safeNavigate(SettingsRoute(indexes = indexes))
+                        },
+                        navigateToSettingsFileEdit = { filePath ->
+                            navController.safeNavigate(SettingsFileEditRoute(filePath = filePath))
+                        },
+                        navigateToServers = { navController.safeNavigate(ServersRoute) },
+                        navigateToUsers = { navController.safeNavigate(UsersRoute) },
+                        navigateToAbout = { navController.safeNavigate(AboutRoute) },
+                        navigateBack = { navController.safePopBackStack() },
+                    )
+                }
             }
             composable<SettingsFileEditRoute> { backStackEntry ->
                 val route: SettingsFileEditRoute = backStackEntry.toRoute()
-                SettingsFileEditScreen(
-                    filePath = route.filePath,
-                    navigateBack = { navController.safePopBackStack() })
+                ContainerTransformScreen(consumePendingTransform = true) {
+                    SettingsFileEditScreen(
+                        filePath = route.filePath,
+                        navigateBack = { navController.safePopBackStack() },
+                    )
+                }
             }
             composable<AboutRoute> {
-                AboutScreen(navigateBack = { navController.safePopBackStack() })
+                ContainerTransformScreen(consumePendingTransform = true) {
+                    AboutScreen(navigateBack = { navController.safePopBackStack() })
+                }
             }
+        }
         }
     }
 }

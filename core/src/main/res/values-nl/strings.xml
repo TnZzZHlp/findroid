@@ -49,7 +49,6 @@
     <string name="next_up">Volgende</string>
     <string name="series_poster">Series poster</string>
     <string name="no_favorites">Jij hebt geen favoriten</string>
-    <string name="no_downloads">Jij hebt niks gedownload</string>
     <string name="device_name">Apparaatnaam</string>
     <string name="error_preparing_player_items">Fout bij het voorbereiden van spelers items.</string>
     <string name="view_details">Bekijk details</string>
@@ -62,10 +61,7 @@
     <string name="subtitle">Ondertiteling</string>
     <string name="size">Grootte</string>
     <string name="privacy_policy_notice">Door Findroid te gebruikt wordt ingestemd met de <a href="https://raw.githubusercontent.com/jarnedemeulemeester/findroid/main/PRIVACY">Privacy Policy</a> welke noemt dat wij geen enkele data verzamelen</string>
-    <string name="offline_mode_icon">Offline Modus icoon</string>
-    <string name="offline_mode_go_online">Ga online</string>
     <string name="not_enough_storage">Dit item heeft %1$s vrije ruimte nodig, maar slechts %2$s is beschikbaar</string>
-    <string name="no_server_connection">Geen verbinding met de Jellyfin server, om offline te kijken zet Offline Modus aan</string>
     <string name="select_storage_location">Selecteer opslag locatie</string>
     <string name="storage_unavailable">Opslag locatie is niet beschikbaar</string>
     <string name="internal">Intern</string>
@@ -92,11 +88,9 @@
     <string name="remove_from_favorites">Van favorieten verwijderen</string>
     <string name="collection_no_media">Deze collectie bevat geen media</string>
     <string name="title_settings">Instellingen</string>
-    <string name="title_download">Downloads</string>
     <string name="season_number">Seizoen %1$d</string>
     <string name="episode_number">Aflevering %1$d</string>
     <string name="sort_by_options_6">Willekeurig</string>
-    <string name="offline_mode">Offline Modus</string>
     <string name="not_set">Niet ingesteld</string>
     <string name="manage_servers">Servers beheren</string>
     <string name="show_stacktrace">Toon stacktrace</string>

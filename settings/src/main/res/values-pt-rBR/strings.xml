@@ -52,7 +52,6 @@
     <string name="amoled_theme_summary">Use o tema AMOLED com um fundo preto</string>
     <string name="player_gestures_seek">Gesto de buscar</string>
     <string name="player_gestures_seek_summary">Deslize horizontalmente para buscar para frente ou para trás</string>
-    <string name="offline_mode">Modo off-line</string>
     <string name="app_language">Idioma do aplicativo</string>
     <string name="picture_in_picture">Picture-in-picture - PiP</string>
     <string name="picture_in_picture_gesture">Gestos do botão iniciar Picture-in-Picture</string>
@@ -77,7 +76,6 @@
     <string name="home_continue_watching">Mostrar continuar assistindo</string>
     <string name="home_next_up">Mostrar a seguir</string>
     <string name="home_latest">Exibir itens recentes</string>
-    <string name="offline_mode_summary">Assistir filmes e séries sem conexão ao servidor</string>
     <string name="mb">MB</string>
     <string name="ms">ms</string>
     <string name="seconds">s</string>

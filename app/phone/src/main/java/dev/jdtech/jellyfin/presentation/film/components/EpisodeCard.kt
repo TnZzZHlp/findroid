@@ -26,6 +26,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyEpisode
+import dev.jdtech.jellyfin.core.presentation.utils.containerTransform
+import dev.jdtech.jellyfin.core.presentation.utils.containerTransformOnClick
+import dev.jdtech.jellyfin.core.presentation.utils.rememberContainerTransformKey
 import dev.jdtech.jellyfin.models.FindroidEpisode
 import dev.jdtech.jellyfin.models.isDownloaded
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
@@ -34,14 +37,17 @@ import dev.jdtech.jellyfin.presentation.theme.spacings
 @Composable
 fun EpisodeCard(episode: FindroidEpisode, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val backgroundColor = MaterialTheme.colorScheme.background
+    val transformKey = rememberContainerTransformKey(episode.id)
+    val transformedOnClick = containerTransformOnClick(transformKey, onClick)
 
     Row(
         modifier =
             modifier
                 .height(84.dp)
                 .fillMaxWidth()
+                .containerTransform(transformKey)
                 .clip(MaterialTheme.shapes.medium)
-                .clickable(onClick = onClick)
+                .clickable(onClick = transformedOnClick)
     ) {
         Box {
             ItemPoster(

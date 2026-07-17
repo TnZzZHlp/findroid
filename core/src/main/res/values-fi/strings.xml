@@ -8,7 +8,6 @@
     <string name="title_media">Oma media</string>
     <string name="title_favorite">Suosikit</string>
     <string name="title_settings">Asetukset</string>
-    <string name="title_download">Lataukset</string>
     <string name="view_all">Näytä kaikki</string>
     <string name="error_loading_data">Virhe tietojen haussa</string>
     <string name="show_stacktrace">Näytä stacktrace</string>
@@ -30,7 +29,6 @@
     <string name="series_poster">Sarjan juliste</string>
     <string name="collection_no_media">Tämä kokoelma on tyhjä</string>
     <string name="no_favorites">Sinulla ei ole suosikkeja</string>
-    <string name="no_downloads">Sinulla ei ole mitään ladattuna</string>
     <string name="search">Hae</string>
     <string name="no_search_results">Ei hakutuloksia</string>
     <string name="device_name">Laitteen nimi</string>
@@ -70,12 +68,8 @@
     <string name="subtitle">Tekstitykset</string>
     <string name="subtitle_chip_text">CC</string>
     <string name="temp">temp</string>
-    <string name="offline_mode">Offline-tila</string>
-    <string name="offline_mode_icon">Offline-tila kuvake</string>
-    <string name="offline_mode_go_online">Siirry verkkoon</string>
     <string name="downloading_error">Lataaminen epäonnistui</string>
     <string name="not_enough_storage">Tarvitset lataamiseen %1$s tallennustilaa, mutta vain %2$s on saatavilla</string>
-    <string name="no_server_connection">Jellyfin-palvelimeen ei saatu yhteyttä, vaihda Offline-tilaan katsoaksesi ilman verkkoyhteyttä</string>
     <string name="select_storage_location">Valitse tallennuspaikka</string>
     <string name="storage_unavailable">Tallenuspaikka ei ole saatavilla</string>
     <string name="internal">Sisäinen muisti</string>

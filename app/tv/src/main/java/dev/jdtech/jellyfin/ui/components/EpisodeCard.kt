@@ -27,14 +27,18 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyEpisode
+import dev.jdtech.jellyfin.core.presentation.utils.containerTransform
+import dev.jdtech.jellyfin.core.presentation.utils.containerTransformOnClick
+import dev.jdtech.jellyfin.core.presentation.utils.rememberContainerTransformKey
 import dev.jdtech.jellyfin.models.FindroidEpisode
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.presentation.theme.spacings
 
 @Composable
 fun EpisodeCard(episode: FindroidEpisode, onClick: (FindroidEpisode) -> Unit) {
+    val transformKey = rememberContainerTransformKey(episode.id)
     Surface(
-        onClick = { onClick(episode) },
+        onClick = containerTransformOnClick(transformKey) { onClick(episode) },
         shape = ClickableSurfaceDefaults.shape(shape = RoundedCornerShape(10.dp)),
         colors =
             ClickableSurfaceDefaults.colors(
@@ -47,7 +51,7 @@ fun EpisodeCard(episode: FindroidEpisode, onClick: (FindroidEpisode) -> Unit) {
                     Border(BorderStroke(4.dp, Color.White), shape = RoundedCornerShape(10.dp))
             ),
         scale = ClickableSurfaceScale.None,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().containerTransform(transformKey),
     ) {
         Row(modifier = Modifier.padding(MaterialTheme.spacings.small)) {
             Box(modifier = Modifier.width(160.dp)) {

@@ -52,7 +52,6 @@
     <string name="extra_info_summary">Zobraziť detailné informácie o zvuku, videu a titulkoch</string>
     <string name="amoled_theme">AMOLED temný motív</string>
     <string name="amoled_theme_summary">Použiť AMOLED motív s úplne čiernym pozadím</string>
-    <string name="offline_mode">Offline Režim</string>
     <string name="app_language">Jazyk aplikácie</string>
     <string name="picture_in_picture">Obraz v obraze</string>
     <string name="picture_in_picture_gesture">Gesto domov obrazu v obraze</string>

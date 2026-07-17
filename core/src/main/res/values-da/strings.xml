@@ -27,7 +27,6 @@
     <string name="descending">Faldende</string>
     <string name="add">Tilføj</string>
     <string name="downloading_error">Fejl under download</string>
-    <string name="offline_mode_go_online">Gå online</string>
     <string name="select_storage_location">Vælg lagerlokation</string>
     <string name="storage_unavailable">Lagerlokation er utilgængelig</string>
     <string name="internal">Intern</string>
@@ -38,10 +37,8 @@
     <string name="search_hint">Søg film, serier, episoder…</string>
     <string name="view_details_underlined"><u>Se detaljer</u></string>
     <string name="size">Størrelse</string>
-    <string name="no_server_connection">Ingen forbindelse til Jellyfin-server, slå Offline Mode til for at se offline</string>
     <string name="cancel_download_message">Er du sikker på, at du vil annullere downloadningen?</string>
     <string name="no_favorites">Du har ingen favoritter</string>
-    <string name="no_downloads">Du har ikke noget downloadet</string>
     <string name="search">Søg</string>
     <string name="no_search_results">Ingen søgeresultater</string>
     <string name="device_name">Enhedsnavn</string>
@@ -81,7 +78,6 @@
     <string name="sort_by_options_1">IMDB-bedømmelse</string>
     <string name="sort_by_options_2">Forældre-bedømmelse</string>
     <string name="title_settings">Indstillinger</string>
-    <string name="title_download">Downloads</string>
     <string name="season_number">Sæson %1$d</string>
     <string name="episode_number">Episode %1$d</string>
     <string name="series_poster">Plakat for serie</string>
@@ -90,8 +86,6 @@
     <string name="sort_by_options_6">Tilfældig</string>
     <string name="subtitle_chip_text">CC</string>
     <string name="temp">midlertidig</string>
-    <string name="offline_mode">Offline Mode</string>
-    <string name="offline_mode_icon">Ikon for offlinetilstand</string>
     <string name="not_enough_storage">Dette element kræver %1$s ledig lagerplads, men kun %2$s er tilgængeligt</string>
     <string name="privacy_policy_notice">Ved at bruge Findroid accepterer du <a href="https://raw.githubusercontent.com/jarnedemeulemeester/findroid/main/PRIVACY">Privatlivspolitikken</a> som angiver, at vi ikke indsamler nogen data</string>
     <string name="live_tv">Live-TV</string>

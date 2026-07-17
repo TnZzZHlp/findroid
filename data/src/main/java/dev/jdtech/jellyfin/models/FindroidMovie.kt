@@ -40,8 +40,18 @@ suspend fun BaseItemDto.toFindroidMovie(
 ): FindroidMovie {
     val sources = mutableListOf<FindroidSource>()
     sources.addAll(mediaSources?.map { it.toFindroidSource(jellyfinRepository, id) } ?: emptyList())
+    val trickplayInfos =
+        trickplay
+            ?.mapValues { it.value[it.value.keys.max()]!!.toFindroidTrickplayInfo() }
+            ?.toMutableMap() ?: mutableMapOf()
     if (serverDatabase != null) {
-        sources.addAll(serverDatabase.getSources(id).map { it.toFindroidSource(serverDatabase) })
+        val localSources = serverDatabase.getSources(id).map { it.toFindroidSource(serverDatabase) }
+        sources.addAll(localSources)
+        for (source in localSources) {
+            serverDatabase.getTrickplayInfo(source.id)?.toFindroidTrickplayInfo()?.let {
+                trickplayInfos[source.id] = it
+            }
+        }
     }
     return FindroidMovie(
         id = id,
@@ -66,8 +76,7 @@ suspend fun BaseItemDto.toFindroidMovie(
         trailer = remoteTrailers?.getOrNull(0)?.url,
         images = toFindroidImages(jellyfinRepository),
         chapters = toFindroidChapters(),
-        trickplayInfo =
-            trickplay?.mapValues { it.value[it.value.keys.max()]!!.toFindroidTrickplayInfo() },
+        trickplayInfo = trickplayInfos,
     )
 }
 

@@ -8,6 +8,7 @@ import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.models.FindroidMovie
 import dev.jdtech.jellyfin.models.FindroidSourceType
 import dev.jdtech.jellyfin.models.FindroidSources
+import dev.jdtech.jellyfin.models.isPlayableLocalFile
 import dev.jdtech.jellyfin.player.core.domain.models.ExternalSubtitle
 import dev.jdtech.jellyfin.player.core.domain.models.PlayerChapter
 import dev.jdtech.jellyfin.player.core.domain.models.PlayerItem
@@ -43,10 +44,16 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
                     movie
                 }
                 BaseItemKind.SERIES -> {
-                    val nextUpEpisode = repository.getNextUp(itemId).firstOrNull()
+                    val localSeasons = repository.getSeasons(itemId, localOnly = true)
+                    val useLocalPlaylist = localSeasons.isNotEmpty()
+                    val nextUpEpisode =
+                        if (useLocalPlaylist) null
+                        else repository.getNextUp(itemId).firstOrNull()
 
                     val season =
-                        if (nextUpEpisode != null) {
+                        if (useLocalPlaylist) {
+                            localSeasons.first()
+                        } else if (nextUpEpisode != null) {
                             repository.getSeason(nextUpEpisode.seasonId)
                         } else {
                             val seasons = repository.getSeasons(itemId)
@@ -62,6 +69,7 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
                                 seriesId = itemId,
                                 seasonId = season.id,
                                 fields = listOf(ItemFields.CHAPTERS, ItemFields.TRICKPLAY),
+                                localOnly = useLocalPlaylist,
                             )
                             .filter { !it.missing }
 
@@ -76,14 +84,25 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
                 }
                 BaseItemKind.SEASON -> {
                     val season = repository.getSeason(itemId)
+                    val localEpisodes =
+                        repository.getEpisodes(
+                            seriesId = season.seriesId,
+                            seasonId = season.id,
+                            fields = listOf(ItemFields.CHAPTERS, ItemFields.TRICKPLAY),
+                            localOnly = true,
+                        )
                     val episodes =
-                        repository
-                            .getEpisodes(
-                                seriesId = season.seriesId,
-                                seasonId = season.id,
-                                fields = listOf(ItemFields.CHAPTERS, ItemFields.TRICKPLAY),
-                            )
-                            .filter { !it.missing }
+                        if (localEpisodes.isNotEmpty()) {
+                            localEpisodes
+                        } else {
+                            repository
+                                .getEpisodes(
+                                    seriesId = season.seriesId,
+                                    seasonId = season.id,
+                                    fields = listOf(ItemFields.CHAPTERS, ItemFields.TRICKPLAY),
+                                )
+                                .filter { !it.missing }
+                        }
 
                     if (episodes.isEmpty()) {
                         return null
@@ -97,14 +116,26 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
                 BaseItemKind.EPISODE -> {
                     val episode = repository.getEpisode(itemId)
 
-                    val episodes =
+                    val localEpisodes =
                         repository
                             .getEpisodes(
                                 seriesId = episode.seriesId,
                                 seasonId = episode.seasonId,
                                 fields = listOf(ItemFields.CHAPTERS, ItemFields.TRICKPLAY),
+                                localOnly = true,
                             )
-                            .filter { !it.missing }
+                    val episodes =
+                        if (localEpisodes.any { it.id == episode.id }) {
+                            localEpisodes
+                        } else {
+                            repository
+                                .getEpisodes(
+                                    seriesId = episode.seriesId,
+                                    seasonId = episode.seasonId,
+                                    fields = listOf(ItemFields.CHAPTERS, ItemFields.TRICKPLAY),
+                                )
+                                .filter { !it.missing }
+                        }
 
                     items = episodes
                     episode
@@ -209,7 +240,9 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
         val mediaSources = repository.getMediaSources(id, true)
         val mediaSource =
             if (mediaSourceIndex == null) {
-                mediaSources.firstOrNull { it.type == FindroidSourceType.LOCAL } ?: mediaSources[0]
+                mediaSources.firstOrNull { it.isPlayableLocalFile() }
+                    ?: mediaSources.firstOrNull { it.type == FindroidSourceType.REMOTE }
+                    ?: error("No playable media source found for item $id")
             } else {
                 mediaSources[mediaSourceIndex]
             }

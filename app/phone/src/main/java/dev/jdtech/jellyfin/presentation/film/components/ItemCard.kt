@@ -23,6 +23,9 @@ import androidx.compose.ui.unit.dp
 import dev.jdtech.jellyfin.core.R
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyEpisode
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyMovie
+import dev.jdtech.jellyfin.core.presentation.utils.containerTransform
+import dev.jdtech.jellyfin.core.presentation.utils.containerTransformOnClick
+import dev.jdtech.jellyfin.core.presentation.utils.rememberContainerTransformKey
 import dev.jdtech.jellyfin.models.FindroidEpisode
 import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.models.isDownloaded
@@ -36,6 +39,8 @@ fun ItemCard(
     onClick: (FindroidItem) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val transformKey = rememberContainerTransformKey(item.id)
+    val transformedOnClick = containerTransformOnClick(transformKey) { onClick(item) }
     val width =
         when (direction) {
             Direction.HORIZONTAL -> 260
@@ -45,8 +50,9 @@ fun ItemCard(
         modifier =
             modifier
                 .width(width.dp)
+                .containerTransform(transformKey)
                 .clip(MaterialTheme.shapes.small)
-                .clickable(onClick = { onClick(item) })
+                .clickable(onClick = transformedOnClick)
     ) {
         Surface(shape = MaterialTheme.shapes.small) {
             Box {

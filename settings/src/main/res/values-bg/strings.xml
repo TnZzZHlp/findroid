@@ -56,7 +56,6 @@
     <string name="picture_in_picture">Картина в картината (PiP)</string>
     <string name="picture_in_picture_gesture">Жест „Начало“ за Картина в картината</string>
     <string name="picture_in_picture_gesture_summary">Използвайте бутона „Начало“ или съответния жест, за да влезете в режим „Картина в картината“, докато видеото се възпроизвежда</string>
-    <string name="offline_mode">Офлайн режим</string>
     <string name="player_start_maximized">Стартиране на цял екран</string>
     <string name="player_start_maximized_summary">Отваряне в режим на цял екран по подразбиране</string>
     <string name="player_gestures_chapter_skip_summary">Дълго натискане в лявата/дясната част за прескачане на глави (отменя жеста за 2x скорост)</string>
@@ -75,7 +74,6 @@
     <string name="home_continue_watching">Показване на „Продължи гледането“</string>
     <string name="home_next_up">Показване на „Следващо“</string>
     <string name="home_latest">Показване на най-новите елементи</string>
-    <string name="offline_mode_summary">Гледайте филми и сериали без връзка със сървъра</string>
     <string name="mb">MB</string>
     <string name="ms">мс</string>
     <string name="seconds">с</string>

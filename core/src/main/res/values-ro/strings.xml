@@ -14,7 +14,6 @@
     <string name="next_up">Urmează</string>
     <string name="libraries">Biblioteci</string>
     <string name="series_poster">Posterul serialului</string>
-    <string name="no_downloads">Nu aveți nimic descărcat</string>
     <string name="search">Căutare</string>
     <string name="no_search_results">Niciun rezultat găsit</string>
     <string name="error_preparing_player_items">Eroare la pregătirea elementelor player-ului.</string>
@@ -42,10 +41,8 @@
     <string name="subtitle">Subtitrări</string>
     <string name="subtitle_chip_text">CC</string>
     <string name="temp">temp</string>
-    <string name="offline_mode_icon">Iconița modului offline</string>
     <string name="downloading_error">Eroare în timpul descărcării</string>
     <string name="not_enough_storage">Acest lucru necesită %1$s de spațiu de stocare liber însă este disponibil doar %2$s</string>
-    <string name="no_server_connection">Nu există conexiune către serverul Jellyfin, pentru a viziona offline activează modul offline</string>
     <string name="select_storage_location">Selectați locația de stocare</string>
     <string name="storage_unavailable">Locația de stocare selectată nu este disponibilă</string>
     <string name="internal">Intern</string>
@@ -84,7 +81,6 @@
     <string name="preparing_download">Se pregătește descărcarea</string>
     <string name="episode_name_extended">S%1$d:E%2$d - %3$s</string>
     <string name="episode_name_extended_with_end">S%1$d:E%2$d-%3$d - %4$s</string>
-    <string name="offline_mode_go_online">Conectare online</string>
     <string name="live_tv">TV Live</string>
     <string name="play">Redă</string>
     <string name="remove_from_favorites">Eliminați de la favorite</string>
@@ -95,8 +91,6 @@
     <string name="track_selection">[%1$s] %2$s (%3$s)</string>
     <string name="title_settings">Setări</string>
     <string name="not_set">Nu se aplica</string>
-    <string name="title_download">Descărcări</string>
-    <string name="offline_mode">Modul Offline</string>
     <string name="season_number">Sezonul %1$d</string>
     <string name="episode_number">Episodul %1$d</string>
     <string name="runtime_minutes_left">%1$d min rămase</string>
