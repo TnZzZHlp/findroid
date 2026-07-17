@@ -25,7 +25,11 @@ class FavoritesViewModel @Inject constructor(private val repository: JellyfinRep
     private val _state = MutableStateFlow(CollectionState())
     val state = _state.asStateFlow()
 
-    fun loadItems() {
+    private var hasLoaded = false
+
+    fun loadItems(forceRefresh: Boolean = false) {
+        if (!forceRefresh && hasLoaded) return
+
         viewModelScope.launch {
             _state.emit(_state.value.copy(isLoading = true, error = null))
 
@@ -67,7 +71,10 @@ class FavoritesViewModel @Inject constructor(private val repository: JellyfinRep
                         }
                 }
 
-                _state.emit(_state.value.copy(isLoading = false, sections = sections))
+                hasLoaded = true
+                _state.emit(
+                    _state.value.copy(isLoading = false, sections = sections, error = null)
+                )
             } catch (e: Exception) {
                 _state.emit(_state.value.copy(isLoading = false, error = e))
             }

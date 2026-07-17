@@ -14,12 +14,17 @@ class MediaViewModel @Inject constructor(private val repository: JellyfinReposit
     private val _state = MutableStateFlow(MediaState())
     val state = _state.asStateFlow()
 
-    fun loadData() {
+    private var hasLoaded = false
+
+    fun loadData(forceRefresh: Boolean = false) {
+        if (!forceRefresh && hasLoaded) return
+
         viewModelScope.launch {
             _state.emit(_state.value.copy(isLoading = true, error = null))
             try {
                 val libraries = repository.getLibraries()
-                _state.emit(_state.value.copy(libraries = libraries))
+                hasLoaded = true
+                _state.emit(_state.value.copy(libraries = libraries, error = null))
             } catch (e: Exception) {
                 _state.emit(_state.value.copy(error = e))
             }
@@ -30,7 +35,7 @@ class MediaViewModel @Inject constructor(private val repository: JellyfinReposit
     fun onAction(action: MediaAction) {
         when (action) {
             is MediaAction.OnRetryClick -> {
-                loadData()
+                loadData(forceRefresh = true)
             }
             else -> Unit
         }

@@ -45,6 +45,7 @@ fun HomeSection(
                     item = item,
                     direction = Direction.HORIZONTAL,
                     onClick = { onAction(HomeAction.OnItemClick(item)) },
+                    containerTransformKey = section.id to item.id,
                 )
             }
         }

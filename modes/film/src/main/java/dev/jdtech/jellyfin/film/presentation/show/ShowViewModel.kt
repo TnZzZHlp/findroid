@@ -23,13 +23,15 @@ class ShowViewModel @Inject constructor(private val repository: JellyfinReposito
 
     lateinit var showId: UUID
 
-    fun loadShow(showId: UUID) {
+    fun loadShow(showId: UUID, forceRefresh: Boolean = false) {
         this.showId = showId
+        if (!forceRefresh && _state.value.show?.id == showId) return
+
         viewModelScope.launch {
             try {
-                val show = repository.getShow(showId)
-                val nextUp = getNextUp(showId)
-                val seasons = repository.getSeasons(showId)
+                val show = repository.getShow(showId, forceRefresh = forceRefresh)
+                val nextUp = getNextUp(showId, forceRefresh = forceRefresh)
+                val seasons = repository.getSeasons(showId, forceRefresh = forceRefresh)
                 val actors = getActors(show)
                 val director = getDirector(show)
                 val writers = getWriters(show)
@@ -41,6 +43,7 @@ class ShowViewModel @Inject constructor(private val repository: JellyfinReposito
                         actors = actors,
                         director = director,
                         writers = writers,
+                        error = null,
                     )
                 )
             } catch (e: Exception) {
@@ -49,8 +52,8 @@ class ShowViewModel @Inject constructor(private val repository: JellyfinReposito
         }
     }
 
-    private suspend fun getNextUp(showId: UUID): FindroidEpisode? {
-        val nextUpItems = repository.getNextUp(showId)
+    private suspend fun getNextUp(showId: UUID, forceRefresh: Boolean): FindroidEpisode? {
+        val nextUpItems = repository.getNextUp(showId, forceRefresh = forceRefresh)
         return nextUpItems.getOrNull(0)
     }
 
@@ -77,25 +80,25 @@ class ShowViewModel @Inject constructor(private val repository: JellyfinReposito
             is ShowAction.MarkAsPlayed -> {
                 viewModelScope.launch {
                     repository.markAsPlayed(showId)
-                    loadShow(showId)
+                    loadShow(showId, forceRefresh = true)
                 }
             }
             is ShowAction.UnmarkAsPlayed -> {
                 viewModelScope.launch {
                     repository.markAsUnplayed(showId)
-                    loadShow(showId)
+                    loadShow(showId, forceRefresh = true)
                 }
             }
             is ShowAction.MarkAsFavorite -> {
                 viewModelScope.launch {
                     repository.markAsFavorite(showId)
-                    loadShow(showId)
+                    loadShow(showId, forceRefresh = true)
                 }
             }
             is ShowAction.UnmarkAsFavorite -> {
                 viewModelScope.launch {
                     repository.unmarkAsFavorite(showId)
-                    loadShow(showId)
+                    loadShow(showId, forceRefresh = true)
                 }
             }
             else -> Unit

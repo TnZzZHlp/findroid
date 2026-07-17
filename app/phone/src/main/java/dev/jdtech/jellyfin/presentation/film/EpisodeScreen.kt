@@ -16,6 +16,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -260,7 +261,7 @@ private fun EpisodeScreenLayout(
                 }
                 Spacer(Modifier.height(paddingBottom))
             }
-        }
+        } ?: CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
 
         ItemTopBar(
             hasBackButton = true,

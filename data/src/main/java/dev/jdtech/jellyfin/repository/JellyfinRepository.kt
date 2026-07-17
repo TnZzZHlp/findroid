@@ -29,7 +29,7 @@ interface JellyfinRepository {
 
     suspend fun getMovie(itemId: UUID): FindroidMovie
 
-    suspend fun getShow(itemId: UUID): FindroidShow
+    suspend fun getShow(itemId: UUID, forceRefresh: Boolean = false): FindroidShow
 
     suspend fun getSeason(itemId: UUID): FindroidSeason
 
@@ -73,9 +73,16 @@ interface JellyfinRepository {
 
     suspend fun getLatestMedia(parentId: UUID): List<FindroidItem>
 
-    suspend fun getSeasons(seriesId: UUID, localOnly: Boolean = false): List<FindroidSeason>
+    suspend fun getSeasons(
+        seriesId: UUID,
+        localOnly: Boolean = false,
+        forceRefresh: Boolean = false,
+    ): List<FindroidSeason>
 
-    suspend fun getNextUp(seriesId: UUID? = null): List<FindroidEpisode>
+    suspend fun getNextUp(
+        seriesId: UUID? = null,
+        forceRefresh: Boolean = false,
+    ): List<FindroidEpisode>
 
     suspend fun getEpisodes(
         seriesId: UUID,

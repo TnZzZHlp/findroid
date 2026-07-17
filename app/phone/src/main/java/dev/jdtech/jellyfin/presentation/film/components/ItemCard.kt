@@ -38,8 +38,9 @@ fun ItemCard(
     direction: Direction,
     onClick: (FindroidItem) -> Unit,
     modifier: Modifier = Modifier,
+    containerTransformKey: Any = item.id,
 ) {
-    val transformKey = rememberContainerTransformKey(item.id)
+    val transformKey = rememberContainerTransformKey(containerTransformKey)
     val transformedOnClick = containerTransformOnClick(transformKey) { onClick(item) }
     val width =
         when (direction) {
@@ -50,11 +51,13 @@ fun ItemCard(
         modifier =
             modifier
                 .width(width.dp)
-                .containerTransform(transformKey)
                 .clip(MaterialTheme.shapes.small)
                 .clickable(onClick = transformedOnClick)
     ) {
-        Surface(shape = MaterialTheme.shapes.small) {
+        Surface(
+            shape = MaterialTheme.shapes.small,
+            modifier = Modifier.containerTransform(transformKey),
+        ) {
             Box {
                 ItemPoster(item = item, direction = direction)
                 Row(

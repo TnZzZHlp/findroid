@@ -39,7 +39,7 @@ import dev.jdtech.jellyfin.presentation.theme.spacings
 
 @Composable
 fun HomeCarouselItem(item: FindroidItem, onAction: (HomeAction) -> Unit) {
-    val transformKey = rememberContainerTransformKey(item.id)
+    val transformKey = rememberContainerTransformKey("home_carousel" to item.id)
     val colorStops =
         arrayOf(
             0.0f to Color.Black.copy(alpha = 0.1f),

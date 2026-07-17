@@ -43,6 +43,7 @@ fun HomeView(
                     item = item,
                     direction = Direction.VERTICAL,
                     onClick = { onAction(HomeAction.OnItemClick(it)) },
+                    containerTransformKey = view.id to item.id,
                 )
             }
         }

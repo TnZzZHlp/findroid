@@ -33,7 +33,7 @@ ktfmt is applied to all subprojects with `kotlinLangStyle()`.
 ## Requirements
 
 - **JDK 21** (Temurin distribution in CI)
-- Android SDK with API 36 (compileSdk)
+- Android SDK with API 36 (compileSdk), Build Tools 36.1.0
 - Ruby + Bundler for Fastlane (publishing only)
 
 ## Module Structure
@@ -71,7 +71,8 @@ Where `{abi}` is one of: `arm64-v8a`, `armeabi-v7a`, `x86_64`, `x86`.
 - Room database with schema in `data/schemas/`
 - Core library desugaring enabled (`android.desugar_jdk_libs`)
 - Release builds use ProGuard with rules keeping `dev.jdtech.jellyfin.**` class names
-- libmpv is `compileOnly` - optional player backend
+- Uses Jellyfin SDK (`org.jellyfin.sdk:jellyfin-core`) for API integration
+- libmpv (`dev.jdtech.mpv:libmpv`) bundled as `implementation` dependency in `player:local`
 
 ## Publishing
 
@@ -80,3 +81,11 @@ Triggered on version tags (`v*`). Uses Fastlane:
 bundle exec fastlane publish
 ```
 Requires signing keystore and Play API credentials as environment variables.
+
+### Local Release Signing
+
+- For local signed release requests, use the existing gitignored `release-signing.p12` keystore and the credentials in the gitignored `.env` file.
+- `.env` defines `SIGNING_KEYSTORE_PATH`, `SIGNING_KEY_ALIAS`, `SIGNING_STORE_PASSWORD`, and `SIGNING_KEY_PASSWORD`.
+- Never print signing credentials, commit `.env` or the keystore, generate a replacement key, or fall back to the Android debug keystore unless the user explicitly requests a test signature.
+- Build both variants with `:app:phone:assembleLibreRelease` and `:app:tv:assembleLibreRelease`, sign each ABI APK with Android SDK `apksigner`, and verify every signed APK with `apksigner verify --verbose --print-certs`.
+- Keep unsigned APKs intact and write signed outputs with the `-signed.apk` suffix. Confirm that all signed APKs use the same release certificate fingerprint.

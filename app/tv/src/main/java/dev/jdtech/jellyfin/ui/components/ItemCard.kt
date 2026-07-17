@@ -41,8 +41,9 @@ fun ItemCard(
     direction: Direction,
     onClick: (FindroidItem) -> Unit,
     modifier: Modifier = Modifier,
+    containerTransformKey: Any = item.id,
 ) {
-    val transformKey = rememberContainerTransformKey(item.id)
+    val transformKey = rememberContainerTransformKey(containerTransformKey)
     val width =
         when (direction) {
             Direction.HORIZONTAL -> 260

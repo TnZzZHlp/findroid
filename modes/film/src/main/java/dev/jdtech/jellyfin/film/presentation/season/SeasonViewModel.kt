@@ -19,8 +19,10 @@ class SeasonViewModel @Inject constructor(private val repository: JellyfinReposi
 
     lateinit var seasonId: UUID
 
-    fun loadSeason(seasonId: UUID) {
+    fun loadSeason(seasonId: UUID, forceRefresh: Boolean = false) {
         this.seasonId = seasonId
+        if (!forceRefresh && _state.value.season?.id == seasonId) return
+
         viewModelScope.launch {
             try {
                 val season = repository.getSeason(seasonId)
@@ -30,7 +32,9 @@ class SeasonViewModel @Inject constructor(private val repository: JellyfinReposi
                         seasonId = seasonId,
                         fields = listOf(ItemFields.OVERVIEW),
                     )
-                _state.emit(_state.value.copy(season = season, episodes = episodes))
+                _state.emit(
+                    _state.value.copy(season = season, episodes = episodes, error = null)
+                )
             } catch (e: Exception) {
                 _state.emit(_state.value.copy(error = e))
             }
@@ -42,25 +46,25 @@ class SeasonViewModel @Inject constructor(private val repository: JellyfinReposi
             is SeasonAction.MarkAsPlayed -> {
                 viewModelScope.launch {
                     repository.markAsPlayed(seasonId)
-                    loadSeason(seasonId)
+                    loadSeason(seasonId, forceRefresh = true)
                 }
             }
             is SeasonAction.UnmarkAsPlayed -> {
                 viewModelScope.launch {
                     repository.markAsUnplayed(seasonId)
-                    loadSeason(seasonId)
+                    loadSeason(seasonId, forceRefresh = true)
                 }
             }
             is SeasonAction.MarkAsFavorite -> {
                 viewModelScope.launch {
                     repository.markAsFavorite(seasonId)
-                    loadSeason(seasonId)
+                    loadSeason(seasonId, forceRefresh = true)
                 }
             }
             is SeasonAction.UnmarkAsFavorite -> {
                 viewModelScope.launch {
                     repository.unmarkAsFavorite(seasonId)
-                    loadSeason(seasonId)
+                    loadSeason(seasonId, forceRefresh = true)
                 }
             }
             else -> Unit

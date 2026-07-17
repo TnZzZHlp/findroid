@@ -19,13 +19,17 @@ class SearchViewModel @Inject constructor(private val repository: JellyfinReposi
     val state = _state.asStateFlow()
 
     var currentJob: Job? = null
+    private var lastSuccessfulQuery: String? = null
 
     private fun search(query: String) {
+        if (query == lastSuccessfulQuery) return
+
         currentJob?.cancel()
         currentJob =
             viewModelScope.launch {
                 try {
                     if (query.isBlank()) {
+                        lastSuccessfulQuery = query
                         _state.emit(SearchState(items = emptyList(), loading = false))
                         return@launch
                     }
@@ -33,6 +37,7 @@ class SearchViewModel @Inject constructor(private val repository: JellyfinReposi
                     _state.emit(_state.value.copy(loading = true))
                     val items = repository.getSearchItems(query)
 
+                    lastSuccessfulQuery = query
                     _state.emit(SearchState(items = items, loading = false))
                 } catch (_: CancellationException) {} catch (e: Exception) {
                     Timber.e(e)

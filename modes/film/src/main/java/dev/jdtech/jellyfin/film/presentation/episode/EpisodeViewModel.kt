@@ -30,8 +30,10 @@ constructor(
 
     lateinit var episodeId: UUID
 
-    fun loadEpisode(episodeId: UUID) {
+    fun loadEpisode(episodeId: UUID, forceRefresh: Boolean = false) {
         this.episodeId = episodeId
+        if (!forceRefresh && _state.value.episode?.id == episodeId) return
+
         viewModelScope.launch {
             try {
                 val episode = repository.getEpisode(episodeId)
@@ -44,6 +46,7 @@ constructor(
                         videoMetadata = videoMetadata,
                         actors = actors,
                         displayExtraInfo = displayExtraInfo,
+                        error = null,
                     )
                 )
             } catch (e: Exception) {
@@ -63,25 +66,25 @@ constructor(
             is EpisodeAction.MarkAsPlayed -> {
                 viewModelScope.launch {
                     repository.markAsPlayed(episodeId)
-                    loadEpisode(episodeId)
+                    loadEpisode(episodeId, forceRefresh = true)
                 }
             }
             is EpisodeAction.UnmarkAsPlayed -> {
                 viewModelScope.launch {
                     repository.markAsUnplayed(episodeId)
-                    loadEpisode(episodeId)
+                    loadEpisode(episodeId, forceRefresh = true)
                 }
             }
             is EpisodeAction.MarkAsFavorite -> {
                 viewModelScope.launch {
                     repository.markAsFavorite(episodeId)
-                    loadEpisode(episodeId)
+                    loadEpisode(episodeId, forceRefresh = true)
                 }
             }
             is EpisodeAction.UnmarkAsFavorite -> {
                 viewModelScope.launch {
                     repository.unmarkAsFavorite(episodeId)
-                    loadEpisode(episodeId)
+                    loadEpisode(episodeId, forceRefresh = true)
                 }
             }
             else -> Unit

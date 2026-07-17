@@ -30,8 +30,10 @@ constructor(
 
     lateinit var movieId: UUID
 
-    fun loadMovie(movieId: UUID) {
+    fun loadMovie(movieId: UUID, forceRefresh: Boolean = false) {
         this.movieId = movieId
+        if (!forceRefresh && _state.value.movie?.id == movieId) return
+
         viewModelScope.launch {
             try {
                 val movie = repository.getMovie(movieId)
@@ -48,6 +50,7 @@ constructor(
                         director = director,
                         writers = writers,
                         displayExtraInfo = displayExtraInfo,
+                        error = null,
                     )
                 )
             } catch (e: Exception) {
@@ -79,25 +82,25 @@ constructor(
             is MovieAction.MarkAsPlayed -> {
                 viewModelScope.launch {
                     repository.markAsPlayed(movieId)
-                    loadMovie(movieId)
+                    loadMovie(movieId, forceRefresh = true)
                 }
             }
             is MovieAction.UnmarkAsPlayed -> {
                 viewModelScope.launch {
                     repository.markAsUnplayed(movieId)
-                    loadMovie(movieId)
+                    loadMovie(movieId, forceRefresh = true)
                 }
             }
             is MovieAction.MarkAsFavorite -> {
                 viewModelScope.launch {
                     repository.markAsFavorite(movieId)
-                    loadMovie(movieId)
+                    loadMovie(movieId, forceRefresh = true)
                 }
             }
             is MovieAction.UnmarkAsFavorite -> {
                 viewModelScope.launch {
                     repository.unmarkAsFavorite(movieId)
-                    loadMovie(movieId)
+                    loadMovie(movieId, forceRefresh = true)
                 }
             }
             else -> Unit

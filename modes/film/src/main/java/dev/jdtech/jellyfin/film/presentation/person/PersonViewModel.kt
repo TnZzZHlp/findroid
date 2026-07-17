@@ -20,6 +20,8 @@ class PersonViewModel @Inject internal constructor(private val repository: Jelly
     val state = _state.asStateFlow()
 
     fun loadPerson(personId: UUID) {
+        if (_state.value.person?.id == personId) return
+
         viewModelScope.launch {
             try {
                 val person = repository.getPerson(personId)
@@ -39,6 +41,7 @@ class PersonViewModel @Inject internal constructor(private val repository: Jelly
                         person = person,
                         starredInMovies = movies,
                         starredInShows = shows,
+                        error = null,
                     )
                 )
             } catch (e: Exception) {

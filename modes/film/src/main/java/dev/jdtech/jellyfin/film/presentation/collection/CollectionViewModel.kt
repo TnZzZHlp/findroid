@@ -26,7 +26,11 @@ class CollectionViewModel @Inject constructor(private val repository: JellyfinRe
     private val _state = MutableStateFlow(CollectionState())
     val state = _state.asStateFlow()
 
+    private var loadedParentId: UUID? = null
+
     fun loadItems(parentId: UUID) {
+        if (loadedParentId == parentId) return
+
         viewModelScope.launch {
             _state.emit(_state.value.copy(isLoading = true, error = null))
 
@@ -68,7 +72,10 @@ class CollectionViewModel @Inject constructor(private val repository: JellyfinRe
                         }
                 }
 
-                _state.emit(_state.value.copy(isLoading = false, sections = sections))
+                loadedParentId = parentId
+                _state.emit(
+                    _state.value.copy(isLoading = false, sections = sections, error = null)
+                )
             } catch (e: Exception) {
                 _state.emit(_state.value.copy(isLoading = false, error = e))
             }

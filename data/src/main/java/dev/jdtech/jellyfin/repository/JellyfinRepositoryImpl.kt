@@ -1,6 +1,8 @@
 package dev.jdtech.jellyfin.repository
 
 import android.content.Context
+import android.os.SystemClock
+import android.util.LruCache
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
@@ -62,6 +64,20 @@ class JellyfinRepositoryImpl(
     private val database: ServerDatabaseDao,
     private val appPreferences: AppPreferences,
 ) : JellyfinRepository {
+    private data class SeriesCacheKey(
+        val serverId: String?,
+        val userId: UUID,
+        val seriesId: UUID,
+    )
+
+    private data class CacheEntry<T>(val value: T, val cachedAt: Long)
+
+    private val showCache = LruCache<SeriesCacheKey, CacheEntry<FindroidShow>>(DETAIL_CACHE_SIZE)
+    private val seasonsCache =
+        LruCache<SeriesCacheKey, CacheEntry<List<FindroidSeason>>>(DETAIL_CACHE_SIZE)
+    private val nextUpCache =
+        LruCache<SeriesCacheKey, CacheEntry<List<FindroidEpisode>>>(DETAIL_CACHE_SIZE)
+
     override suspend fun getPublicSystemInfo(): PublicSystemInfo =
         withContext(Dispatchers.IO) { jellyfinApi.systemApi.getPublicSystemInfo().content }
 
@@ -96,17 +112,23 @@ class JellyfinRepositoryImpl(
             }
         }
 
-    override suspend fun getShow(itemId: UUID): FindroidShow =
+    override suspend fun getShow(itemId: UUID, forceRefresh: Boolean): FindroidShow =
         withContext(Dispatchers.IO) {
-            try {
-                jellyfinApi.userLibraryApi
-                    .getItem(itemId, jellyfinApi.userId!!)
-                    .content
-                    .toFindroidShow(this@JellyfinRepositoryImpl)
-            } catch (error: Exception) {
-                database.getShowOrNull(itemId)?.takeIf { hasPlayableLocalEpisode(itemId) }
-                    ?.toFindroidShow(database, jellyfinApi.userId!!) ?: throw error
-            }
+            val cacheKey = seriesCacheKey(itemId)
+            if (!forceRefresh) getCached(showCache, cacheKey)?.let { return@withContext it }
+
+            val show =
+                try {
+                    jellyfinApi.userLibraryApi
+                        .getItem(itemId, jellyfinApi.userId!!)
+                        .content
+                        .toFindroidShow(this@JellyfinRepositoryImpl)
+                } catch (error: Exception) {
+                    database.getShowOrNull(itemId)?.takeIf { hasPlayableLocalEpisode(itemId) }
+                        ?.toFindroidShow(database, jellyfinApi.userId!!) ?: throw error
+                }
+            putCached(showCache, cacheKey, show)
+            show
         }
 
     override suspend fun getSeason(itemId: UUID): FindroidSeason =
@@ -276,50 +298,73 @@ class JellyfinRepositoryImpl(
                 .mapNotNull { it.toFindroidItem(this@JellyfinRepositoryImpl, database) }
         }
 
-    override suspend fun getSeasons(seriesId: UUID, localOnly: Boolean): List<FindroidSeason> =
+    override suspend fun getSeasons(
+        seriesId: UUID,
+        localOnly: Boolean,
+        forceRefresh: Boolean,
+    ): List<FindroidSeason> =
         withContext(Dispatchers.IO) {
             if (localOnly) {
                 getLocalSeasons(seriesId)
             } else {
-                try {
-                    jellyfinApi.showsApi
-                        .getSeasons(seriesId, jellyfinApi.userId!!)
-                        .content
-                        .items
-                        .map { it.toFindroidSeason(this@JellyfinRepositoryImpl) }
-                } catch (error: Exception) {
-                    getLocalSeasons(seriesId).ifEmpty { throw error }
+                val cacheKey = seriesCacheKey(seriesId)
+                if (!forceRefresh) {
+                    getCached(seasonsCache, cacheKey)?.let { return@withContext it }
                 }
+
+                val seasons =
+                    try {
+                        jellyfinApi.showsApi
+                            .getSeasons(seriesId, jellyfinApi.userId!!)
+                            .content
+                            .items
+                            .map { it.toFindroidSeason(this@JellyfinRepositoryImpl) }
+                    } catch (error: Exception) {
+                        getLocalSeasons(seriesId).ifEmpty { throw error }
+                    }
+                putCached(seasonsCache, cacheKey, seasons)
+                seasons
             }
         }
 
-    override suspend fun getNextUp(seriesId: UUID?): List<FindroidEpisode> =
+    override suspend fun getNextUp(
+        seriesId: UUID?,
+        forceRefresh: Boolean,
+    ): List<FindroidEpisode> =
         withContext(Dispatchers.IO) {
-            try {
-                jellyfinApi.showsApi
-                    .getNextUp(
-                        jellyfinApi.userId!!,
-                        limit = 24,
-                        seriesId = seriesId,
-                        enableResumable = false,
-                    )
-                    .content
-                    .items
-                    .mapNotNull { it.toFindroidEpisode(this@JellyfinRepositoryImpl, database) }
-            } catch (error: Exception) {
-                val localNextUp = getLocalNextUp(seriesId)
-                val hasLocalEpisodes =
-                    if (seriesId != null) {
-                        hasPlayableLocalEpisode(seriesId)
-                    } else {
-                        database
-                            .getEpisodesByServerId(
-                                appPreferences.getValue(appPreferences.currentServer)!!
-                            )
-                            .any { hasPlayableLocalSource(it.id) }
-                    }
-                if (hasLocalEpisodes) localNextUp else throw error
+            val cacheKey = seriesId?.let(::seriesCacheKey)
+            if (!forceRefresh && cacheKey != null) {
+                getCached(nextUpCache, cacheKey)?.let { return@withContext it }
             }
+
+            val nextUp =
+                try {
+                    jellyfinApi.showsApi
+                        .getNextUp(
+                            jellyfinApi.userId!!,
+                            limit = 24,
+                            seriesId = seriesId,
+                            enableResumable = false,
+                        )
+                        .content
+                        .items
+                        .mapNotNull { it.toFindroidEpisode(this@JellyfinRepositoryImpl, database) }
+                } catch (error: Exception) {
+                    val localNextUp = getLocalNextUp(seriesId)
+                    val hasLocalEpisodes =
+                        if (seriesId != null) {
+                            hasPlayableLocalEpisode(seriesId)
+                        } else {
+                            database
+                                .getEpisodesByServerId(
+                                    appPreferences.getValue(appPreferences.currentServer)!!
+                                )
+                                .any { hasPlayableLocalSource(it.id) }
+                        }
+                    if (hasLocalEpisodes) localNextUp else throw error
+                }
+            if (cacheKey != null) putCached(nextUpCache, cacheKey, nextUp)
+            nextUp
         }
 
     override suspend fun getEpisodes(
@@ -674,5 +719,41 @@ class JellyfinRepositoryImpl(
 
     override fun getUserId(): UUID {
         return jellyfinApi.userId!!
+    }
+
+    private fun seriesCacheKey(seriesId: UUID) =
+        SeriesCacheKey(
+            serverId = appPreferences.getValue(appPreferences.currentServer),
+            userId = jellyfinApi.userId!!,
+            seriesId = seriesId,
+        )
+
+    private fun <T> getCached(
+        cache: LruCache<SeriesCacheKey, CacheEntry<T>>,
+        key: SeriesCacheKey,
+    ): T? =
+        synchronized(cache) {
+            val entry = cache.get(key) ?: return@synchronized null
+            if (SystemClock.elapsedRealtime() - entry.cachedAt >= DETAIL_CACHE_TTL_MILLIS) {
+                cache.remove(key)
+                null
+            } else {
+                entry.value
+            }
+        }
+
+    private fun <T> putCached(
+        cache: LruCache<SeriesCacheKey, CacheEntry<T>>,
+        key: SeriesCacheKey,
+        value: T,
+    ) {
+        synchronized(cache) {
+            cache.put(key, CacheEntry(value = value, cachedAt = SystemClock.elapsedRealtime()))
+        }
+    }
+
+    private companion object {
+        const val DETAIL_CACHE_SIZE = 50
+        const val DETAIL_CACHE_TTL_MILLIS = 5 * 60 * 1000L
     }
 }
