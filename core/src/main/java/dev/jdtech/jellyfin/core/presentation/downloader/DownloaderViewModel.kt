@@ -1,8 +1,6 @@
 package dev.jdtech.jellyfin.core.presentation.downloader
 
 import android.app.DownloadManager
-import android.os.Handler
-import android.os.Looper
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -12,8 +10,9 @@ import dev.jdtech.jellyfin.models.isPlayableLocalFile
 import dev.jdtech.jellyfin.models.isDownloading
 import dev.jdtech.jellyfin.utils.Downloader
 import javax.inject.Inject
-import kotlinx.coroutines.Runnable
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -29,7 +28,7 @@ class DownloaderViewModel @Inject constructor(private val downloader: Downloader
 
     var downloadId: Long? = null
 
-    private val handler = Handler(Looper.getMainLooper())
+    private var progressJob: Job? = null
 
     fun update(item: FindroidItem) {
         viewModelScope.launch {
@@ -48,10 +47,16 @@ class DownloaderViewModel @Inject constructor(private val downloader: Downloader
     private fun download(item: FindroidItem, storageIndex: Int = 0) {
         viewModelScope.launch {
             _state.emit(DownloaderState(status = DownloadManager.STATUS_PENDING))
+            val sourceId =
+                item.sources.firstOrNull { it.type == FindroidSourceType.REMOTE }?.id
+            if (sourceId == null) {
+                _state.emit(DownloaderState(status = DownloadManager.STATUS_FAILED))
+                return@launch
+            }
             val (downloadId, uiText) =
                 downloader.downloadItem(
                     item = item,
-                    sourceId = item.sources.first { it.type == FindroidSourceType.REMOTE }.id,
+                    sourceId = sourceId,
                     storageIndex = storageIndex,
                 )
             if (downloadId != -1L) {
@@ -68,7 +73,7 @@ class DownloaderViewModel @Inject constructor(private val downloader: Downloader
     private fun cancelDownload(item: FindroidItem) {
         viewModelScope.launch {
             // Stop progress polling
-            handler.removeCallbacksAndMessages(null)
+            progressJob?.cancel()
 
             // Cancel the download
             downloadId?.let { downloader.cancelDownload(item = item, downloadId = it) }
@@ -89,30 +94,34 @@ class DownloaderViewModel @Inject constructor(private val downloader: Downloader
     }
 
     private fun pollDownloadProgress(downloadId: Long?) {
-        handler.removeCallbacksAndMessages(null)
-        val downloadProgressRunnable =
-            object : Runnable {
-                override fun run() {
-                    viewModelScope.launch {
-                        val (status, progress) = downloader.getProgress(downloadId)
-                        _state.emit(
-                            DownloaderState(
-                                status = status,
-                                progress = progress.coerceAtLeast(0) / 100f,
-                            )
+        progressJob?.cancel()
+        progressJob =
+            viewModelScope.launch {
+                while (true) {
+                    val (status, progress) = downloader.getProgress(downloadId)
+                    _state.emit(
+                        DownloaderState(
+                            status = status,
+                            progress = progress.coerceAtLeast(0) / 100f,
                         )
-                    }
+                    )
 
-                    if (_state.value.status == DownloadManager.STATUS_SUCCESSFUL) {
-                        eventsChannel.trySend(DownloaderEvent.Successful)
-                    }
-
-                    if (_state.value.isDownloading) {
-                        handler.postDelayed(this, 1000L)
+                    when (status) {
+                        DownloadManager.STATUS_SUCCESSFUL -> {
+                            if (downloadId != null && downloader.finalizeDownload(downloadId)) {
+                                eventsChannel.send(DownloaderEvent.Successful)
+                            } else {
+                                _state.emit(
+                                    DownloaderState(status = DownloadManager.STATUS_FAILED)
+                                )
+                            }
+                            return@launch
+                        }
+                        DownloadManager.STATUS_FAILED -> return@launch
+                        else -> delay(1000L)
                     }
                 }
             }
-        handler.post(downloadProgressRunnable)
     }
 
     fun onAction(action: DownloaderAction) {
@@ -125,6 +134,6 @@ class DownloaderViewModel @Inject constructor(private val downloader: Downloader
 
     override fun onCleared() {
         super.onCleared()
-        handler.removeCallbacksAndMessages(null)
+        progressJob?.cancel()
     }
 }
