@@ -43,6 +43,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jdtech.jellyfin.PlayerActivity
 import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyShow
+import dev.jdtech.jellyfin.core.presentation.utils.containerTransform
+import dev.jdtech.jellyfin.core.presentation.utils.containerTransformOnClick
+import dev.jdtech.jellyfin.core.presentation.utils.rememberContainerTransformKey
 import dev.jdtech.jellyfin.film.presentation.show.ShowAction
 import dev.jdtech.jellyfin.film.presentation.show.ShowState
 import dev.jdtech.jellyfin.film.presentation.show.ShowViewModel
@@ -220,6 +223,11 @@ private fun ShowScreenLayout(state: ShowState, onAction: (ShowAction) -> Unit) {
                     )
                     Spacer(Modifier.height(MaterialTheme.spacings.medium))
                     state.nextUp?.let { nextUp ->
+                        val transformKey = rememberContainerTransformKey(nextUp.id)
+                        val onNextUpClick =
+                            containerTransformOnClick(transformKey) {
+                                onAction(ShowAction.NavigateToItem(nextUp))
+                            }
                         Text(
                             text = stringResource(CoreR.string.next_up),
                             style = MaterialTheme.typography.titleMedium,
@@ -228,8 +236,9 @@ private fun ShowScreenLayout(state: ShowState, onAction: (ShowAction) -> Unit) {
                         Column(
                             modifier =
                                 Modifier.widthIn(max = 420.dp)
+                                    .containerTransform(transformKey)
                                     .clip(MaterialTheme.shapes.small)
-                                    .clickable { onAction(ShowAction.NavigateToItem(nextUp)) }
+                                    .clickable(onClick = onNextUpClick)
                         ) {
                             ItemPoster(
                                 item = nextUp,
