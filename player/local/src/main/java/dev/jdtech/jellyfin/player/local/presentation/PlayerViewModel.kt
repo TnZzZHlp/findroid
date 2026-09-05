@@ -99,6 +99,8 @@ constructor(
     private var segmentsAutoSkipMode: String = "always"
 
     var playbackSpeed: Float = 1f
+    var videoQuality: VideoQuality = VideoQuality.AUTO
+        private set
 
     var isInPictureInPictureMode: Boolean = false
 
@@ -217,6 +219,36 @@ constructor(
                 }
 
             player.setMediaItems(mediaItems, 0, startPosition)
+            player.prepare()
+            player.play()
+        }
+    }
+
+    fun selectVideoQuality(quality: VideoQuality) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(fileLoaded = false) }
+            val playbackPosition = player.currentPosition
+            val item =
+                try {
+                    playlistManager.reloadCurrentPlayerItem(
+                        quality.maxStreamingBitrate,
+                        playbackPosition,
+                    )
+                } catch (e: Exception) {
+                    Timber.e(e, "Failed to select video quality")
+                    _uiState.update { it.copy(fileLoaded = true) }
+                    return@launch
+                }
+
+            if (item == null) {
+                _uiState.update { it.copy(fileLoaded = true) }
+                return@launch
+            }
+
+            videoQuality = quality
+            items = mutableListOf(item)
+            currentMediaItemIndex = 0
+            player.setMediaItem(item.toMediaItem(), playbackPosition)
             player.prepare()
             player.play()
         }

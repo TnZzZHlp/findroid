@@ -25,18 +25,29 @@ suspend fun MediaSourceInfo.toFindroidSource(
     jellyfinRepository: JellyfinRepository,
     itemId: UUID,
     includePath: Boolean = false,
+    forceTranscoding: Boolean = false,
 ): FindroidSource {
     val path =
-        when (protocol) {
-            MediaProtocol.FILE -> {
-                try {
-                    if (includePath) jellyfinRepository.getStreamUrl(itemId, id.orEmpty()) else ""
-                } catch (e: Exception) {
-                    ""
+        if (forceTranscoding) {
+            transcodingUrl
+                ?.let { url ->
+                    if (url.startsWith("http")) url
+                    else jellyfinRepository.getBaseUrl().trimEnd('/') + url
                 }
+                .orEmpty()
+        } else {
+            when (protocol) {
+                MediaProtocol.FILE -> {
+                    try {
+                        if (includePath) jellyfinRepository.getStreamUrl(itemId, id.orEmpty())
+                        else ""
+                    } catch (e: Exception) {
+                        ""
+                    }
+                }
+                MediaProtocol.HTTP -> this.path.orEmpty()
+                else -> ""
             }
-            MediaProtocol.HTTP -> this.path.orEmpty()
-            else -> ""
         }
     return FindroidSource(
         id = id.orEmpty(),

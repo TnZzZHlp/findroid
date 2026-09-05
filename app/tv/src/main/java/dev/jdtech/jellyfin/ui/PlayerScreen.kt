@@ -3,6 +3,7 @@ package dev.jdtech.jellyfin.ui
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,6 +30,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.zIndex
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -43,9 +45,12 @@ import androidx.tv.material3.ButtonDefaults
 import androidx.tv.material3.Glow
 import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
+import androidx.tv.material3.Surface
 import dev.jdtech.jellyfin.core.R
 import dev.jdtech.jellyfin.player.core.domain.models.Track
+import dev.jdtech.jellyfin.player.local.R as PlayerLocalR
 import dev.jdtech.jellyfin.player.local.presentation.PlayerViewModel
+import dev.jdtech.jellyfin.player.local.presentation.VideoQuality
 import dev.jdtech.jellyfin.presentation.theme.spacings
 import dev.jdtech.jellyfin.ui.components.player.VideoPlayerControlsLayout
 import dev.jdtech.jellyfin.ui.components.player.VideoPlayerMediaButton
@@ -83,6 +88,7 @@ fun PlayerScreen(
 
     var lifecycle by remember { mutableStateOf(Lifecycle.Event.ON_CREATE) }
     var mediaSession by remember { mutableStateOf<MediaSession?>(null) }
+    var showVideoQualityDialog by remember { mutableStateOf(false) }
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -203,6 +209,34 @@ fun PlayerScreen(
             },
             modifier = Modifier.fillMaxSize(),
         )
+        if (showVideoQualityDialog) {
+            Dialog(onDismissRequest = { showVideoQualityDialog = false }) {
+                Surface {
+                    Column(modifier = Modifier.padding(MaterialTheme.spacings.medium)) {
+                        Text(
+                            text = stringResource(PlayerLocalR.string.select_video_quality),
+                            style = MaterialTheme.typography.headlineMedium,
+                        )
+                        VideoQuality.entries.forEach { quality ->
+                            Surface(
+                                onClick = {
+                                    viewModel.selectVideoQuality(quality)
+                                    showVideoQualityDialog = false
+                                },
+                                modifier =
+                                    Modifier.padding(top = MaterialTheme.spacings.extraSmall),
+                            ) {
+                                Text(
+                                    text = quality.label,
+                                    modifier = Modifier.padding(MaterialTheme.spacings.medium),
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         val focusRequester = remember { FocusRequester() }
         VideoPlayerOverlay(
             modifier = Modifier.align(Alignment.BottomCenter),
@@ -217,6 +251,7 @@ fun PlayerScreen(
                     player = viewModel.player,
                     state = videoPlayerState,
                     focusRequester = focusRequester,
+                    onQualityClick = { showVideoQualityDialog = true },
                     // navigator = navigator,
                 )
             },
@@ -233,6 +268,7 @@ fun VideoPlayerControls(
     player: Player,
     state: VideoPlayerState,
     focusRequester: FocusRequester,
+    onQualityClick: () -> Unit,
     // navigator: DestinationsNavigator,
 ) {
     val onPlayPauseToggle = { shouldPlay: Boolean ->
@@ -258,6 +294,12 @@ fun VideoPlayerControls(
         },
         mediaActions = {
             Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.medium)) {
+                VideoPlayerMediaButton(
+                    icon = painterResource(id = R.drawable.ic_tv),
+                    state = state,
+                    isPlaying = isPlaying,
+                    onClick = onQualityClick,
+                )
                 VideoPlayerMediaButton(
                     icon = painterResource(id = R.drawable.ic_speaker),
                     state = state,

@@ -39,10 +39,13 @@ import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.BaseItemKind
 import org.jellyfin.sdk.model.api.DeviceOptionsDto
 import org.jellyfin.sdk.model.api.DeviceProfile
+import org.jellyfin.sdk.model.api.DlnaProfileType
+import org.jellyfin.sdk.model.api.EncodingContext
 import org.jellyfin.sdk.model.api.GeneralCommandType
 import org.jellyfin.sdk.model.api.ItemFields
 import org.jellyfin.sdk.model.api.ItemFilter
 import org.jellyfin.sdk.model.api.ItemSortBy
+import org.jellyfin.sdk.model.api.MediaStreamProtocol
 import org.jellyfin.sdk.model.api.MediaType
 import org.jellyfin.sdk.model.api.PlayMethod
 import org.jellyfin.sdk.model.api.PlaybackInfoDto
@@ -55,6 +58,7 @@ import org.jellyfin.sdk.model.api.RepeatMode
 import org.jellyfin.sdk.model.api.SortOrder as ItemSortOrder
 import org.jellyfin.sdk.model.api.SubtitleDeliveryMethod
 import org.jellyfin.sdk.model.api.SubtitleProfile
+import org.jellyfin.sdk.model.api.TranscodingProfile
 import org.jellyfin.sdk.model.api.UserConfiguration
 import timber.log.Timber
 
@@ -417,11 +421,17 @@ class JellyfinRepositoryImpl(
             }
         }
 
-    override suspend fun getMediaSources(itemId: UUID, includePath: Boolean): List<FindroidSource> =
+    override suspend fun getMediaSources(
+        itemId: UUID,
+        includePath: Boolean,
+        maxStreamingBitrate: Int?,
+    ): List<FindroidSource> =
         withContext(Dispatchers.IO) {
-            val localSources = getPlayableLocalSources(itemId)
-            if (localSources.isNotEmpty()) {
-                return@withContext localSources
+            if (maxStreamingBitrate == null) {
+                val localSources = getPlayableLocalSources(itemId)
+                if (localSources.isNotEmpty()) {
+                    return@withContext localSources
+                }
             }
 
             jellyfinApi.mediaInfoApi
@@ -431,25 +441,51 @@ class JellyfinRepositoryImpl(
                         userId = jellyfinApi.userId!!,
                         deviceProfile =
                             DeviceProfile(
-                                name = "Direct play all",
-                                maxStaticBitrate = 1_000_000_000,
-                                maxStreamingBitrate = 1_000_000_000,
+                                name = "Findroid",
+                                maxStaticBitrate = maxStreamingBitrate ?: 1_000_000_000,
+                                maxStreamingBitrate = maxStreamingBitrate ?: 1_000_000_000,
                                 codecProfiles = emptyList(),
                                 containerProfiles = emptyList(),
                                 directPlayProfiles = emptyList(),
-                                transcodingProfiles = emptyList(),
+                                transcodingProfiles =
+                                    if (maxStreamingBitrate == null) {
+                                        emptyList()
+                                    } else {
+                                        listOf(
+                                            TranscodingProfile(
+                                                container = "ts",
+                                                type = DlnaProfileType.VIDEO,
+                                                videoCodec = "h264",
+                                                audioCodec = "aac",
+                                                protocol = MediaStreamProtocol.HLS,
+                                                context = EncodingContext.STREAMING,
+                                                conditions = emptyList(),
+                                            )
+                                        )
+                                    },
                                 subtitleProfiles =
                                     listOf(
                                         SubtitleProfile("srt", SubtitleDeliveryMethod.EXTERNAL),
                                         SubtitleProfile("ass", SubtitleDeliveryMethod.EXTERNAL),
                                     ),
                             ),
-                        maxStreamingBitrate = 1_000_000_000,
+                        maxStreamingBitrate = maxStreamingBitrate ?: 1_000_000_000,
+                        enableDirectPlay = maxStreamingBitrate == null,
+                        enableDirectStream = maxStreamingBitrate == null,
+                        enableTranscoding = true,
+                        allowVideoStreamCopy = maxStreamingBitrate == null,
                     ),
                 )
                 .content
                 .mediaSources
-                .map { it.toFindroidSource(this@JellyfinRepositoryImpl, itemId, includePath) }
+                .map {
+                    it.toFindroidSource(
+                        this@JellyfinRepositoryImpl,
+                        itemId,
+                        includePath,
+                        forceTranscoding = maxStreamingBitrate != null,
+                    )
+                }
         }
 
     override suspend fun getStreamUrl(itemId: UUID, mediaSourceId: String): String =

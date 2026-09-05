@@ -93,7 +93,11 @@ interface JellyfinRepository {
         localOnly: Boolean = false,
     ): List<FindroidEpisode>
 
-    suspend fun getMediaSources(itemId: UUID, includePath: Boolean = false): List<FindroidSource>
+    suspend fun getMediaSources(
+        itemId: UUID,
+        includePath: Boolean = false,
+        maxStreamingBitrate: Int? = null,
+    ): List<FindroidSource>
 
     suspend fun getStreamUrl(itemId: UUID, mediaSourceId: String): String
 

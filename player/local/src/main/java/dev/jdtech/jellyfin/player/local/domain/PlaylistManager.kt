@@ -25,6 +25,7 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
     private var startItem: FindroidItem? = null
     private var items: List<FindroidItem> = emptyList()
     private val playerItems: MutableList<PlayerItem> = mutableListOf()
+    private var maxStreamingBitrate: Int? = null
     var currentItemIndex: Int = 0
 
     suspend fun getInitialItem(
@@ -146,6 +147,7 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
         }
 
         startItem = initialItem
+        maxStreamingBitrate = null
 
         currentItemIndex = items.indexOfFirst { it.id == initialItem.id }
 
@@ -229,17 +231,31 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
         currentItemIndex = items.indexOfFirst { it.id == itemId }
     }
 
+    suspend fun reloadCurrentPlayerItem(
+        maxStreamingBitrate: Int?,
+        playbackPosition: Long,
+    ): PlayerItem? {
+        this.maxStreamingBitrate = maxStreamingBitrate
+        val item = items.getOrNull(currentItemIndex) ?: return null
+        return item.toPlayerItem(null, playbackPosition).also {
+            playerItems.clear()
+            playerItems.add(it)
+        }
+    }
+
     private suspend fun FindroidItem.toPlayerItem(
         mediaSourceIndex: Int?,
         playbackPosition: Long,
     ): PlayerItem {
         Timber.d("Converting FindroidItem ${this.id} to PlayerItem")
 
-        val mediaSources = repository.getMediaSources(id, true)
+        val mediaSources = repository.getMediaSources(id, true, maxStreamingBitrate)
         val mediaSource =
             if (mediaSourceIndex == null) {
                 mediaSources.firstOrNull { it.isPlayableLocalFile() }
-                    ?: mediaSources.firstOrNull { it.type == FindroidSourceType.REMOTE }
+                    ?: mediaSources.firstOrNull {
+                        it.type == FindroidSourceType.REMOTE && it.path.isNotBlank()
+                    }
                     ?: error("No playable media source found for item $id")
             } else {
                 mediaSources[mediaSourceIndex]
