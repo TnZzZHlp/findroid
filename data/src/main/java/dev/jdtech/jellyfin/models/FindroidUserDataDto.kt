@@ -1,5 +1,6 @@
 package dev.jdtech.jellyfin.models
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import java.util.UUID
 
@@ -10,6 +11,7 @@ data class FindroidUserDataDto(
     val played: Boolean,
     val favorite: Boolean,
     val playbackPositionTicks: Long,
+    @ColumnInfo(defaultValue = "0") val subtitleDelayMs: Long = 0L,
     val toBeSynced: Boolean = false,
 )
 

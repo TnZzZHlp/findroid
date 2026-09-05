@@ -41,6 +41,12 @@ class TrackSelectionDialogFragment(
                 )
                 dialog.dismiss()
             }
+            if (type == C.TRACK_TYPE_TEXT && viewModel.supportsSubtitleDelay) {
+                builder.setNeutralButton(R.string.subtitle_delay) { _, _ ->
+                    SubtitleDelayDialogFragment(viewModel)
+                        .show(parentFragmentManager, "subtitledelaydialog")
+                }
+            }
             builder.create()
         } ?: throw IllegalStateException("Activity cannot be null")
     }

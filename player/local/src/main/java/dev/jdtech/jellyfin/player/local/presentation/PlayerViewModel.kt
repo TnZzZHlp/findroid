@@ -17,6 +17,8 @@ import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dev.jdtech.jellyfin.api.JellyfinApi
+import dev.jdtech.jellyfin.database.ServerDatabaseDao
 import dev.jdtech.jellyfin.models.FindroidSegment
 import dev.jdtech.jellyfin.models.FindroidSegmentType
 import dev.jdtech.jellyfin.player.core.domain.models.PlayerChapter
@@ -52,6 +54,8 @@ constructor(
     private val application: Application,
     private val playlistManager: PlaylistManager,
     private val repository: JellyfinRepository,
+    private val database: ServerDatabaseDao,
+    private val jellyfinApi: JellyfinApi,
     private val appPreferences: AppPreferences,
     private val savedStateHandle: SavedStateHandle,
 ) : ViewModel(), Player.Listener {
@@ -99,6 +103,12 @@ constructor(
     private var segmentsAutoSkipMode: String = "always"
 
     var playbackSpeed: Float = 1f
+    var subtitleDelayMs: Long = 0L
+        private set
+
+    val supportsSubtitleDelay: Boolean
+        get() = player is MPVPlayer
+
     var videoQuality: VideoQuality = VideoQuality.AUTO
         private set
 
@@ -402,6 +412,8 @@ constructor(
 
                         repository.postPlaybackStart(item.itemId)
 
+                        loadSubtitleDelay(item.itemId)
+
                         if (segmentsSkipButton || segmentsAutoSkip) {
                             getSegments(item.itemId)
                         }
@@ -520,6 +532,29 @@ constructor(
     fun selectSpeed(speed: Float) {
         player.setPlaybackSpeed(speed)
         playbackSpeed = speed
+    }
+
+    fun adjustSubtitleDelay(delayMs: Long) {
+        setSubtitleDelay(subtitleDelayMs + delayMs)
+    }
+
+    fun resetSubtitleDelay() {
+        setSubtitleDelay(0L)
+    }
+
+    private fun loadSubtitleDelay(itemId: UUID) {
+        val userId = jellyfinApi.userId ?: return
+        subtitleDelayMs = database.getUserDataOrCreateNew(itemId, userId).subtitleDelayMs
+        (player as? MPVPlayer)?.setSubtitleDelay(subtitleDelayMs)
+    }
+
+    private fun setSubtitleDelay(delayMs: Long) {
+        val itemId = player.currentMediaItem?.mediaId?.let(UUID::fromString) ?: return
+        val userId = jellyfinApi.userId ?: return
+        subtitleDelayMs = delayMs
+        database.getUserDataOrCreateNew(itemId, userId)
+        database.setSubtitleDelayMs(itemId, userId, delayMs)
+        (player as? MPVPlayer)?.setSubtitleDelay(delayMs)
     }
 
     private suspend fun getSegments(itemId: UUID) {

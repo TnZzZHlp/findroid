@@ -524,6 +524,10 @@ class MPVPlayer(
         mpvLib.setPropertyString(trackType.type, id)
     }
 
+    fun setSubtitleDelay(delayMs: Long) {
+        mpvLib.setPropertyDouble("sub-delay", delayMs / 1000.0)
+    }
+
     // Timeline wrapper
     private val timeline: Timeline =
         object : Timeline() {

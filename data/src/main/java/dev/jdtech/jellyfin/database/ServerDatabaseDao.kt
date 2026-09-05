@@ -122,6 +122,11 @@ interface ServerDatabaseDao {
     )
     fun setPlaybackPositionTicks(itemId: UUID, userId: UUID, playbackPositionTicks: Long)
 
+    @Query(
+        "UPDATE userdata SET subtitleDelayMs = :subtitleDelayMs WHERE itemId = :itemId AND userId = :userId"
+    )
+    fun setSubtitleDelayMs(itemId: UUID, userId: UUID, subtitleDelayMs: Long)
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertMediaStream(mediaStream: FindroidMediaStreamDto)
 
