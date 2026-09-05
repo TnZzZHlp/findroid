@@ -25,25 +25,24 @@ class SearchViewModel @Inject constructor(private val repository: JellyfinReposi
         if (query == lastSuccessfulQuery) return
 
         currentJob?.cancel()
-        currentJob =
-            viewModelScope.launch {
-                try {
-                    if (query.isBlank()) {
-                        lastSuccessfulQuery = query
-                        _state.emit(SearchState(items = emptyList(), loading = false))
-                        return@launch
-                    }
-
-                    _state.emit(_state.value.copy(loading = true))
-                    val items = repository.getSearchItems(query)
-
+        currentJob = viewModelScope.launch {
+            try {
+                if (query.isBlank()) {
                     lastSuccessfulQuery = query
-                    _state.emit(SearchState(items = items, loading = false))
-                } catch (_: CancellationException) {} catch (e: Exception) {
-                    Timber.e(e)
-                    _state.emit(_state.value.copy(loading = false))
+                    _state.emit(SearchState(items = emptyList(), loading = false))
+                    return@launch
                 }
+
+                _state.emit(_state.value.copy(loading = true))
+                val items = repository.getSearchItems(query)
+
+                lastSuccessfulQuery = query
+                _state.emit(SearchState(items = items, loading = false))
+            } catch (_: CancellationException) {} catch (e: Exception) {
+                Timber.e(e)
+                _state.emit(_state.value.copy(loading = false))
             }
+        }
     }
 
     fun onAction(action: SearchAction) {

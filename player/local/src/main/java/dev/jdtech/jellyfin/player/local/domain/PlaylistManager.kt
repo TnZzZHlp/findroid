@@ -47,8 +47,7 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
                     val localSeasons = repository.getSeasons(itemId, localOnly = true)
                     val useLocalPlaylist = localSeasons.isNotEmpty()
                     val nextUpEpisode =
-                        if (useLocalPlaylist) null
-                        else repository.getNextUp(itemId).firstOrNull()
+                        if (useLocalPlaylist) null else repository.getNextUp(itemId).firstOrNull()
 
                     val season =
                         if (useLocalPlaylist) {
@@ -117,13 +116,12 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
                     val episode = repository.getEpisode(itemId)
 
                     val localEpisodes =
-                        repository
-                            .getEpisodes(
-                                seriesId = episode.seriesId,
-                                seasonId = episode.seasonId,
-                                fields = listOf(ItemFields.CHAPTERS, ItemFields.TRICKPLAY),
-                                localOnly = true,
-                            )
+                        repository.getEpisodes(
+                            seriesId = episode.seriesId,
+                            seasonId = episode.seasonId,
+                            fields = listOf(ItemFields.CHAPTERS, ItemFields.TRICKPLAY),
+                            localOnly = true,
+                        )
                     val episodes =
                         if (localEpisodes.any { it.id == episode.id }) {
                             localEpisodes

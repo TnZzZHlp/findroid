@@ -10,10 +10,10 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
-import dev.jdtech.jellyfin.models.CollectionType
-import dev.jdtech.jellyfin.models.FindroidSeason
 import dev.jdtech.jellyfin.core.presentation.utils.ContainerTransformHost
 import dev.jdtech.jellyfin.core.presentation.utils.ContainerTransformScreen
+import dev.jdtech.jellyfin.models.CollectionType
+import dev.jdtech.jellyfin.models.FindroidSeason
 import dev.jdtech.jellyfin.presentation.film.LibraryScreen
 import dev.jdtech.jellyfin.presentation.film.SeasonScreen
 import dev.jdtech.jellyfin.presentation.film.ShowScreen
@@ -104,24 +104,45 @@ fun NavigationRoot(
             enterTransition = { fadeIn(tween(300)) },
             exitTransition = { fadeOut(tween(300)) },
         ) {
-        composable<WelcomeRoute> {
-            WelcomeScreen(onContinueClick = { navController.navigate(ServersRoute) })
-        }
-        composable<ServersRoute> {
-            ContainerTransformScreen(consumePendingTransform = true) {
-                ServersScreen(
-                    navigateToUsers = { navController.navigate(UsersRoute) },
-                    onAddClick = { navController.navigate(AddServerRoute) },
-                )
+            composable<WelcomeRoute> {
+                WelcomeScreen(onContinueClick = { navController.navigate(ServersRoute) })
             }
-        }
-        composable<AddServerRoute> {
-            AddServerScreen(onSuccess = { navController.navigate(UsersRoute) })
-        }
-        composable<UsersRoute> {
-            ContainerTransformScreen(consumePendingTransform = true) {
-                UsersScreen(
-                    navigateToHome = {
+            composable<ServersRoute> {
+                ContainerTransformScreen(consumePendingTransform = true) {
+                    ServersScreen(
+                        navigateToUsers = { navController.navigate(UsersRoute) },
+                        onAddClick = { navController.navigate(AddServerRoute) },
+                    )
+                }
+            }
+            composable<AddServerRoute> {
+                AddServerScreen(onSuccess = { navController.navigate(UsersRoute) })
+            }
+            composable<UsersRoute> {
+                ContainerTransformScreen(consumePendingTransform = true) {
+                    UsersScreen(
+                        navigateToHome = {
+                            navController.navigate(MainRoute) {
+                                popUpTo(startDestination) { inclusive = true }
+                            }
+                        },
+                        onChangeServerClick = {
+                            navController.navigate(ServersRoute) {
+                                popUpTo(ServersRoute) { inclusive = false }
+                                launchSingleTop = true
+                            }
+                        },
+                        onAddClick = { navController.navigate(LoginRoute()) },
+                        onPublicUserClick = { username ->
+                            navController.navigate(LoginRoute(username = username))
+                        },
+                    )
+                }
+            }
+            composable<LoginRoute> { backStackEntry ->
+                val route: LoginRoute = backStackEntry.toRoute()
+                LoginScreen(
+                    onSuccess = {
                         navController.navigate(MainRoute) {
                             popUpTo(startDestination) { inclusive = true }
                         }
@@ -132,171 +153,155 @@ fun NavigationRoot(
                             launchSingleTop = true
                         }
                     },
-                    onAddClick = { navController.navigate(LoginRoute()) },
-                    onPublicUserClick = { username ->
-                        navController.navigate(LoginRoute(username = username))
-                    },
+                    prefilledUsername = route.username,
                 )
             }
-        }
-        composable<LoginRoute> { backStackEntry ->
-            val route: LoginRoute = backStackEntry.toRoute()
-            LoginScreen(
-                onSuccess = {
-                    navController.navigate(MainRoute) {
-                        popUpTo(startDestination) { inclusive = true }
-                    }
-                },
-                onChangeServerClick = {
-                    navController.navigate(ServersRoute) {
-                        popUpTo(ServersRoute) { inclusive = false }
-                        launchSingleTop = true
-                    }
-                },
-                prefilledUsername = route.username,
-            )
-        }
-        composable<MainRoute> {
-            ContainerTransformScreen {
-                MainScreen(
-                    navigateToSettings = { navController.navigate(SettingsRoute) },
-                    navigateToLibrary = { libraryId, libraryName, libraryType ->
-                        navController.navigate(
-                            LibraryRoute(
-                                libraryId = libraryId.toString(),
-                                libraryName = libraryName,
-                                libraryType = libraryType,
+            composable<MainRoute> {
+                ContainerTransformScreen {
+                    MainScreen(
+                        navigateToSettings = { navController.navigate(SettingsRoute) },
+                        navigateToLibrary = { libraryId, libraryName, libraryType ->
+                            navController.navigate(
+                                LibraryRoute(
+                                    libraryId = libraryId.toString(),
+                                    libraryName = libraryName,
+                                    libraryType = libraryType,
+                                )
                             )
-                        )
-                    },
-                    navigateToMovie = { itemId ->
-                        navController.navigate(MovieRoute(itemId.toString()))
-                    },
-                    navigateToShow = { itemId ->
-                        navController.navigate(ShowRoute(itemId.toString()))
-                    },
-                    navigateToPlayer = { itemId, itemKind ->
-                        navController.navigate(
-                            PlayerRoute(itemId = itemId.toString(), itemKind = itemKind.serialName)
-                        )
-                    },
-                )
-            }
-        }
-        composable<LibraryRoute> { backStackEntry ->
-            val route: LibraryRoute = backStackEntry.toRoute()
-            ContainerTransformScreen(consumePendingTransform = true) {
-                LibraryScreen(
-                    libraryId = UUID.fromString(route.libraryId),
-                    libraryName = route.libraryName,
-                    libraryType = route.libraryType,
-                    navigateToLibrary = { libraryId, libraryName, libraryType ->
-                        navController.navigate(
-                            LibraryRoute(
-                                libraryId = libraryId.toString(),
-                                libraryName = libraryName,
-                                libraryType = libraryType,
+                        },
+                        navigateToMovie = { itemId ->
+                            navController.navigate(MovieRoute(itemId.toString()))
+                        },
+                        navigateToShow = { itemId ->
+                            navController.navigate(ShowRoute(itemId.toString()))
+                        },
+                        navigateToPlayer = { itemId, itemKind ->
+                            navController.navigate(
+                                PlayerRoute(
+                                    itemId = itemId.toString(),
+                                    itemKind = itemKind.serialName,
+                                )
                             )
-                        )
-                    },
-                    navigateToMovie = { itemId ->
-                        navController.navigate(MovieRoute(itemId.toString()))
-                    },
-                    navigateToShow = { itemId ->
-                        navController.navigate(ShowRoute(itemId.toString()))
-                    },
-                )
+                        },
+                    )
+                }
             }
-        }
-        composable<MovieRoute> { backStackEntry ->
-            val route: MovieRoute = backStackEntry.toRoute()
-            ContainerTransformScreen(consumePendingTransform = true) {
-                MovieScreen(
-                    movieId = UUID.fromString(route.itemId),
-                    navigateToPlayer = { itemId ->
-                        navController.navigate(
-                            PlayerRoute(
-                                itemId = itemId.toString(),
-                                itemKind = BaseItemKind.MOVIE.serialName,
+            composable<LibraryRoute> { backStackEntry ->
+                val route: LibraryRoute = backStackEntry.toRoute()
+                ContainerTransformScreen(consumePendingTransform = true) {
+                    LibraryScreen(
+                        libraryId = UUID.fromString(route.libraryId),
+                        libraryName = route.libraryName,
+                        libraryType = route.libraryType,
+                        navigateToLibrary = { libraryId, libraryName, libraryType ->
+                            navController.navigate(
+                                LibraryRoute(
+                                    libraryId = libraryId.toString(),
+                                    libraryName = libraryName,
+                                    libraryType = libraryType,
+                                )
                             )
-                        )
-                    },
-                )
+                        },
+                        navigateToMovie = { itemId ->
+                            navController.navigate(MovieRoute(itemId.toString()))
+                        },
+                        navigateToShow = { itemId ->
+                            navController.navigate(ShowRoute(itemId.toString()))
+                        },
+                    )
+                }
             }
-        }
-        composable<ShowRoute> { backStackEntry ->
-            val route: ShowRoute = backStackEntry.toRoute()
-            ContainerTransformScreen(consumePendingTransform = true) {
-                ShowScreen(
-                    showId = UUID.fromString(route.itemId),
-                    navigateToItem = { item ->
-                        when (item) {
-                            is FindroidSeason -> {
-                                navController.navigate(SeasonRoute(seasonId = item.id.toString()))
+            composable<MovieRoute> { backStackEntry ->
+                val route: MovieRoute = backStackEntry.toRoute()
+                ContainerTransformScreen(consumePendingTransform = true) {
+                    MovieScreen(
+                        movieId = UUID.fromString(route.itemId),
+                        navigateToPlayer = { itemId ->
+                            navController.navigate(
+                                PlayerRoute(
+                                    itemId = itemId.toString(),
+                                    itemKind = BaseItemKind.MOVIE.serialName,
+                                )
+                            )
+                        },
+                    )
+                }
+            }
+            composable<ShowRoute> { backStackEntry ->
+                val route: ShowRoute = backStackEntry.toRoute()
+                ContainerTransformScreen(consumePendingTransform = true) {
+                    ShowScreen(
+                        showId = UUID.fromString(route.itemId),
+                        navigateToItem = { item ->
+                            when (item) {
+                                is FindroidSeason -> {
+                                    navController.navigate(
+                                        SeasonRoute(seasonId = item.id.toString())
+                                    )
+                                }
                             }
-                        }
-                    },
-                    navigateToPlayer = { itemId ->
-                        navController.navigate(
-                            PlayerRoute(
-                                itemId = itemId.toString(),
-                                itemKind = BaseItemKind.SERIES.serialName,
+                        },
+                        navigateToPlayer = { itemId ->
+                            navController.navigate(
+                                PlayerRoute(
+                                    itemId = itemId.toString(),
+                                    itemKind = BaseItemKind.SERIES.serialName,
+                                )
                             )
-                        )
-                    },
-                )
+                        },
+                    )
+                }
             }
-        }
-        composable<SeasonRoute> { backStackEntry ->
-            val route: SeasonRoute = backStackEntry.toRoute()
-            ContainerTransformScreen(consumePendingTransform = true) {
-                SeasonScreen(
-                    seasonId = UUID.fromString(route.seasonId),
-                    navigateToPlayer = { itemId ->
-                        navController.navigate(
-                            PlayerRoute(
-                                itemId = itemId.toString(),
-                                itemKind = BaseItemKind.SEASON.serialName,
+            composable<SeasonRoute> { backStackEntry ->
+                val route: SeasonRoute = backStackEntry.toRoute()
+                ContainerTransformScreen(consumePendingTransform = true) {
+                    SeasonScreen(
+                        seasonId = UUID.fromString(route.seasonId),
+                        navigateToPlayer = { itemId ->
+                            navController.navigate(
+                                PlayerRoute(
+                                    itemId = itemId.toString(),
+                                    itemKind = BaseItemKind.SEASON.serialName,
+                                )
                             )
-                        )
-                    },
-                )
+                        },
+                    )
+                }
             }
-        }
-        composable<PlayerRoute> { backStackEntry ->
-            val route: PlayerRoute = backStackEntry.toRoute()
-            ContainerTransformScreen(consumePendingTransform = true) {
-                PlayerScreen(
-                    itemId = UUID.fromString(route.itemId),
-                    itemKind = route.itemKind,
-                    startFromBeginning = false,
-                )
+            composable<PlayerRoute> { backStackEntry ->
+                val route: PlayerRoute = backStackEntry.toRoute()
+                ContainerTransformScreen(consumePendingTransform = true) {
+                    PlayerScreen(
+                        itemId = UUID.fromString(route.itemId),
+                        itemKind = route.itemKind,
+                        startFromBeginning = false,
+                    )
+                }
             }
-        }
-        composable<SettingsRoute> {
-            ContainerTransformScreen(consumePendingTransform = true) {
-                SettingsScreen(
-                    navigateToUsers = { navController.navigate(UsersRoute) },
-                    navigateToServers = { navController.navigate(ServersRoute) },
-                    navigateToSubSettings = { indexes ->
-                        navController.navigate(SettingsSubRoute(indexes = indexes))
-                    },
-                )
+            composable<SettingsRoute> {
+                ContainerTransformScreen(consumePendingTransform = true) {
+                    SettingsScreen(
+                        navigateToUsers = { navController.navigate(UsersRoute) },
+                        navigateToServers = { navController.navigate(ServersRoute) },
+                        navigateToSubSettings = { indexes ->
+                            navController.navigate(SettingsSubRoute(indexes = indexes))
+                        },
+                    )
+                }
             }
-        }
-        composable<SettingsSubRoute> { backStackEntry ->
-            val route: SettingsSubRoute = backStackEntry.toRoute()
-            ContainerTransformScreen(consumePendingTransform = true) {
-                SettingsSubScreen(
-                    indexes = route.indexes,
-                    navigateToUsers = { navController.navigate(UsersRoute) },
-                    navigateToServers = { navController.navigate(ServersRoute) },
-                    navigateToSubSettings = { indexes ->
-                        navController.navigate(SettingsSubRoute(indexes = indexes))
-                    },
-                )
+            composable<SettingsSubRoute> { backStackEntry ->
+                val route: SettingsSubRoute = backStackEntry.toRoute()
+                ContainerTransformScreen(consumePendingTransform = true) {
+                    SettingsSubScreen(
+                        indexes = route.indexes,
+                        navigateToUsers = { navController.navigate(UsersRoute) },
+                        navigateToServers = { navController.navigate(ServersRoute) },
+                        navigateToSubSettings = { indexes ->
+                            navController.navigate(SettingsSubRoute(indexes = indexes))
+                        },
+                    )
+                }
             }
-        }
         }
     }
 }

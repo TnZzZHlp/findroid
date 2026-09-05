@@ -73,9 +73,7 @@ class CollectionViewModel @Inject constructor(private val repository: JellyfinRe
                 }
 
                 loadedParentId = parentId
-                _state.emit(
-                    _state.value.copy(isLoading = false, sections = sections, error = null)
-                )
+                _state.emit(_state.value.copy(isLoading = false, sections = sections, error = null))
             } catch (e: Exception) {
                 _state.emit(_state.value.copy(isLoading = false, error = e))
             }

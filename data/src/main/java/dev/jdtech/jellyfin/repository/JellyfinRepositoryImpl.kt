@@ -19,6 +19,7 @@ import dev.jdtech.jellyfin.models.FindroidShow
 import dev.jdtech.jellyfin.models.FindroidSource
 import dev.jdtech.jellyfin.models.SortBy
 import dev.jdtech.jellyfin.models.SortOrder
+import dev.jdtech.jellyfin.models.isPlayableLocalFile
 import dev.jdtech.jellyfin.models.toFindroidCollection
 import dev.jdtech.jellyfin.models.toFindroidEpisode
 import dev.jdtech.jellyfin.models.toFindroidItem
@@ -28,7 +29,6 @@ import dev.jdtech.jellyfin.models.toFindroidSeason
 import dev.jdtech.jellyfin.models.toFindroidSegment
 import dev.jdtech.jellyfin.models.toFindroidShow
 import dev.jdtech.jellyfin.models.toFindroidSource
-import dev.jdtech.jellyfin.models.isPlayableLocalFile
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
 import java.io.File
 import java.util.UUID
@@ -94,7 +94,9 @@ class JellyfinRepositoryImpl(
                     .content
                     .toFindroidEpisode(this@JellyfinRepositoryImpl, database)!!
             } catch (error: Exception) {
-                database.getEpisodeOrNull(itemId)?.takeIf { hasPlayableLocalSource(itemId) }
+                database
+                    .getEpisodeOrNull(itemId)
+                    ?.takeIf { hasPlayableLocalSource(itemId) }
                     ?.toFindroidEpisode(database, jellyfinApi.userId!!) ?: throw error
             }
         }
@@ -107,7 +109,9 @@ class JellyfinRepositoryImpl(
                     .content
                     .toFindroidMovie(this@JellyfinRepositoryImpl, database)
             } catch (error: Exception) {
-                database.getMovieOrNull(itemId)?.takeIf { hasPlayableLocalSource(itemId) }
+                database
+                    .getMovieOrNull(itemId)
+                    ?.takeIf { hasPlayableLocalSource(itemId) }
                     ?.toFindroidMovie(database, jellyfinApi.userId!!) ?: throw error
             }
         }
@@ -115,7 +119,10 @@ class JellyfinRepositoryImpl(
     override suspend fun getShow(itemId: UUID, forceRefresh: Boolean): FindroidShow =
         withContext(Dispatchers.IO) {
             val cacheKey = seriesCacheKey(itemId)
-            if (!forceRefresh) getCached(showCache, cacheKey)?.let { return@withContext it }
+            if (!forceRefresh)
+                getCached(showCache, cacheKey)?.let {
+                    return@withContext it
+                }
 
             val show =
                 try {
@@ -124,7 +131,9 @@ class JellyfinRepositoryImpl(
                         .content
                         .toFindroidShow(this@JellyfinRepositoryImpl)
                 } catch (error: Exception) {
-                    database.getShowOrNull(itemId)?.takeIf { hasPlayableLocalEpisode(itemId) }
+                    database
+                        .getShowOrNull(itemId)
+                        ?.takeIf { hasPlayableLocalEpisode(itemId) }
                         ?.toFindroidShow(database, jellyfinApi.userId!!) ?: throw error
                 }
             putCached(showCache, cacheKey, show)
@@ -139,7 +148,9 @@ class JellyfinRepositoryImpl(
                     .content
                     .toFindroidSeason(this@JellyfinRepositoryImpl)
             } catch (error: Exception) {
-                database.getSeasonOrNull(itemId)?.takeIf { hasPlayableLocalEpisodeInSeason(itemId) }
+                database
+                    .getSeasonOrNull(itemId)
+                    ?.takeIf { hasPlayableLocalEpisodeInSeason(itemId) }
                     ?.toFindroidSeason(database, jellyfinApi.userId!!) ?: throw error
             }
         }
@@ -159,9 +170,13 @@ class JellyfinRepositoryImpl(
                     .content
                     .toFindroidItem(this@JellyfinRepositoryImpl, database)
             } catch (error: Exception) {
-                database.getMovieOrNull(itemId)?.takeIf { hasPlayableLocalSource(itemId) }
+                database
+                    .getMovieOrNull(itemId)
+                    ?.takeIf { hasPlayableLocalSource(itemId) }
                     ?.toFindroidMovie(database, jellyfinApi.userId!!)
-                    ?: database.getEpisodeOrNull(itemId)?.takeIf { hasPlayableLocalSource(itemId) }
+                    ?: database
+                        .getEpisodeOrNull(itemId)
+                        ?.takeIf { hasPlayableLocalSource(itemId) }
                         ?.toFindroidEpisode(database, jellyfinApi.userId!!)
                     ?: throw error
             }
@@ -309,7 +324,9 @@ class JellyfinRepositoryImpl(
             } else {
                 val cacheKey = seriesCacheKey(seriesId)
                 if (!forceRefresh) {
-                    getCached(seasonsCache, cacheKey)?.let { return@withContext it }
+                    getCached(seasonsCache, cacheKey)?.let {
+                        return@withContext it
+                    }
                 }
 
                 val seasons =
@@ -334,7 +351,9 @@ class JellyfinRepositoryImpl(
         withContext(Dispatchers.IO) {
             val cacheKey = seriesId?.let(::seriesCacheKey)
             if (!forceRefresh && cacheKey != null) {
-                getCached(nextUpCache, cacheKey)?.let { return@withContext it }
+                getCached(nextUpCache, cacheKey)?.let {
+                    return@withContext it
+                }
             }
 
             val nextUp =
@@ -391,9 +410,7 @@ class JellyfinRepositoryImpl(
                         )
                         .content
                         .items
-                        .mapNotNull {
-                            it.toFindroidEpisode(this@JellyfinRepositoryImpl, database)
-                        }
+                        .mapNotNull { it.toFindroidEpisode(this@JellyfinRepositoryImpl, database) }
                 } catch (error: Exception) {
                     getLocalEpisodes(seasonId, startItemId, limit).ifEmpty { throw error }
                 }
@@ -408,31 +425,31 @@ class JellyfinRepositoryImpl(
             }
 
             jellyfinApi.mediaInfoApi
-                    .getPostedPlaybackInfo(
-                        itemId,
-                        PlaybackInfoDto(
-                            userId = jellyfinApi.userId!!,
-                            deviceProfile =
-                                DeviceProfile(
-                                    name = "Direct play all",
-                                    maxStaticBitrate = 1_000_000_000,
-                                    maxStreamingBitrate = 1_000_000_000,
-                                    codecProfiles = emptyList(),
-                                    containerProfiles = emptyList(),
-                                    directPlayProfiles = emptyList(),
-                                    transcodingProfiles = emptyList(),
-                                    subtitleProfiles =
-                                        listOf(
-                                            SubtitleProfile("srt", SubtitleDeliveryMethod.EXTERNAL),
-                                            SubtitleProfile("ass", SubtitleDeliveryMethod.EXTERNAL),
-                                        ),
-                                ),
-                            maxStreamingBitrate = 1_000_000_000,
-                        ),
-                    )
-                    .content
-                    .mediaSources
-                    .map { it.toFindroidSource(this@JellyfinRepositoryImpl, itemId, includePath) }
+                .getPostedPlaybackInfo(
+                    itemId,
+                    PlaybackInfoDto(
+                        userId = jellyfinApi.userId!!,
+                        deviceProfile =
+                            DeviceProfile(
+                                name = "Direct play all",
+                                maxStaticBitrate = 1_000_000_000,
+                                maxStreamingBitrate = 1_000_000_000,
+                                codecProfiles = emptyList(),
+                                containerProfiles = emptyList(),
+                                directPlayProfiles = emptyList(),
+                                transcodingProfiles = emptyList(),
+                                subtitleProfiles =
+                                    listOf(
+                                        SubtitleProfile("srt", SubtitleDeliveryMethod.EXTERNAL),
+                                        SubtitleProfile("ass", SubtitleDeliveryMethod.EXTERNAL),
+                                    ),
+                            ),
+                        maxStreamingBitrate = 1_000_000_000,
+                    ),
+                )
+                .content
+                .mediaSources
+                .map { it.toFindroidSource(this@JellyfinRepositoryImpl, itemId, includePath) }
         }
 
     override suspend fun getStreamUrl(itemId: UUID, mediaSourceId: String): String =

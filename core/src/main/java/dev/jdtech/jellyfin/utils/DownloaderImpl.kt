@@ -64,7 +64,8 @@ class DownloaderImpl(
         try {
             val mediaSources = jellyfinRepository.getMediaSources(item.id, true)
             val source =
-                mediaSources.firstOrNull { it.id == sourceId } ?: mediaSources.firstOrNull()
+                mediaSources.firstOrNull { it.id == sourceId }
+                    ?: mediaSources.firstOrNull()
                     ?: return@coroutineScope Pair(
                         -1,
                         UiText.StringResource(CoreR.string.downloading_error),
@@ -128,9 +129,10 @@ class DownloaderImpl(
                 }
             }
 
-            database.getSources(item.id).map { it.toFindroidSource(database) }.forEach {
-                deleteSource(item.id, it)
-            }
+            database
+                .getSources(item.id)
+                .map { it.toFindroidSource(database) }
+                .forEach { deleteSource(item.id, it) }
             val sourceDto =
                 source.toFindroidSourceDto(
                     itemId = item.id,
@@ -251,7 +253,9 @@ class DownloaderImpl(
                     DownloadManager.STATUS_RUNNING -> {
                         val totalBytes =
                             cursor.getLong(
-                                cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES)
+                                cursor.getColumnIndexOrThrow(
+                                    DownloadManager.COLUMN_TOTAL_SIZE_BYTES
+                                )
                             )
                         if (totalBytes > 0) {
                             val downloadedBytes =
@@ -275,52 +279,47 @@ class DownloaderImpl(
         return Pair(downloadStatus, progress)
     }
 
-    override suspend fun finalizeDownload(downloadId: Long): Boolean =
-        finalizeMutex.withLock {
-            val query = DownloadManager.Query().setFilterById(downloadId)
-            val download =
-                downloadManager.query(query).use { cursor ->
-                    if (!cursor.moveToFirst()) return@withLock false
-                    DownloadResult(
-                        status =
-                            cursor.getInt(
-                                cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS)
-                            ),
-                        downloadedBytes =
-                            cursor.getLong(
-                                cursor.getColumnIndexOrThrow(
-                                    DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR
-                                )
-                            ),
-                        totalBytes =
-                            cursor.getLong(
-                                cursor.getColumnIndexOrThrow(
-                                    DownloadManager.COLUMN_TOTAL_SIZE_BYTES
-                                )
-                            ),
-                    )
-                }
-
-            if (download.status != DownloadManager.STATUS_SUCCESSFUL) return@withLock false
-
-            database.getSourceByDownloadId(downloadId)?.let { source ->
-                return@withLock finalizeFile(
-                    temporaryPath = source.path,
-                    download = download,
-                    updatePath = { database.setSourcePath(source.id, it) },
+    override suspend fun finalizeDownload(downloadId: Long): Boolean = finalizeMutex.withLock {
+        val query = DownloadManager.Query().setFilterById(downloadId)
+        val download =
+            downloadManager.query(query).use { cursor ->
+                if (!cursor.moveToFirst()) return@withLock false
+                DownloadResult(
+                    status =
+                        cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS)),
+                    downloadedBytes =
+                        cursor.getLong(
+                            cursor.getColumnIndexOrThrow(
+                                DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR
+                            )
+                        ),
+                    totalBytes =
+                        cursor.getLong(
+                            cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES)
+                        ),
                 )
             }
 
-            database.getMediaStreamByDownloadId(downloadId)?.let { mediaStream ->
-                return@withLock finalizeFile(
-                    temporaryPath = mediaStream.path,
-                    download = download,
-                    updatePath = { database.setMediaStreamPath(mediaStream.id, it) },
-                )
-            }
+        if (download.status != DownloadManager.STATUS_SUCCESSFUL) return@withLock false
 
-            false
+        database.getSourceByDownloadId(downloadId)?.let { source ->
+            return@withLock finalizeFile(
+                temporaryPath = source.path,
+                download = download,
+                updatePath = { database.setSourcePath(source.id, it) },
+            )
         }
+
+        database.getMediaStreamByDownloadId(downloadId)?.let { mediaStream ->
+            return@withLock finalizeFile(
+                temporaryPath = mediaStream.path,
+                download = download,
+                updatePath = { database.setMediaStreamPath(mediaStream.id, it) },
+            )
+        }
+
+        false
+    }
 
     private fun finalizeFile(
         temporaryPath: String,

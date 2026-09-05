@@ -170,8 +170,7 @@ interface ServerDatabaseDao {
 
     @Query("SELECT * FROM seasons WHERE id = :id") fun getSeason(id: UUID): FindroidSeasonDto
 
-    @Query("SELECT * FROM seasons WHERE id = :id")
-    fun getSeasonOrNull(id: UUID): FindroidSeasonDto?
+    @Query("SELECT * FROM seasons WHERE id = :id") fun getSeasonOrNull(id: UUID): FindroidSeasonDto?
 
     @Query("SELECT * FROM seasons WHERE seriesId = :seriesId ORDER BY indexNumber ASC")
     fun getSeasonsByShowId(seriesId: UUID): List<FindroidSeasonDto>

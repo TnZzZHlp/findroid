@@ -6,8 +6,8 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.models.FindroidSourceType
-import dev.jdtech.jellyfin.models.isPlayableLocalFile
 import dev.jdtech.jellyfin.models.isDownloading
+import dev.jdtech.jellyfin.models.isPlayableLocalFile
 import dev.jdtech.jellyfin.utils.Downloader
 import javax.inject.Inject
 import kotlinx.coroutines.Job
@@ -36,8 +36,7 @@ class DownloaderViewModel @Inject constructor(private val downloader: Downloader
                 val source =
                     item.sources.firstOrNull {
                         it.type == FindroidSourceType.LOCAL && it.path.endsWith(".download")
-                    }
-                        ?: return@launch
+                    } ?: return@launch
                 this@DownloaderViewModel.downloadId = source.downloadId
                 pollDownloadProgress(source.downloadId)
             }
@@ -47,8 +46,7 @@ class DownloaderViewModel @Inject constructor(private val downloader: Downloader
     private fun download(item: FindroidItem, storageIndex: Int = 0) {
         viewModelScope.launch {
             _state.emit(DownloaderState(status = DownloadManager.STATUS_PENDING))
-            val sourceId =
-                item.sources.firstOrNull { it.type == FindroidSourceType.REMOTE }?.id
+            val sourceId = item.sources.firstOrNull { it.type == FindroidSourceType.REMOTE }?.id
             if (sourceId == null) {
                 _state.emit(DownloaderState(status = DownloadManager.STATUS_FAILED))
                 return@launch
@@ -95,33 +93,30 @@ class DownloaderViewModel @Inject constructor(private val downloader: Downloader
 
     private fun pollDownloadProgress(downloadId: Long?) {
         progressJob?.cancel()
-        progressJob =
-            viewModelScope.launch {
-                while (true) {
-                    val (status, progress) = downloader.getProgress(downloadId)
-                    _state.emit(
-                        DownloaderState(
-                            status = status,
-                            progress = progress.coerceAtLeast(0) / 100f,
-                        )
+        progressJob = viewModelScope.launch {
+            while (true) {
+                val (status, progress) = downloader.getProgress(downloadId)
+                _state.emit(
+                    DownloaderState(
+                        status = status,
+                        progress = progress.coerceAtLeast(0) / 100f,
                     )
+                )
 
-                    when (status) {
-                        DownloadManager.STATUS_SUCCESSFUL -> {
-                            if (downloadId != null && downloader.finalizeDownload(downloadId)) {
-                                eventsChannel.send(DownloaderEvent.Successful)
-                            } else {
-                                _state.emit(
-                                    DownloaderState(status = DownloadManager.STATUS_FAILED)
-                                )
-                            }
-                            return@launch
+                when (status) {
+                    DownloadManager.STATUS_SUCCESSFUL -> {
+                        if (downloadId != null && downloader.finalizeDownload(downloadId)) {
+                            eventsChannel.send(DownloaderEvent.Successful)
+                        } else {
+                            _state.emit(DownloaderState(status = DownloadManager.STATUS_FAILED))
                         }
-                        DownloadManager.STATUS_FAILED -> return@launch
-                        else -> delay(1000L)
+                        return@launch
                     }
+                    DownloadManager.STATUS_FAILED -> return@launch
+                    else -> delay(1000L)
                 }
             }
+        }
     }
 
     fun onAction(action: DownloaderAction) {

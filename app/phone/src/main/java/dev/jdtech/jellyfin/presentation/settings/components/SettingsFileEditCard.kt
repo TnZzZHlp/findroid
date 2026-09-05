@@ -31,8 +31,7 @@ fun SettingsFileEditCard(preference: PreferenceFileEdit, modifier: Modifier = Mo
 
     SettingsBaseCard(
         preference = preference,
-        onClick =
-            containerTransformOnClick(transformKey) { preference.onClick(preference) },
+        onClick = containerTransformOnClick(transformKey) { preference.onClick(preference) },
         modifier = modifier.containerTransform(transformKey),
     ) {
         Row(

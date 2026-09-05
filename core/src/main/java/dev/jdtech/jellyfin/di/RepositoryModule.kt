@@ -30,7 +30,7 @@ object RepositoryModule {
 
     @Provides
     fun provideJellyfinRepository(
-        jellyfinRepositoryImpl: JellyfinRepositoryImpl,
+        jellyfinRepositoryImpl: JellyfinRepositoryImpl
     ): JellyfinRepository {
         println("Creating new JellyfinRepository")
         return jellyfinRepositoryImpl

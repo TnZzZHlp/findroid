@@ -76,9 +76,7 @@ fun MovieScreen(
 
     LaunchedEffect(true) { viewModel.loadMovie(movieId = movieId) }
 
-    LaunchedEffect(state.movie) {
-        state.movie?.let { movie -> downloaderViewModel.update(movie) }
-    }
+    LaunchedEffect(state.movie) { state.movie?.let { movie -> downloaderViewModel.update(movie) } }
 
     ObserveAsEvents(downloaderViewModel.events) { event ->
         when (event) {

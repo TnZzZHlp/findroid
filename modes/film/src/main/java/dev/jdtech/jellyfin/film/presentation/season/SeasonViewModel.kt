@@ -32,9 +32,7 @@ class SeasonViewModel @Inject constructor(private val repository: JellyfinReposi
                         seasonId = seasonId,
                         fields = listOf(ItemFields.OVERVIEW),
                     )
-                _state.emit(
-                    _state.value.copy(season = season, episodes = episodes, error = null)
-                )
+                _state.emit(_state.value.copy(season = season, episodes = episodes, error = null))
             } catch (e: Exception) {
                 _state.emit(_state.value.copy(error = e))
             }

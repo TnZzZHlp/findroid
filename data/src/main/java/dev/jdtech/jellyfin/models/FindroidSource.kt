@@ -18,9 +18,7 @@ data class FindroidSource(
 )
 
 fun FindroidSource.isPlayableLocalFile(): Boolean {
-    return type == FindroidSourceType.LOCAL &&
-        !path.endsWith(".download") &&
-        File(path).isFile
+    return type == FindroidSourceType.LOCAL && !path.endsWith(".download") && File(path).isFile
 }
 
 suspend fun MediaSourceInfo.toFindroidSource(

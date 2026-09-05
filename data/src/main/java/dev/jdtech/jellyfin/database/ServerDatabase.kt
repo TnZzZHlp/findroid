@@ -76,6 +76,8 @@ val MIGRATION_8_9 =
             db.execSQL(
                 "UPDATE trickplayInfos SET sourceId = 'local-' || (SELECT itemId FROM sources WHERE sources.id = trickplayInfos.sourceId) || '-' || sourceId WHERE EXISTS (SELECT 1 FROM sources WHERE sources.id = trickplayInfos.sourceId AND sources.type = 'LOCAL')"
             )
-            db.execSQL("UPDATE sources SET id = 'local-' || itemId || '-' || id WHERE type = 'LOCAL'")
+            db.execSQL(
+                "UPDATE sources SET id = 'local-' || itemId || '-' || id WHERE type = 'LOCAL'"
+            )
         }
     }

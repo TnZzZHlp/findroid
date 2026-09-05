@@ -29,8 +29,7 @@ fun SettingsCategoryCard(preference: PreferenceCategory, modifier: Modifier = Mo
     val transformKey = rememberContainerTransformKey(preference)
     SettingsBaseCard(
         preference = preference,
-        onClick =
-            containerTransformOnClick(transformKey) { preference.onClick(preference) },
+        onClick = containerTransformOnClick(transformKey) { preference.onClick(preference) },
         modifier = modifier.containerTransform(transformKey),
     ) {
         Row(
@@ -68,9 +67,7 @@ private fun SettingsCategoryCardPreview() {
     FindroidTheme {
         SettingsCategoryCard(
             preference =
-                PreferenceCategory(
-                    nameStringResource = SettingsR.string.settings_category_player,
-                )
+                PreferenceCategory(nameStringResource = SettingsR.string.settings_category_player)
         )
     }
 }
