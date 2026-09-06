@@ -166,6 +166,14 @@ class JellyfinRepositoryImpl(
             }
         }
 
+    override suspend fun getItemAncestorIds(itemId: UUID): Set<UUID> =
+        withContext(Dispatchers.IO) {
+            jellyfinApi.libraryApi
+                .getAncestors(itemId = itemId, userId = jellyfinApi.userId!!)
+                .content
+                .mapTo(mutableSetOf()) { it.id }
+        }
+
     override suspend fun getItem(itemId: UUID): FindroidItem? =
         withContext(Dispatchers.IO) {
             try {

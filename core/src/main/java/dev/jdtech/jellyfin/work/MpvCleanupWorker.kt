@@ -19,20 +19,11 @@ constructor(
     val appPreferences: AppPreferences,
 ) : Worker(context, workerParameters) {
     override fun doWork(): Result {
-        migratePreference()
         cleanUpDirs()
 
         appPreferences.setValue(appPreferences.mpvMigrated, true)
 
         return Result.success()
-    }
-
-    private fun migratePreference() {
-        // Migrate to new player backend preference
-        val defaultMpv = appPreferences.getValue(appPreferences.playerMpv)
-        if (defaultMpv) {
-            appPreferences.setValue(appPreferences.playerBackend, "mpv")
-        }
     }
 
     private fun cleanUpDirs() {

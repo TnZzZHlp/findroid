@@ -26,6 +26,7 @@ dependencies {
     implementation(projects.data)
     implementation(projects.settings)
     implementation(libs.timber)
+    testImplementation("junit:junit:4.13.2")
 
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.runtime)

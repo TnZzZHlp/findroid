@@ -45,7 +45,7 @@ ktfmt is applied to all subprojects with `kotlinLangStyle()`.
 | `core` | ViewModels, DI, WorkManager workers, utils |
 | `data` | Room database, Jellyfin API integration |
 | `player:core` | Player interfaces |
-| `player:local` | ExoPlayer and libmpv implementation |
+| `player:local` | libmpv implementation |
 | `setup` | Server connection/login UI |
 | `modes:film` | Film library UI |
 | `settings` | Settings screens |

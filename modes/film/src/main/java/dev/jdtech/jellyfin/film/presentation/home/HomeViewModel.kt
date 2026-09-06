@@ -14,7 +14,9 @@ import dev.jdtech.jellyfin.settings.domain.AppPreferences
 import dev.jdtech.jellyfin.utils.toView
 import java.util.UUID
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -40,28 +42,67 @@ constructor(
     private val uiTextContinueWatching = UiText.StringResource(FilmR.string.continue_watching)
     private val uiTextNextUp = UiText.StringResource(FilmR.string.next_up)
 
-    init {
-        loadData()
+    private var hideLibrariesOnHome = false
+    private var loadJob: Job? = null
+
+    fun initialize(filterHiddenLibraries: Boolean = false) {
+        if (loadJob == null) loadData(filterHiddenLibraries)
     }
 
-    fun loadData() {
+    fun loadData(filterHiddenLibraries: Boolean = hideLibrariesOnHome) {
+        hideLibrariesOnHome = filterHiddenLibraries
         Timber.i("Loading data")
-        viewModelScope.launch(Dispatchers.Default) {
-            _state.emit(_state.value.copy(isLoading = true, error = null))
-            try {
-                appPreferences.getValue(appPreferences.currentServer)?.let { serverId ->
-                    loadServerName(serverId)
-                }
+        loadJob?.cancel()
+        loadJob =
+            viewModelScope.launch(Dispatchers.Default) {
+                val storedHiddenLibraryIds =
+                    if (filterHiddenLibraries) {
+                        appPreferences
+                            .getValue(appPreferences.homeHiddenLibraries)
+                            .mapNotNull { value ->
+                                runCatching { UUID.fromString(value) }.getOrNull()
+                            }
+                            .toSet()
+                    } else {
+                        emptySet()
+                    }
+                val clearContent = filterHiddenLibraries && storedHiddenLibraryIds.isNotEmpty()
+                _state.emit(
+                    _state.value.copy(
+                        isLoading = true,
+                        error = null,
+                        suggestionsSection =
+                            if (clearContent) null else _state.value.suggestionsSection,
+                        resumeSection = if (clearContent) null else _state.value.resumeSection,
+                        nextUpSection = if (clearContent) null else _state.value.nextUpSection,
+                        views = if (clearContent) emptyList() else _state.value.views,
+                    )
+                )
+                try {
+                    appPreferences.getValue(appPreferences.currentServer)?.let { serverId ->
+                        loadServerName(serverId)
+                    }
 
-                loadSuggestions()
-                loadResumeItems()
-                loadNextUpItems()
-                loadViews()
-            } catch (e: Exception) {
-                _state.emit(_state.value.copy(error = e))
+                    val hiddenLibraryIds =
+                        if (storedHiddenLibraryIds.isNotEmpty()) {
+                            val availableLibraryIds =
+                                repository.getLibraries().map { it.id }.toSet()
+                            storedHiddenLibraryIds.intersect(availableLibraryIds)
+                        } else {
+                            emptySet()
+                        }
+                    val filter = HomeFilter(hiddenLibraryIds, repository::getItemAncestorIds)
+                    loadSuggestions(filter)
+                    loadResumeItems(filter)
+                    loadNextUpItems(filter)
+                    loadViews(hiddenLibraryIds, filter)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    _state.emit(_state.value.copy(error = e))
+                }
+                _state.emit(_state.value.copy(isLoading = false))
             }
-            _state.emit(_state.value.copy(isLoading = false))
-        }
     }
 
     private suspend fun loadServerName(serverId: String) {
@@ -71,14 +112,14 @@ constructor(
         }
     }
 
-    private suspend fun loadSuggestions() {
+    private suspend fun loadSuggestions(filter: HomeFilter) {
         Timber.i("Loading suggestions")
         if (!appPreferences.getValue(appPreferences.homeSuggestions)) {
             _state.emit(_state.value.copy(suggestionsSection = null))
             return
         }
 
-        val items = repository.getSuggestions()
+        val items = filter.filter(repository.getSuggestions()) { it.id }
 
         val section =
             if (items.isEmpty()) {
@@ -90,14 +131,14 @@ constructor(
         _state.emit(_state.value.copy(suggestionsSection = section))
     }
 
-    private suspend fun loadResumeItems() {
+    private suspend fun loadResumeItems(filter: HomeFilter) {
         Timber.i("Loading resume items")
         if (!appPreferences.getValue(appPreferences.homeContinueWatching)) {
             _state.emit(_state.value.copy(resumeSection = null))
             return
         }
 
-        val resumeItems = repository.getResumeItems()
+        val resumeItems = filter.filter(repository.getResumeItems()) { it.id }
 
         val section =
             if (resumeItems.isEmpty()) {
@@ -111,14 +152,14 @@ constructor(
         _state.emit(_state.value.copy(resumeSection = section))
     }
 
-    private suspend fun loadNextUpItems() {
+    private suspend fun loadNextUpItems(filter: HomeFilter) {
         Timber.i("Loading next up items")
         if (!appPreferences.getValue(appPreferences.homeNextUp)) {
             _state.emit(_state.value.copy(nextUpSection = null))
             return
         }
 
-        val nextUpItems = repository.getNextUp()
+        val nextUpItems = filter.filter(repository.getNextUp()) { it.id }
 
         val section =
             if (nextUpItems.isEmpty()) {
@@ -130,7 +171,7 @@ constructor(
         _state.emit(_state.value.copy(nextUpSection = section))
     }
 
-    private suspend fun loadViews() {
+    private suspend fun loadViews(hiddenLibraryIds: Set<UUID>, filter: HomeFilter) {
         Timber.i("Loading views")
         val items =
             if (appPreferences.getValue(appPreferences.homeLatest)) {
@@ -140,7 +181,10 @@ constructor(
                         CollectionType.fromString(view.collectionType?.serialName) in
                             CollectionType.supported
                     }
-                    .map { view -> view to repository.getLatestMedia(view.id) }
+                    .filterNot { view -> view.id in hiddenLibraryIds }
+                    .map { view ->
+                        view to filter.filter(repository.getLatestMedia(view.id)) { it.id }
+                    }
                     .filter { (_, latest) -> latest.isNotEmpty() }
                     .map { (view, latest) -> view.toView(latest) }
                     .map { HomeItem.ViewItem(it) }

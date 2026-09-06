@@ -41,6 +41,7 @@ fun HomeScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
+    LaunchedEffect(viewModel) { viewModel.initialize() }
     LaunchedEffect(state.isLoading) { isLoading(state.isLoading) }
 
     HomeScreenLayout(

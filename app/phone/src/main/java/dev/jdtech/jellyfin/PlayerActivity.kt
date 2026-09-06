@@ -289,18 +289,18 @@ class PlayerActivity : BasePlayerActivity() {
                 .show(supportFragmentManager, "trackselectiondialog")
         }
 
-        val exoPlayerControlView = findViewById<FrameLayout>(R.id.player_controls)
+        val playerControlView = findViewById<FrameLayout>(R.id.player_controls)
         val lockedLayout = findViewById<FrameLayout>(R.id.locked_player_view)
 
         lockButton.setOnClickListener {
-            exoPlayerControlView.visibility = View.GONE
+            playerControlView.visibility = View.GONE
             lockedLayout.visibility = View.VISIBLE
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LOCKED
             isControlsLocked = true
         }
 
         unlockButton.setOnClickListener {
-            exoPlayerControlView.visibility = View.VISIBLE
+            playerControlView.visibility = View.VISIBLE
             lockedLayout.visibility = View.GONE
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
             isControlsLocked = false

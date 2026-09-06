@@ -5,6 +5,10 @@ import dev.jdtech.jellyfin.settings.domain.models.Preference
 import javax.inject.Inject
 import timber.log.Timber
 
+internal fun homeHiddenLibrariesPreferenceKey(serverId: String?): String {
+    return "home_hidden_libraries_${serverId.orEmpty()}"
+}
+
 class AppPreferences @Inject constructor(val sharedPreferences: SharedPreferences) {
     // Server
     val currentServer = Preference<String?>("pref_current_server", null)
@@ -20,14 +24,13 @@ class AppPreferences @Inject constructor(val sharedPreferences: SharedPreference
     val homeContinueWatching = Preference<Boolean>("home_continue_watching", true)
     val homeNextUp = Preference<Boolean>("home_next_up", true)
     val homeLatest = Preference<Boolean>("home_latest", true)
+    val homeHiddenLibraries = Preference<Set<String>>("home_hidden_libraries", emptySet())
     val displayExtraInfo = Preference("pref_display_extra_info", false)
 
     // Player
-    val playerBackend = Preference("pref_player_backend", "exoplayer")
     val playerBrightness = Preference("pref_player_brightness", -1.0f)
 
     // Player - mpv
-    val playerMpv = Preference("pref_player_mpv", false)
     val playerMpvHwdec = Preference("pref_player_mpv_hwdec", "mediacodec")
     val playerMpvVo = Preference("pref_player_mpv_vo", "gpu-next")
     val playerMpvAo = Preference("pref_player_mpv_ao", "aaudio")
@@ -102,25 +105,28 @@ class AppPreferences @Inject constructor(val sharedPreferences: SharedPreference
     // Migrations
     val mpvMigrated = Preference("mpv_migrated", false)
 
+    @PublishedApi
+    internal fun storageKey(preference: Preference<*>): String {
+        return if (preference.backendName == homeHiddenLibraries.backendName) {
+            homeHiddenLibrariesPreferenceKey(getValue(currentServer))
+        } else {
+            preference.backendName
+        }
+    }
+
     inline fun <reified T> getValue(preference: Preference<T>): T {
+        val storageKey = storageKey(preference)
         return try {
             @Suppress("UNCHECKED_CAST")
             when (preference.defaultValue) {
-                is Boolean ->
-                    sharedPreferences.getBoolean(preference.backendName, preference.defaultValue)
-                        as T
-                is Int ->
-                    sharedPreferences.getInt(preference.backendName, preference.defaultValue) as T
-                is Long ->
-                    sharedPreferences.getLong(preference.backendName, preference.defaultValue) as T
-                is Float ->
-                    sharedPreferences.getFloat(preference.backendName, preference.defaultValue) as T
-                is String? ->
-                    sharedPreferences.getString(preference.backendName, preference.defaultValue)
-                        as T
+                is Boolean -> sharedPreferences.getBoolean(storageKey, preference.defaultValue) as T
+                is Int -> sharedPreferences.getInt(storageKey, preference.defaultValue) as T
+                is Long -> sharedPreferences.getLong(storageKey, preference.defaultValue) as T
+                is Float -> sharedPreferences.getFloat(storageKey, preference.defaultValue) as T
+                is String? -> sharedPreferences.getString(storageKey, preference.defaultValue) as T
                 is Set<*> ->
                     sharedPreferences.getStringSet(
-                        preference.backendName,
+                        storageKey,
                         preference.defaultValue as Set<String>,
                     ) as T
                 else -> preference.defaultValue
@@ -135,15 +141,16 @@ class AppPreferences @Inject constructor(val sharedPreferences: SharedPreference
     }
 
     inline fun <reified T> setValue(preference: Preference<T>, value: T) {
+        val storageKey = storageKey(preference)
         val editor = sharedPreferences.edit()
         @Suppress("UNCHECKED_CAST")
         when (preference.defaultValue) {
-            is Boolean -> editor.putBoolean(preference.backendName, value as Boolean)
-            is Int -> editor.putInt(preference.backendName, value as Int)
-            is Long -> editor.putLong(preference.backendName, value as Long)
-            is Float -> editor.putFloat(preference.backendName, value as Float)
-            is String? -> editor.putString(preference.backendName, value as String?)
-            is Set<*> -> editor.putStringSet(preference.backendName, value as Set<String>)
+            is Boolean -> editor.putBoolean(storageKey, value as Boolean)
+            is Int -> editor.putInt(storageKey, value as Int)
+            is Long -> editor.putLong(storageKey, value as Long)
+            is Float -> editor.putFloat(storageKey, value as Float)
+            is String? -> editor.putString(storageKey, value as String?)
+            is Set<*> -> editor.putStringSet(storageKey, value as Set<String>)
             else -> throw Exception()
         }
         editor.apply()

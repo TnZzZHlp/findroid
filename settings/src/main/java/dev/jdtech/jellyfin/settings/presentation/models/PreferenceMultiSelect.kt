@@ -18,4 +18,5 @@ data class PreferenceMultiSelect(
     val options: Int, // Resource ID for the array of entry strings
     val optionValues: Int, // Resource ID for the array of entry values
     val value: Set<String> = emptySet(), // The current value is a Set of strings
+    val dynamicOptions: List<Pair<String, String>>? = null,
 ) : Preference

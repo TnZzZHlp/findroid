@@ -175,7 +175,7 @@ fun PlayerScreen(
 
     Box(
         modifier =
-            Modifier.dPadEvents(exoPlayer = viewModel.player, videoPlayerState = videoPlayerState)
+            Modifier.dPadEvents(player = viewModel.player, videoPlayerState = videoPlayerState)
                 .focusable()
     ) {
         AndroidView(
@@ -353,14 +353,14 @@ private fun SkipButton(
     }
 }
 
-private fun Modifier.dPadEvents(exoPlayer: Player, videoPlayerState: VideoPlayerState): Modifier =
+private fun Modifier.dPadEvents(player: Player, videoPlayerState: VideoPlayerState): Modifier =
     this.handleDPadKeyEvents(
         onLeft = {},
         onRight = {},
         onUp = {},
         onDown = {},
         onEnter = {
-            exoPlayer.pause()
+            player.pause()
             videoPlayerState.showControls()
         },
     )

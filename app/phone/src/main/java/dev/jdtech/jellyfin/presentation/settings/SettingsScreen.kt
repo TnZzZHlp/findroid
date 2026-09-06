@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jdtech.jellyfin.core.R as CoreR
+import dev.jdtech.jellyfin.film.presentation.media.MediaViewModel
 import dev.jdtech.jellyfin.presentation.settings.components.SettingsGroupCard
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.presentation.theme.spacings
@@ -61,10 +62,21 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
+    val mediaViewModel: MediaViewModel = hiltViewModel()
 
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val mediaState by mediaViewModel.state.collectAsStateWithLifecycle()
+    val libraryOptions =
+        if (!mediaState.isLoading && mediaState.error == null) {
+            mediaState.libraries.map { it.id.toString() to it.name }
+        } else {
+            emptyList()
+        }
 
-    LaunchedEffect(true) { viewModel.loadPreferences(indexes, DeviceType.PHONE) }
+    LaunchedEffect(Unit) { mediaViewModel.loadData(forceRefresh = true) }
+    LaunchedEffect(indexes.contentHashCode(), libraryOptions) {
+        viewModel.loadPreferences(indexes, DeviceType.PHONE, libraryOptions)
+    }
 
     ObserveAsEvents(viewModel.events) { event ->
         when (event) {
@@ -120,7 +132,7 @@ fun SettingsScreen(
                 is SettingsAction.OnBackClick -> navigateBack()
                 is SettingsAction.OnUpdate -> {
                     viewModel.onAction(action)
-                    viewModel.loadPreferences(indexes, DeviceType.PHONE)
+                    viewModel.loadPreferences(indexes, DeviceType.PHONE, libraryOptions)
                 }
             }
         },

@@ -56,6 +56,8 @@
     <string name="home_continue_watching">Display continue watching</string>
     <string name="home_next_up">Display next up</string>
     <string name="home_latest">Display latest items</string>
+    <string name="home_hidden_libraries">Hide libraries from home</string>
+    <string name="home_hidden_libraries_summary">Selected libraries will not appear in any home section.</string>
     <string name="title_settings">Settings</string>
     <string name="picture_in_picture">Picture-in-picture</string>
     <string name="picture_in_picture_gesture">Picture-in-picture home gesture</string>
@@ -99,7 +101,6 @@
     <string name="media_segments_type_intro">Intro</string>
     <string name="none">None</string>
     <string name="edit_file_title">Edit %1$s</string>
-    <string name="pref_player_backend">Player backend</string>
     <string name="mpv_options">mpv options</string>
     <string name="advanced">Advanced</string>
     <string name="discard_changes_dialog_title">Discard changes?</string>

@@ -168,6 +168,18 @@ class SettingsViewModel @Inject constructor(private val appPreferences: AppPrefe
                                                     nameStringResource = R.string.home_latest,
                                                     backendPreference = appPreferences.homeLatest,
                                                 ),
+                                                PreferenceMultiSelect(
+                                                    nameStringResource =
+                                                        R.string.home_hidden_libraries,
+                                                    descriptionStringRes =
+                                                        R.string.home_hidden_libraries_summary,
+                                                    supportedDeviceTypes = listOf(DeviceType.PHONE),
+                                                    backendPreference =
+                                                        appPreferences.homeHiddenLibraries,
+                                                    options = 0,
+                                                    optionValues = 0,
+                                                    dynamicOptions = emptyList(),
+                                                ),
                                             ),
                                     ),
                                     PreferenceGroup(
@@ -229,14 +241,6 @@ class SettingsViewModel @Inject constructor(private val appPreferences: AppPrefe
                                     PreferenceGroup(
                                         preferences =
                                             listOf(
-                                                PreferenceSelect(
-                                                    nameStringResource =
-                                                        R.string.pref_player_backend,
-                                                    backendPreference =
-                                                        appPreferences.playerBackend,
-                                                    options = R.array.player_backends,
-                                                    optionValues = R.array.player_backends,
-                                                ),
                                                 PreferenceCategory(
                                                     nameStringResource = R.string.mpv_options,
                                                     onClick = {
@@ -343,7 +347,7 @@ class SettingsViewModel @Inject constructor(private val appPreferences: AppPrefe
                                                                     ),
                                                             ),
                                                         ),
-                                                ),
+                                                )
                                             )
                                     ),
                                     PreferenceGroup(
@@ -780,7 +784,11 @@ class SettingsViewModel @Inject constructor(private val appPreferences: AppPrefe
             ),
         )
 
-    fun loadPreferences(indexes: IntArray = intArrayOf(), deviceType: DeviceType) {
+    fun loadPreferences(
+        indexes: IntArray = intArrayOf(),
+        deviceType: DeviceType,
+        homeLibraryOptions: List<Pair<String, String>>? = null,
+    ) {
         viewModelScope.launch {
             var preferences = topLevelPreferences
 
@@ -837,16 +845,42 @@ class SettingsViewModel @Inject constructor(private val appPreferences: AppPrefe
                                                 )
                                             }
                                             is PreferenceMultiSelect -> {
+                                                val isHomeLibrariesPreference =
+                                                    preference.backendPreference.backendName ==
+                                                        appPreferences.homeHiddenLibraries
+                                                            .backendName
+                                                val dynamicOptions =
+                                                    if (isHomeLibrariesPreference) {
+                                                        homeLibraryOptions.orEmpty()
+                                                    } else {
+                                                        preference.dynamicOptions
+                                                    }
+                                                val storedValue =
+                                                    appPreferences.getValue(
+                                                        preference.backendPreference
+                                                    )
                                                 preference.copy(
                                                     enabled =
                                                         preference.enabled &&
                                                             preference.dependencies.all {
                                                                 appPreferences.getValue(it)
-                                                            },
+                                                            } &&
+                                                            (!isHomeLibrariesPreference ||
+                                                                dynamicOptions?.isNotEmpty() ==
+                                                                    true),
                                                     value =
-                                                        appPreferences.getValue(
-                                                            preference.backendPreference
-                                                        ),
+                                                        if (dynamicOptions != null) {
+                                                            storedValue.intersect(
+                                                                dynamicOptions.mapTo(
+                                                                    mutableSetOf()
+                                                                ) {
+                                                                    it.first
+                                                                }
+                                                            )
+                                                        } else {
+                                                            storedValue
+                                                        },
+                                                    dynamicOptions = dynamicOptions,
                                                 )
                                             }
                                             is PreferenceIntInput -> {

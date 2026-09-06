@@ -13,9 +13,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.common.TrackSelectionOverride
-import androidx.media3.exoplayer.DefaultRenderersFactory
-import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
+import androidx.media3.common.TrackSelectionParameters
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.jdtech.jellyfin.api.JellyfinApi
 import dev.jdtech.jellyfin.database.ServerDatabaseDao
@@ -88,7 +86,6 @@ constructor(
 
     private var items: MutableList<PlayerItem> = mutableListOf()
 
-    private val trackSelector = DefaultTrackSelector(application)
     var playWhenReady = true
     private var currentMediaItemIndex = savedStateHandle["mediaItemIndex"] ?: 0
     private var playbackPosition: Long = savedStateHandle["position"] ?: 0
@@ -132,58 +129,29 @@ constructor(
                 .setUsage(C.USAGE_MEDIA)
                 .build()
 
-        trackSelector.setParameters(
-            trackSelector
-                .buildUponParameters()
-                .setTunnelingEnabled(true)
+        val trackSelectionParameters =
+            TrackSelectionParameters.Builder(application)
                 .setPreferredAudioLanguage(
                     appPreferences.getValue(appPreferences.preferredAudioLanguage)
                 )
                 .setPreferredTextLanguage(
                     appPreferences.getValue(appPreferences.preferredSubtitleLanguage)
                 )
-        )
+                .build()
 
-        val playerBackend = appPreferences.getValue(appPreferences.playerBackend)
         player =
-            when (playerBackend) {
-                "exoplayer" -> {
-                    val renderersFactory =
-                        DefaultRenderersFactory(application)
-                            .setExtensionRendererMode(
-                                DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON
-                            )
-                    ExoPlayer.Builder(application, renderersFactory)
-                        .setAudioAttributes(audioAttributes, true)
-                        .setTrackSelector(trackSelector)
-                        .setSeekBackIncrementMs(
-                            appPreferences.getValue(appPreferences.playerSeekBackInc)
-                        )
-                        .setSeekForwardIncrementMs(
-                            appPreferences.getValue(appPreferences.playerSeekForwardInc)
-                        )
-                        .setPauseAtEndOfMediaItems(true)
-                        .build()
-                }
-                "mpv" -> {
-                    MPVPlayer.Builder(application)
-                        .setAudioAttributes(audioAttributes, true)
-                        .setTrackSelectionParameters(trackSelector.parameters)
-                        .setSeekBackIncrementMs(
-                            appPreferences.getValue(appPreferences.playerSeekBackInc)
-                        )
-                        .setSeekForwardIncrementMs(
-                            appPreferences.getValue(appPreferences.playerSeekForwardInc)
-                        )
-                        .setPauseAtEndOfMediaItems(true)
-                        .setVideoOutput(appPreferences.getValue(appPreferences.playerMpvVo))
-                        .setAudioOutput(appPreferences.getValue(appPreferences.playerMpvAo))
-                        .setHwDec(appPreferences.getValue(appPreferences.playerMpvHwdec))
-                        .build()
-                }
-
-                else -> throw RuntimeException("$playerBackend is not a valid player backend")
-            }
+            MPVPlayer.Builder(application)
+                .setAudioAttributes(audioAttributes, true)
+                .setTrackSelectionParameters(trackSelectionParameters)
+                .setSeekBackIncrementMs(appPreferences.getValue(appPreferences.playerSeekBackInc))
+                .setSeekForwardIncrementMs(
+                    appPreferences.getValue(appPreferences.playerSeekForwardInc)
+                )
+                .setPauseAtEndOfMediaItems(true)
+                .setVideoOutput(appPreferences.getValue(appPreferences.playerMpvVo))
+                .setAudioOutput(appPreferences.getValue(appPreferences.playerMpvAo))
+                .setHwDec(appPreferences.getValue(appPreferences.playerMpvHwdec))
+                .build()
     }
 
     fun initializePlayer(itemId: UUID, itemKind: String, startFromBeginning: Boolean) {
@@ -455,7 +423,7 @@ constructor(
         if (
             !playWhenReady &&
                 reason == Player.PLAY_WHEN_READY_CHANGE_REASON_END_OF_MEDIA_ITEM &&
-                player.playbackState == ExoPlayer.STATE_READY
+                player.playbackState == Player.STATE_READY
         ) {
             viewModelScope.launch {
                 val mediaId = player.currentMediaItem?.mediaId
@@ -479,18 +447,18 @@ constructor(
     override fun onPlaybackStateChanged(state: Int) {
         var stateString = "UNKNOWN_STATE             -"
         when (state) {
-            ExoPlayer.STATE_IDLE -> {
-                stateString = "ExoPlayer.STATE_IDLE      -"
+            Player.STATE_IDLE -> {
+                stateString = "Player.STATE_IDLE      -"
             }
-            ExoPlayer.STATE_BUFFERING -> {
-                stateString = "ExoPlayer.STATE_BUFFERING -"
+            Player.STATE_BUFFERING -> {
+                stateString = "Player.STATE_BUFFERING -"
             }
-            ExoPlayer.STATE_READY -> {
-                stateString = "ExoPlayer.STATE_READY     -"
+            Player.STATE_READY -> {
+                stateString = "Player.STATE_READY     -"
                 _uiState.update { it.copy(fileLoaded = true) }
             }
-            ExoPlayer.STATE_ENDED -> {
-                stateString = "ExoPlayer.STATE_ENDED     -"
+            Player.STATE_ENDED -> {
+                stateString = "Player.STATE_ENDED     -"
                 eventsChannel.trySend(PlayerEvents.NavigateBack)
             }
         }

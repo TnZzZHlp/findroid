@@ -129,7 +129,6 @@ dependencies {
     ksp(libs.kotlin.metadata.jvm)
     compileOnly(libs.libmpv)
     implementation(libs.material)
-    implementation(libs.media3.ffmpeg.decoder)
     implementation(libs.timber)
 
     coreLibraryDesugaring(libs.android.desugar.jdk)

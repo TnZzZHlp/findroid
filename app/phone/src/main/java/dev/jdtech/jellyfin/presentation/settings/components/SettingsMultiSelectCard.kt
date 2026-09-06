@@ -33,11 +33,14 @@ fun SettingsMultiSelectCard(
     onUpdate: (value: Set<String>) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val optionValues = stringArrayResource(preference.optionValues)
-    val optionNames = stringArrayResource(preference.options)
     val noneString = stringResource(CoreR.string.none)
-
-    val options = remember(preference.nameStringResource) { optionValues.zip(optionNames) }
+    val options =
+        preference.dynamicOptions
+            ?: run {
+                val optionValues = stringArrayResource(preference.optionValues)
+                val optionNames = stringArrayResource(preference.options)
+                optionValues.zip(optionNames)
+            }
 
     val optionsMap = remember(options) { options.toMap() }
 

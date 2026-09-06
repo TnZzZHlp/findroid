@@ -98,7 +98,6 @@ dependencies {
     implementation(libs.androidx.core)
     implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
-    implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.ui)
     implementation(libs.androidx.media3.session)
     implementation(libs.androidx.navigation.compose)
@@ -112,7 +111,6 @@ dependencies {
     ksp(libs.hilt.compiler)
     implementation(libs.jellyfin.core)
     ksp(libs.kotlin.metadata.jvm)
-    implementation(libs.media3.ffmpeg.decoder)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.timber)
 
