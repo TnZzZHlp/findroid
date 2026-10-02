@@ -5,6 +5,8 @@
     <string name="remove">删除</string>
     <string name="cancel">取消</string>
     <string name="title_media">我的媒体</string>
+    <string name="title_downloads">已下载</string>
+    <string name="no_downloaded_episodes">当前服务器暂无已下载的剧集</string>
     <string name="title_favorite">收藏</string>
     <string name="view_all">查看所有</string>
     <string name="error_loading_data">加载数据错误</string>

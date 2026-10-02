@@ -43,6 +43,7 @@ import dev.jdtech.jellyfin.models.FindroidMovie
 import dev.jdtech.jellyfin.models.FindroidSeason
 import dev.jdtech.jellyfin.models.FindroidShow
 import dev.jdtech.jellyfin.presentation.film.CollectionScreen
+import dev.jdtech.jellyfin.presentation.film.DownloadsScreen
 import dev.jdtech.jellyfin.presentation.film.EpisodeScreen
 import dev.jdtech.jellyfin.presentation.film.FavoritesScreen
 import dev.jdtech.jellyfin.presentation.film.HomeScreen
@@ -90,6 +91,8 @@ data class LibraryRoute(
 @Serializable data class CollectionRoute(val collectionId: String, val collectionName: String)
 
 @Serializable data object FavoritesRoute
+
+@Serializable data object DownloadsRoute
 
 @Serializable data class MovieRoute(val movieId: String)
 
@@ -322,6 +325,7 @@ fun NavigationRoot(
                                 navigateToItem(navController = navController, item = item)
                             },
                             onFavoritesClick = { navController.safeNavigate(FavoritesRoute) },
+                            onDownloadsClick = { navController.safeNavigate(DownloadsRoute) },
                             searchExpanded = searchExpanded,
                             onSearchExpand = { searchExpanded = it },
                         )
@@ -362,6 +366,11 @@ fun NavigationRoot(
                             },
                             navigateBack = { navController.safePopBackStack() },
                         )
+                    }
+                }
+                composable<DownloadsRoute> {
+                    ContainerTransformScreen(consumePendingTransform = true) {
+                        DownloadsScreen(navigateBack = { navController.safePopBackStack() })
                     }
                 }
                 composable<MovieRoute> { backStackEntry ->

@@ -103,6 +103,8 @@ interface JellyfinRepository {
 
     suspend fun hasPlayableLocalSource(itemId: UUID): Boolean
 
+    fun observeDownloadedEpisodes(): Flow<List<FindroidEpisode>>
+
     suspend fun getStreamUrl(itemId: UUID, mediaSourceId: String): String
 
     suspend fun getSegments(itemId: UUID): List<FindroidSegment>

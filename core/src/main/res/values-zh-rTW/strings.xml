@@ -5,6 +5,8 @@
     <string name="cancel">取消</string>
     <string name="title_home">主畫面</string>
     <string name="title_media">媒體庫</string>
+    <string name="title_downloads">已下載</string>
+    <string name="no_downloaded_episodes">目前伺服器沒有已下載的劇集</string>
     <string name="view_all">更多</string>
     <string name="retry">重試</string>
     <string name="genres">類型</string>

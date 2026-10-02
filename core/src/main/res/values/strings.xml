@@ -8,6 +8,8 @@
     <string name="title_home">Home</string>
     <string name="title_media">My media</string>
     <string name="title_favorite">Favorites</string>
+    <string name="title_downloads">Downloaded</string>
+    <string name="no_downloaded_episodes">No downloaded episodes on this server</string>
     <string name="title_settings">Settings</string>
     <string name="view_all">View all</string>
     <string name="error_loading_data">Error loading data</string>

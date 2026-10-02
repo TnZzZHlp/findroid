@@ -35,6 +35,7 @@ import dev.jdtech.jellyfin.film.presentation.search.SearchViewModel
 import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.presentation.components.ErrorDialog
 import dev.jdtech.jellyfin.presentation.film.components.Direction
+import dev.jdtech.jellyfin.presentation.film.components.DownloadsCard
 import dev.jdtech.jellyfin.presentation.film.components.ErrorCard
 import dev.jdtech.jellyfin.presentation.film.components.FavoritesCard
 import dev.jdtech.jellyfin.presentation.film.components.FilmSearchBar
@@ -47,6 +48,7 @@ import dev.jdtech.jellyfin.presentation.utils.rememberSafePadding
 fun MediaScreen(
     onItemClick: (FindroidItem) -> Unit,
     onFavoritesClick: () -> Unit,
+    onDownloadsClick: () -> Unit,
     searchExpanded: Boolean,
     onSearchExpand: (Boolean) -> Unit,
     viewModel: MediaViewModel = hiltViewModel(),
@@ -62,6 +64,7 @@ fun MediaScreen(
         searchState = searchState,
         searchExpanded = searchExpanded,
         onSearchExpand = onSearchExpand,
+        onDownloadsClick = onDownloadsClick,
         onAction = { action ->
             when (action) {
                 is MediaAction.OnItemClick -> onItemClick(action.item)
@@ -86,6 +89,7 @@ private fun MediaScreenLayout(
     searchState: SearchState,
     searchExpanded: Boolean,
     onSearchExpand: (Boolean) -> Unit,
+    onDownloadsClick: () -> Unit,
     onAction: (MediaAction) -> Unit,
     onSearchAction: (SearchAction) -> Unit,
 ) {
@@ -145,6 +149,7 @@ private fun MediaScreenLayout(
             item(span = { GridItemSpan(maxLineSpan) }) {
                 FavoritesCard(onClick = { onAction(MediaAction.OnFavoritesClick) })
             }
+            item(span = { GridItemSpan(maxLineSpan) }) { DownloadsCard(onClick = onDownloadsClick) }
             items(state.libraries, key = { it.id }) { library ->
                 ItemCard(
                     item = library,
@@ -186,6 +191,7 @@ private fun MediaScreenLayoutPreview() {
             searchState = SearchState(),
             searchExpanded = false,
             onSearchExpand = {},
+            onDownloadsClick = {},
             onAction = {},
             onSearchAction = {},
         )

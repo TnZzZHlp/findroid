@@ -13,6 +13,7 @@ import dev.jdtech.jellyfin.models.FindroidSeasonDto
 import dev.jdtech.jellyfin.models.FindroidSegmentDto
 import dev.jdtech.jellyfin.models.FindroidShowDto
 import dev.jdtech.jellyfin.models.FindroidSourceDto
+import dev.jdtech.jellyfin.models.FindroidSourceType
 import dev.jdtech.jellyfin.models.FindroidTrickplayInfoDto
 import dev.jdtech.jellyfin.models.FindroidUserDataDto
 import dev.jdtech.jellyfin.models.Server
@@ -22,6 +23,7 @@ import dev.jdtech.jellyfin.models.ServerWithAddresses
 import dev.jdtech.jellyfin.models.ServerWithAddressesAndUsers
 import dev.jdtech.jellyfin.models.User
 import java.util.UUID
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ServerDatabaseDao {
@@ -199,6 +201,19 @@ interface ServerDatabaseDao {
         "SELECT * FROM episodes WHERE serverId = :serverId ORDER BY seriesName ASC, parentIndexNumber ASC, indexNumber ASC"
     )
     suspend fun getEpisodesByServerId(serverId: String): List<FindroidEpisodeDto>
+
+    @Query(
+        """
+        SELECT DISTINCT episodes.* FROM episodes
+        INNER JOIN sources ON sources.itemId = episodes.id
+        WHERE episodes.serverId = :serverId AND sources.type = :sourceType
+        ORDER BY episodes.seriesName COLLATE NOCASE, episodes.parentIndexNumber, episodes.indexNumber
+        """
+    )
+    fun observeLocalEpisodesByServerId(
+        serverId: String,
+        sourceType: FindroidSourceType = FindroidSourceType.LOCAL,
+    ): Flow<List<FindroidEpisodeDto>>
 
     @Query("DELETE FROM episodes WHERE id = :id") suspend fun deleteEpisode(id: UUID)
 

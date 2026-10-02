@@ -34,6 +34,10 @@ import java.io.File
 import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.BaseItemKind
@@ -721,6 +725,23 @@ class JellyfinRepositoryImpl(
     override suspend fun hasPlayableLocalSource(itemId: UUID): Boolean {
         return withContext(Dispatchers.IO) { getPlayableLocalSources(itemId).isNotEmpty() }
     }
+
+    override fun observeDownloadedEpisodes(): Flow<List<FindroidEpisode>> = flow {
+        val serverId = appPreferences.getValue(appPreferences.currentServer)
+        val userId = jellyfinApi.userId
+        if (serverId == null || userId == null) {
+            emit(emptyList())
+            return@flow
+        }
+        emitAll(
+            database.observeLocalEpisodesByServerId(serverId).map { episodes ->
+                episodes
+                    .filter { hasPlayableLocalSource(it.id) }
+                    .map { it.toFindroidEpisode(database, userId) }
+            }
+        )
+    }
+        .flowOn(Dispatchers.IO)
 
     private suspend fun hasPlayableLocalEpisode(seriesId: UUID): Boolean {
         return database.getEpisodesByShowId(seriesId).any { hasPlayableLocalSource(it.id) }
