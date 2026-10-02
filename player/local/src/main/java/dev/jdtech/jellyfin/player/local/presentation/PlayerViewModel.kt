@@ -690,20 +690,20 @@ constructor(
     }
 
     fun adjustSubtitleDelay(delayMs: Long) {
-        setSubtitleDelay(subtitleDelayMs + delayMs)
+        viewModelScope.launch { setSubtitleDelay(subtitleDelayMs + delayMs) }
     }
 
     fun resetSubtitleDelay() {
-        setSubtitleDelay(0L)
+        viewModelScope.launch { setSubtitleDelay(0L) }
     }
 
-    private fun loadSubtitleDelay(itemId: UUID) {
+    private suspend fun loadSubtitleDelay(itemId: UUID) {
         val userId = jellyfinApi.userId ?: return
         subtitleDelayMs = database.getUserDataOrCreateNew(itemId, userId).subtitleDelayMs
         (player as? MPVPlayer)?.setSubtitleDelay(subtitleDelayMs)
     }
 
-    private fun setSubtitleDelay(delayMs: Long) {
+    private suspend fun setSubtitleDelay(delayMs: Long) {
         val itemId = player.currentMediaItem?.mediaId?.let(UUID::fromString) ?: return
         val userId = jellyfinApi.userId ?: return
         subtitleDelayMs = delayMs

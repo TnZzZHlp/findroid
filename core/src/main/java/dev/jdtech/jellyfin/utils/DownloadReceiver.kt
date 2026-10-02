@@ -39,7 +39,7 @@ class DownloadReceiver : BroadcastReceiver() {
         }
     }
 
-    private fun cleanupFailedDownload(downloadId: Long) {
+    private suspend fun cleanupFailedDownload(downloadId: Long) {
         val source = database.getSourceByDownloadId(downloadId)
         if (source != null) {
             File(source.path).delete()

@@ -1,7 +1,7 @@
 package dev.jdtech.jellyfin.models
 
-import androidx.room.ColumnInfo
-import androidx.room.Entity
+import androidx.room3.ColumnInfo
+import androidx.room3.Entity
 import java.util.UUID
 
 @Entity(tableName = "userdata", primaryKeys = ["userId", "itemId"])

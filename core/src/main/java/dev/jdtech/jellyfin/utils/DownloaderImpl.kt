@@ -226,7 +226,7 @@ class DownloaderImpl(
         File(context.filesDir, "images/${item.id}").deleteRecursively()
     }
 
-    private fun deleteSource(itemId: UUID, source: FindroidSource) {
+    private suspend fun deleteSource(itemId: UUID, source: FindroidSource) {
         source.downloadId?.let { downloadManager.remove(it) }
         File(source.path).delete()
         database.getMediaStreamsBySourceId(source.id).forEach { mediaStream ->
@@ -321,10 +321,10 @@ class DownloaderImpl(
         false
     }
 
-    private fun finalizeFile(
+    private suspend fun finalizeFile(
         temporaryPath: String,
         download: DownloadResult,
-        updatePath: (String) -> Unit,
+        updatePath: suspend (String) -> Unit,
     ): Boolean {
         val temporaryFile = File(temporaryPath)
         if (!temporaryFile.isFile) return false
@@ -352,7 +352,7 @@ class DownloaderImpl(
         val totalBytes: Long,
     )
 
-    private fun downloadExternalMediaStreams(
+    private suspend fun downloadExternalMediaStreams(
         item: FindroidItem,
         source: FindroidSource,
         localSourceId: String,
@@ -409,7 +409,7 @@ class DownloaderImpl(
         saveTrickplayData(itemId, localSourceId, trickplayInfo, byteArrays)
     }
 
-    private fun saveTrickplayData(
+    private suspend fun saveTrickplayData(
         itemId: UUID,
         sourceId: String,
         trickplayInfo: FindroidTrickplayInfo,

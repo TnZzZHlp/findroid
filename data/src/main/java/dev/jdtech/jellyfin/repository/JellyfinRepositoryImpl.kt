@@ -710,33 +710,33 @@ class JellyfinRepositoryImpl(
     override suspend fun getUserConfiguration(): UserConfiguration =
         withContext(Dispatchers.IO) { jellyfinApi.userApi.getCurrentUser().content.configuration!! }
 
-    private fun getPlayableLocalSources(itemId: UUID): List<FindroidSource> {
+    private suspend fun getPlayableLocalSources(itemId: UUID): List<FindroidSource> {
         return database
             .getSources(itemId)
             .map { it.toFindroidSource(database) }
             .filter { it.isPlayableLocalFile() }
     }
 
-    private fun hasPlayableLocalSource(itemId: UUID): Boolean {
+    private suspend fun hasPlayableLocalSource(itemId: UUID): Boolean {
         return getPlayableLocalSources(itemId).isNotEmpty()
     }
 
-    private fun hasPlayableLocalEpisode(seriesId: UUID): Boolean {
+    private suspend fun hasPlayableLocalEpisode(seriesId: UUID): Boolean {
         return database.getEpisodesByShowId(seriesId).any { hasPlayableLocalSource(it.id) }
     }
 
-    private fun hasPlayableLocalEpisodeInSeason(seasonId: UUID): Boolean {
+    private suspend fun hasPlayableLocalEpisodeInSeason(seasonId: UUID): Boolean {
         return database.getEpisodesBySeasonId(seasonId).any { hasPlayableLocalSource(it.id) }
     }
 
-    private fun getLocalSeasons(seriesId: UUID): List<FindroidSeason> {
+    private suspend fun getLocalSeasons(seriesId: UUID): List<FindroidSeason> {
         return database
             .getSeasonsByShowId(seriesId)
             .filter { hasPlayableLocalEpisodeInSeason(it.id) }
             .map { it.toFindroidSeason(database, jellyfinApi.userId!!) }
     }
 
-    private fun getLocalEpisodes(
+    private suspend fun getLocalEpisodes(
         seasonId: UUID,
         startItemId: UUID?,
         limit: Int?,
@@ -755,7 +755,7 @@ class JellyfinRepositoryImpl(
         return episodes
     }
 
-    private fun getLocalNextUp(seriesId: UUID?): List<FindroidEpisode> {
+    private suspend fun getLocalNextUp(seriesId: UUID?): List<FindroidEpisode> {
         val showIds =
             if (seriesId != null) {
                 listOf(seriesId)
