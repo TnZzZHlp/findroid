@@ -51,13 +51,11 @@ jobs:
               output.write(f"compile_sdk={sdk}\nbuild_tools={tools}\n")
           PY
 
-      - name: Install Android SDK packages
-        env:
-          COMPILE_SDK: ${{ steps.sdk.outputs.compile_sdk }}
-          BUILD_TOOLS: ${{ steps.sdk.outputs.build_tools }}
-        run: |
-          sdkmanager --licenses < <(yes) > /dev/null
-          sdkmanager "platforms;android-$COMPILE_SDK" "build-tools;$BUILD_TOOLS"
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd # v4
+        with:
+          packages: platform-tools platforms;android-${{ steps.sdk.outputs.compile_sdk }} build-tools;${{ steps.sdk.outputs.build_tools }}
+          log-accepted-android-sdk-licenses: false
 
       - name: Build unsigned release APKs
         run: ./gradlew :app:phone:assembleLibreRelease :app:tv:assembleLibreRelease --console=plain
