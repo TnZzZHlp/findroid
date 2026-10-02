@@ -54,8 +54,30 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd # v4
         with:
-          packages: platform-tools platforms;android-${{ steps.sdk.outputs.compile_sdk }} build-tools;${{ steps.sdk.outputs.build_tools }}
           log-accepted-android-sdk-licenses: false
+
+      - name: Install requested Android SDK packages
+        env:
+          COMPILE_SDK: ${{ steps.sdk.outputs.compile_sdk }}
+          BUILD_TOOLS: ${{ steps.sdk.outputs.build_tools }}
+        run: |
+          sdkmanager --list | awk -F '|' '{
+            gsub(/^[[:space:]]+|[[:space:]]+$/, "", $1)
+            print $1
+          }' > "$RUNNER_TEMP/android-sdk-packages.txt"
+          platform=""
+          # Recent SDKs use a decimal platform package ID, such as android-37.0.
+          for candidate in "platforms;android-$COMPILE_SDK" "platforms;android-$COMPILE_SDK.0"; do
+            if grep -Fxq "$candidate" "$RUNNER_TEMP/android-sdk-packages.txt"; then
+              platform="$candidate"
+              break
+            fi
+          done
+          if [[ -z "$platform" ]]; then
+            echo "No Android platform package found for API $COMPILE_SDK" >&2
+            exit 1
+          fi
+          sdkmanager "$platform" "build-tools;$BUILD_TOOLS"
 
       - name: Build unsigned release APKs
         run: ./gradlew :app:phone:assembleLibreRelease :app:tv:assembleLibreRelease --console=plain
