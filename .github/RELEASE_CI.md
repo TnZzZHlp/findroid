@@ -1,7 +1,10 @@
 # Signed release APK workflow
 
-`Signed Release APKs` runs on every push to `main`, or manually from the Actions
-page on `main`. It builds the phone and TV Libre Release variants with JDK 21
+`Signed Release APKs` runs on pushes to `main` that change module source/resources,
+Gradle build scripts, ProGuard rules, Gradle dependencies/wrapper configuration,
+or the release signing script. Documentation-only and workflow-only changes do
+not trigger it. It can also be run manually from the Actions page on `main`.
+It builds the phone and TV Libre Release variants with JDK 21
 and the Android SDK versions declared in `buildSrc/src/main/kotlin/Versions.kt`.
 It does not publish a GitHub Release or upload to Google Play.
 
@@ -64,12 +67,14 @@ verified with `apksigner verify --verbose --print-certs`, including a check
 against `SIGNING_CERT_SHA256`. A missing APK, failed verification, or mismatched
 certificate fails the job before artifact upload; no debug-key fallback is used.
 
-Two artifacts, `phone-libre-release-signed-<commit>` and
-`tv-libre-release-signed-<commit>`, contain the four signed APKs for their variant
-and their public certificate verification reports. They are retained for 14 days
-and are available on the workflow run's Actions page. Neither signing credentials
-nor the keystore are uploaded. The temporary keystore is removed after signing,
-including a failed signing step.
+Each of the eight signed APKs is uploaded as its own artifact using
+`archive: false`, named after the APK file, for example
+`phone-libre-arm64-v8a-release-signed.apk`. Downloading an individual artifact
+returns the APK directly, not a ZIP bundle. Artifacts are retained for 14 days
+and are available on the workflow run's Actions page. Verification reports remain
+on the runner and are not included in these APK artifacts. Neither signing
+credentials nor the keystore are uploaded. The temporary keystore is removed
+after signing, including a failed signing step.
 
 The workflow uses pinned action revisions, read-only repository permissions, and
 no pull-request trigger. Only trusted changes should be merged into `main`:

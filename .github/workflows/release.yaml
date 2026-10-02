@@ -3,6 +3,16 @@ name: Signed Release APKs
 on:
   push:
     branches: [main]
+    paths:
+      - '**/src/**'
+      - '**/*.gradle'
+      - '**/*.gradle.kts'
+      - '**/*.pro'
+      - 'gradle/**'
+      - 'gradle.properties'
+      - 'gradlew'
+      - 'gradlew.bat'
+      - '.github/scripts/sign-release-apks.sh'
   workflow_dispatch:
 
 permissions:
@@ -105,24 +115,66 @@ jobs:
         if: always()
         run: rm -f "$RUNNER_TEMP/findroid-release-signing.p12"
 
-      - name: Upload signed phone APKs
+      - name: Upload phone arm64-v8a APK
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: phone-libre-release-signed-${{ github.sha }}
-          path: |
-            app/phone/build/outputs/apk/libre/release/*-signed.apk
-            app/phone/build/outputs/apk/libre/release/*-signed-verification.txt
+          path: app/phone/build/outputs/apk/libre/release/phone-libre-arm64-v8a-release-signed.apk
+          archive: false
           if-no-files-found: error
-          compression-level: 0
           retention-days: 14
 
-      - name: Upload signed TV APKs
+      - name: Upload phone armeabi-v7a APK
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: tv-libre-release-signed-${{ github.sha }}
-          path: |
-            app/tv/build/outputs/apk/libre/release/*-signed.apk
-            app/tv/build/outputs/apk/libre/release/*-signed-verification.txt
+          path: app/phone/build/outputs/apk/libre/release/phone-libre-armeabi-v7a-release-signed.apk
+          archive: false
           if-no-files-found: error
-          compression-level: 0
+          retention-days: 14
+
+      - name: Upload phone x86_64 APK
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          path: app/phone/build/outputs/apk/libre/release/phone-libre-x86_64-release-signed.apk
+          archive: false
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload phone x86 APK
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          path: app/phone/build/outputs/apk/libre/release/phone-libre-x86-release-signed.apk
+          archive: false
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload TV arm64-v8a APK
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          path: app/tv/build/outputs/apk/libre/release/tv-libre-arm64-v8a-release-signed.apk
+          archive: false
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload TV armeabi-v7a APK
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          path: app/tv/build/outputs/apk/libre/release/tv-libre-armeabi-v7a-release-signed.apk
+          archive: false
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload TV x86_64 APK
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          path: app/tv/build/outputs/apk/libre/release/tv-libre-x86_64-release-signed.apk
+          archive: false
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload TV x86 APK
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          path: app/tv/build/outputs/apk/libre/release/tv-libre-x86-release-signed.apk
+          archive: false
+          if-no-files-found: error
           retention-days: 14
