@@ -1,5 +1,6 @@
 package dev.jdtech.jellyfin.ui
 
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -49,6 +50,7 @@ import androidx.tv.material3.Surface
 import dev.jdtech.jellyfin.core.R
 import dev.jdtech.jellyfin.player.core.domain.models.Track
 import dev.jdtech.jellyfin.player.local.R as PlayerLocalR
+import dev.jdtech.jellyfin.player.local.presentation.PlayerEvents
 import dev.jdtech.jellyfin.player.local.presentation.PlayerViewModel
 import dev.jdtech.jellyfin.player.local.presentation.formatLabel
 import dev.jdtech.jellyfin.presentation.theme.spacings
@@ -79,6 +81,8 @@ fun PlayerScreen(
 
     val context = LocalContext.current
     val currentView = LocalView.current
+    val backPressedDispatcher =
+        checkNotNull(LocalOnBackPressedDispatcherOwner.current).onBackPressedDispatcher
 
     // Keep the screen on while player is show
     DisposableEffect(Unit) {
@@ -118,6 +122,14 @@ fun PlayerScreen(
 
     var currentPosition by remember { mutableLongStateOf(0L) }
     var isPlaying by remember { mutableStateOf(viewModel.player.isPlaying) }
+    LaunchedEffect(viewModel, backPressedDispatcher) {
+        viewModel.eventsChannelFlow.collect { event ->
+            when (event) {
+                PlayerEvents.NavigateBack -> backPressedDispatcher.onBackPressed()
+                is PlayerEvents.IsPlayingChanged -> isPlaying = event.isPlaying
+            }
+        }
+    }
     LaunchedEffect(Unit) {
         while (true) {
             delay(300)

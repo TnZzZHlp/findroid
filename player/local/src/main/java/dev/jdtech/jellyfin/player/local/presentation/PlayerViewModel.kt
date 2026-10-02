@@ -38,6 +38,7 @@ import dev.jdtech.jellyfin.settings.domain.subtitleSelectionPreferenceKey
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.math.ceil
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -84,7 +85,7 @@ constructor(
         )
     val uiState = _uiState.asStateFlow()
 
-    private val eventsChannel = Channel<PlayerEvents>()
+    private val eventsChannel = Channel<PlayerEvents>(Channel.BUFFERED)
     val eventsChannelFlow = eventsChannel.receiveAsFlow()
 
     data class UiState(
@@ -214,14 +215,22 @@ constructor(
                         startFromBeginning = startFromBeginning,
                         maxStreamingBitrate = preferredVideoQuality.maxStreamingBitrate,
                     )
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (e: Exception) {
                     Timber.e(e)
-                    Toast.makeText(application, e.localizedMessage, Toast.LENGTH_LONG).show()
                     null
                 }
 
             if (startItem == null) {
-                Timber.e("No start item, stopping player initialization")
+                Timber.e("No playable start item, stopping player initialization")
+                Toast.makeText(
+                        application,
+                        R.string.player_initialization_failed,
+                        Toast.LENGTH_LONG,
+                    )
+                    .show()
+                eventsChannel.send(PlayerEvents.NavigateBack)
                 return@launch
             }
 

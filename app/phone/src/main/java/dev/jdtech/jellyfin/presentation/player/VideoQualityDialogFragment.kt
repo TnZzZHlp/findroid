@@ -14,12 +14,9 @@ import dev.jdtech.jellyfin.player.local.presentation.formatLabel
 class VideoQualityDialogFragment(private val viewModel: PlayerViewModel) : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val qualities = viewModel.availableVideoQualities
-        val selectedIndex =
-            qualities
-                .indexOfFirst {
-                    it.maxStreamingBitrate == viewModel.videoQuality.maxStreamingBitrate
-                }
-                .takeIf { it >= 0 } ?: 0
+        val selectedIndex = qualities.indexOfFirst {
+            it.maxStreamingBitrate == viewModel.videoQuality.maxStreamingBitrate
+        }
         return requireActivity().let { activity ->
             MaterialAlertDialogBuilder(activity)
                 .setTitle(R.string.select_video_quality)

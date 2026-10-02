@@ -22,6 +22,7 @@ data class FindroidMediaStreamDto(
     val width: Int?,
     val videoDoViTitle: String?,
     val downloadId: Long? = null,
+    val bitrate: Int? = null,
 )
 
 fun FindroidMediaStream.toFindroidMediaStreamDto(
@@ -44,5 +45,6 @@ fun FindroidMediaStream.toFindroidMediaStreamDto(
         height = height,
         width = width,
         videoDoViTitle = videoDoViTitle,
+        bitrate = bitrate,
     )
 }

@@ -26,6 +26,7 @@ suspend fun MediaSourceInfo.toFindroidSource(
     itemId: UUID,
     includePath: Boolean = false,
     forceTranscoding: Boolean = false,
+    maxStreamingBitrate: Int? = null,
 ): FindroidSource {
     val path =
         if (forceTranscoding) {
@@ -36,18 +37,20 @@ suspend fun MediaSourceInfo.toFindroidSource(
                 }
                 .orEmpty()
                 .ifEmpty {
-                    // The server can answer with a direct stream instead of a transcode session
-                    // when the source already fits the requested quality.
-                    when (protocol) {
-                        MediaProtocol.FILE -> {
-                            try {
-                                jellyfinRepository.getStreamUrl(itemId, id.orEmpty())
-                            } catch (_: Exception) {
-                                ""
+                    if (!canFallBackToDirectSource(maxStreamingBitrate)) {
+                        ""
+                    } else {
+                        when (protocol) {
+                            MediaProtocol.FILE -> {
+                                try {
+                                    jellyfinRepository.getStreamUrl(itemId, id.orEmpty())
+                                } catch (_: Exception) {
+                                    ""
+                                }
                             }
+                            MediaProtocol.HTTP -> this.path.orEmpty()
+                            else -> ""
                         }
-                        MediaProtocol.HTTP -> this.path.orEmpty()
-                        else -> ""
                     }
                 }
         } else {
@@ -73,6 +76,14 @@ suspend fun MediaSourceInfo.toFindroidSource(
         mediaStreams =
             mediaStreams?.map { it.toFindroidMediaStream(jellyfinRepository) } ?: emptyList(),
     )
+}
+
+internal fun MediaSourceInfo.canFallBackToDirectSource(maxStreamingBitrate: Int?): Boolean {
+    if (maxStreamingBitrate == null) return true
+    if (maxStreamingBitrate <= 0) return false
+
+    // MediaSourceInfo.bitrate is the aggregate source bitrate, including audio.
+    return bitrate?.let { it > 0 && it <= maxStreamingBitrate } == true
 }
 
 suspend fun FindroidSourceDto.toFindroidSource(

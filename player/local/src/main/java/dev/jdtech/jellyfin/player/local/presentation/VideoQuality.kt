@@ -8,8 +8,9 @@ import java.util.Locale
  * A selectable video quality.
  *
  * [maxStreamingBitrate] is the bitrate cap requested from the server, `null` means the original
- * quality (direct play). [height] and [bitrate] describe the option itself, except for the original
- * quality where they describe the current media source.
+ * quality (direct play). For capped options, [height] is only used to filter presets when source
+ * bitrate is unknown; it does not promise an output resolution. The original option's [height] and
+ * [bitrate] describe the current media source.
  */
 data class VideoQuality(
     val maxStreamingBitrate: Int?,
@@ -67,13 +68,25 @@ data class VideoQuality(
     }
 }
 
-fun VideoQuality.formatLabel(context: Context): String {
+fun VideoQuality.formatLabel(context: Context): String =
+    formatLabel(
+        originalLabel = context.getString(R.string.video_quality_original),
+        formatBitrateCap = { context.getString(R.string.video_quality_up_to, it) },
+    )
+
+internal fun VideoQuality.formatLabel(
+    originalLabel: String,
+    formatBitrateCap: (String) -> String,
+): String {
     val parts = mutableListOf<String>()
     if (isOriginal) {
-        parts.add(context.getString(R.string.video_quality_original))
+        parts.add(originalLabel)
+        height?.let { parts.add("${it}p") }
+        bitrate?.let { parts.add(formatBitrate(it)) }
+    } else {
+        bitrate?.let { parts.add(formatBitrateCap(formatBitrate(it))) }
+            ?: maxStreamingBitrate?.let { parts.add(formatBitrateCap(formatBitrate(it))) }
     }
-    height?.let { parts.add("${it}p") }
-    bitrate?.let { parts.add(formatBitrate(it)) }
     return parts.joinToString(" · ")
 }
 

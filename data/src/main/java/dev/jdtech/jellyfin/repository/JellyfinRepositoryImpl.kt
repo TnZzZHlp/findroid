@@ -492,6 +492,7 @@ class JellyfinRepositoryImpl(
                         itemId,
                         includePath,
                         forceTranscoding = maxStreamingBitrate != null,
+                        maxStreamingBitrate = maxStreamingBitrate,
                     )
                 }
         }

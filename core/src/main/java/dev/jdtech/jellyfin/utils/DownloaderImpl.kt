@@ -40,6 +40,7 @@ import kotlin.math.ceil
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import org.jellyfin.sdk.model.api.MediaStreamType
 import timber.log.Timber
 
 class DownloaderImpl(
@@ -160,6 +161,7 @@ class DownloaderImpl(
             database.setSourceDownloadId(localSourceId, downloadId)
             database.insertUserData(item.toFindroidUserDataDto(jellyfinRepository.getUserId()))
 
+            saveVideoStreamMetadata(source, localSourceId)
             downloadExternalMediaStreams(item, source, localSourceId, storageIndex)
 
             segments.forEach { database.insertSegment(it.toFindroidSegmentsDto(item.id)) }
@@ -230,8 +232,10 @@ class DownloaderImpl(
         source.downloadId?.let { downloadManager.remove(it) }
         File(source.path).delete()
         database.getMediaStreamsBySourceId(source.id).forEach { mediaStream ->
-            mediaStream.downloadId?.let { downloadManager.remove(it) }
-            File(mediaStream.path).delete()
+            if (mediaStream.isExternal) {
+                mediaStream.downloadId?.let { downloadManager.remove(it) }
+                File(mediaStream.path).delete()
+            }
         }
         database.deleteMediaStreamsBySourceId(source.id)
         database.deleteSource(source.id)
@@ -351,6 +355,21 @@ class DownloaderImpl(
         val downloadedBytes: Long,
         val totalBytes: Long,
     )
+
+    private suspend fun saveVideoStreamMetadata(source: FindroidSource, localSourceId: String) {
+        val videoStream =
+            source.mediaStreams.firstOrNull { it.type == MediaStreamType.VIDEO } ?: return
+        // This metadata-only row has no separately downloaded stream file.
+        database.insertMediaStream(
+            videoStream
+                .copy(isExternal = false, path = null)
+                .toFindroidMediaStreamDto(
+                    id = UUID.randomUUID(),
+                    sourceId = localSourceId,
+                    path = "",
+                )
+        )
+    }
 
     private suspend fun downloadExternalMediaStreams(
         item: FindroidItem,

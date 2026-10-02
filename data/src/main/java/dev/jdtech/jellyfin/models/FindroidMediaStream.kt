@@ -53,5 +53,6 @@ fun FindroidMediaStreamDto.toFindroidMediaStream(): FindroidMediaStream {
         height = height,
         width = width,
         videoDoViTitle = videoDoViTitle,
+        bitrate = bitrate,
     )
 }

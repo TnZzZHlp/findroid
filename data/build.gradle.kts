@@ -42,4 +42,5 @@ dependencies {
     implementation(libs.jellyfin.core)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.timber)
+    testImplementation("junit:junit:4.13.2")
 }
