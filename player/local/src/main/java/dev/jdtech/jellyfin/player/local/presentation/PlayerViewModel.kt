@@ -121,12 +121,23 @@ constructor(
     val supportsSubtitleDelay: Boolean
         get() = player is MPVPlayer
 
-    var videoQuality: VideoQuality = VideoQuality.AUTO
+    var videoQuality: VideoQuality = VideoQuality.original()
         private set
+
+    var availableVideoQualities: List<VideoQuality> = listOf(VideoQuality.original())
+        private set
+
+    private var preferredVideoQuality: VideoQuality = VideoQuality.original()
 
     var isInPictureInPictureMode: Boolean = false
 
     init {
+        preferredVideoQuality =
+            VideoQuality.fromStoredBitrate(
+                appPreferences.getValue(appPreferences.playerVideoQuality)
+            )
+        videoQuality = preferredVideoQuality
+
         segmentsSkipButton = appPreferences.getValue(appPreferences.playerMediaSegmentsSkipButton)
         segmentsSkipButtonTypes =
             appPreferences.getValue(appPreferences.playerMediaSegmentsSkipButtonType)
@@ -173,6 +184,23 @@ constructor(
         subtitleSelectionMemoryEnabled = true
     }
 
+    private var videoQualitySourceItemId: UUID? = null
+
+    private fun applyVideoQualityForItem(item: PlayerItem) {
+        if (videoQualitySourceItemId != item.itemId) {
+            // Only rebuild the option list when another item starts playing, so switching the
+            // quality does not rebuild it from the transcoded stream.
+            availableVideoQualities = VideoQuality.optionsFor(item.videoHeight, item.videoBitrate)
+            videoQualitySourceItemId = item.itemId
+        }
+        videoQuality =
+            if (item.isLocalSource) {
+                VideoQuality.original(item.videoHeight, item.videoBitrate)
+            } else {
+                preferredVideoQuality
+            }
+    }
+
     fun initializePlayer(itemId: UUID, itemKind: String, startFromBeginning: Boolean) {
         player.addListener(this)
 
@@ -184,6 +212,7 @@ constructor(
                         itemKind = BaseItemKind.fromName(itemKind),
                         mediaSourceIndex = null,
                         startFromBeginning = startFromBeginning,
+                        maxStreamingBitrate = preferredVideoQuality.maxStreamingBitrate,
                     )
                 } catch (e: Exception) {
                     Timber.e(e)
@@ -196,6 +225,7 @@ constructor(
                 return@launch
             }
 
+            applyVideoQualityForItem(startItem)
             items = listOfNotNull(startItem).toMutableList()
             currentMediaItemIndex = items.indexOf(startItem)
 
@@ -249,6 +279,11 @@ constructor(
             }
 
             videoQuality = quality
+            preferredVideoQuality = quality
+            appPreferences.setValue(
+                appPreferences.playerVideoQuality,
+                quality.maxStreamingBitrate ?: Constants.VIDEO_QUALITY_ORIGINAL,
+            )
             items = mutableListOf(item)
             currentMediaItemIndex = 0
             if (subtitleSelectionMemoryEnabled) {
@@ -395,6 +430,7 @@ constructor(
                 items
                     .first { it.itemId.toString() == player.currentMediaItem?.mediaId }
                     .let { item ->
+                        applyVideoQualityForItem(item)
                         val itemTitle =
                             if (item.parentIndexNumber != null && item.indexNumber != null) {
                                 if (item.indexNumberEnd == null) {

@@ -35,6 +35,21 @@ suspend fun MediaSourceInfo.toFindroidSource(
                     else jellyfinRepository.getBaseUrl().trimEnd('/') + url
                 }
                 .orEmpty()
+                .ifEmpty {
+                    // The server can answer with a direct stream instead of a transcode session
+                    // when the source already fits the requested quality.
+                    when (protocol) {
+                        MediaProtocol.FILE -> {
+                            try {
+                                jellyfinRepository.getStreamUrl(itemId, id.orEmpty())
+                            } catch (_: Exception) {
+                                ""
+                            }
+                        }
+                        MediaProtocol.HTTP -> this.path.orEmpty()
+                        else -> ""
+                    }
+                }
         } else {
             when (protocol) {
                 MediaProtocol.FILE -> {

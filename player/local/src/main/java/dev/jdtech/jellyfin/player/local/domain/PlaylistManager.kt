@@ -33,6 +33,7 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
         itemKind: BaseItemKind,
         mediaSourceIndex: Int? = null,
         startFromBeginning: Boolean = false,
+        maxStreamingBitrate: Int? = null,
     ): PlayerItem? {
         Timber.d("Retrieving initial player item")
 
@@ -147,7 +148,7 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
         }
 
         startItem = initialItem
-        maxStreamingBitrate = null
+        this.maxStreamingBitrate = maxStreamingBitrate
 
         currentItemIndex = items.indexOfFirst { it.id == initialItem.id }
 
@@ -237,7 +238,7 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
     ): PlayerItem? {
         this.maxStreamingBitrate = maxStreamingBitrate
         val item = items.getOrNull(currentItemIndex) ?: return null
-        return item.toPlayerItem(null, playbackPosition).also {
+        return item.toPlayerItem(null, playbackPosition, preferLocalSource = false).also {
             playerItems.clear()
             playerItems.add(it)
         }
@@ -246,10 +247,21 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
     private suspend fun FindroidItem.toPlayerItem(
         mediaSourceIndex: Int?,
         playbackPosition: Long,
+        preferLocalSource: Boolean = true,
     ): PlayerItem {
         Timber.d("Converting FindroidItem ${this.id} to PlayerItem")
 
-        val mediaSources = repository.getMediaSources(id, true, maxStreamingBitrate)
+        val bitrate =
+            if (
+                maxStreamingBitrate != null &&
+                    preferLocalSource &&
+                    repository.hasPlayableLocalSource(id)
+            ) {
+                null
+            } else {
+                maxStreamingBitrate
+            }
+        val mediaSources = repository.getMediaSources(id, true, bitrate)
         val mediaSource =
             if (mediaSourceIndex == null) {
                 mediaSources.firstOrNull { it.isPlayableLocalFile() }
@@ -297,6 +309,7 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
                 }
                 else -> null
             }
+        val videoStream = mediaSource.mediaStreams.firstOrNull { it.type == MediaStreamType.VIDEO }
         return PlayerItem(
             name = name,
             itemId = id,
@@ -310,6 +323,9 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
             externalSubtitles = externalSubtitles,
             chapters = chapters.toPlayerChapters(),
             trickplayInfo = trickplayInfo,
+            videoHeight = videoStream?.height,
+            videoBitrate = videoStream?.bitrate,
+            isLocalSource = mediaSource.type == FindroidSourceType.LOCAL,
         )
     }
 

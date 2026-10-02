@@ -481,7 +481,7 @@ class JellyfinRepositoryImpl(
                         enableDirectPlay = maxStreamingBitrate == null,
                         enableDirectStream = maxStreamingBitrate == null,
                         enableTranscoding = true,
-                        allowVideoStreamCopy = maxStreamingBitrate == null,
+                        allowVideoStreamCopy = true,
                     ),
                 )
                 .content
@@ -717,8 +717,8 @@ class JellyfinRepositoryImpl(
             .filter { it.isPlayableLocalFile() }
     }
 
-    private suspend fun hasPlayableLocalSource(itemId: UUID): Boolean {
-        return getPlayableLocalSources(itemId).isNotEmpty()
+    override suspend fun hasPlayableLocalSource(itemId: UUID): Boolean {
+        return withContext(Dispatchers.IO) { getPlayableLocalSources(itemId).isNotEmpty() }
     }
 
     private suspend fun hasPlayableLocalEpisode(seriesId: UUID): Boolean {

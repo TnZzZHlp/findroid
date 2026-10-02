@@ -18,4 +18,7 @@ data class PlayerItem(
     val externalSubtitles: List<ExternalSubtitle> = emptyList(),
     val chapters: List<PlayerChapter> = emptyList(),
     val trickplayInfo: TrickplayInfo? = null,
+    val videoHeight: Int? = null,
+    val videoBitrate: Int? = null,
+    val isLocalSource: Boolean = false,
 ) : Parcelable

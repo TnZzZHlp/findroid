@@ -101,6 +101,8 @@ interface JellyfinRepository {
         maxStreamingBitrate: Int? = null,
     ): List<FindroidSource>
 
+    suspend fun hasPlayableLocalSource(itemId: UUID): Boolean
+
     suspend fun getStreamUrl(itemId: UUID, mediaSourceId: String): String
 
     suspend fun getSegments(itemId: UUID): List<FindroidSegment>

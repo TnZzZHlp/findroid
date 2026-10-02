@@ -50,7 +50,7 @@ import dev.jdtech.jellyfin.core.R
 import dev.jdtech.jellyfin.player.core.domain.models.Track
 import dev.jdtech.jellyfin.player.local.R as PlayerLocalR
 import dev.jdtech.jellyfin.player.local.presentation.PlayerViewModel
-import dev.jdtech.jellyfin.player.local.presentation.VideoQuality
+import dev.jdtech.jellyfin.player.local.presentation.formatLabel
 import dev.jdtech.jellyfin.presentation.theme.spacings
 import dev.jdtech.jellyfin.ui.components.player.VideoPlayerControlsLayout
 import dev.jdtech.jellyfin.ui.components.player.VideoPlayerMediaButton
@@ -217,7 +217,7 @@ fun PlayerScreen(
                             text = stringResource(PlayerLocalR.string.select_video_quality),
                             style = MaterialTheme.typography.headlineMedium,
                         )
-                        VideoQuality.entries.forEach { quality ->
+                        viewModel.availableVideoQualities.forEach { quality ->
                             Surface(
                                 onClick = {
                                     viewModel.selectVideoQuality(quality)
@@ -227,7 +227,7 @@ fun PlayerScreen(
                                     Modifier.padding(top = MaterialTheme.spacings.extraSmall),
                             ) {
                                 Text(
-                                    text = quality.label,
+                                    text = quality.formatLabel(context),
                                     modifier = Modifier.padding(MaterialTheme.spacings.medium),
                                 )
                             }

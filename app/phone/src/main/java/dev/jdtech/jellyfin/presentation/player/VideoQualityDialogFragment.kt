@@ -9,17 +9,23 @@ import androidx.fragment.app.DialogFragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dev.jdtech.jellyfin.player.local.R
 import dev.jdtech.jellyfin.player.local.presentation.PlayerViewModel
-import dev.jdtech.jellyfin.player.local.presentation.VideoQuality
+import dev.jdtech.jellyfin.player.local.presentation.formatLabel
 
 class VideoQualityDialogFragment(private val viewModel: PlayerViewModel) : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val qualities = VideoQuality.entries
+        val qualities = viewModel.availableVideoQualities
+        val selectedIndex =
+            qualities
+                .indexOfFirst {
+                    it.maxStreamingBitrate == viewModel.videoQuality.maxStreamingBitrate
+                }
+                .takeIf { it >= 0 } ?: 0
         return requireActivity().let { activity ->
             MaterialAlertDialogBuilder(activity)
                 .setTitle(R.string.select_video_quality)
                 .setSingleChoiceItems(
-                    qualities.map(VideoQuality::label).toTypedArray(),
-                    qualities.indexOf(viewModel.videoQuality),
+                    qualities.map { it.formatLabel(activity) }.toTypedArray(),
+                    selectedIndex,
                 ) { dialog, which ->
                     viewModel.selectVideoQuality(qualities[which])
                     dialog.dismiss()

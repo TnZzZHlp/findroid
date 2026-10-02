@@ -29,6 +29,8 @@ class AppPreferences @Inject constructor(val sharedPreferences: SharedPreference
 
     // Player
     val playerBrightness = Preference("pref_player_brightness", -1.0f)
+    val playerVideoQuality =
+        Preference("pref_player_video_quality", Constants.VIDEO_QUALITY_ORIGINAL)
 
     // Player - mpv
     val playerMpvHwdec = Preference("pref_player_mpv_hwdec", "mediacodec")
