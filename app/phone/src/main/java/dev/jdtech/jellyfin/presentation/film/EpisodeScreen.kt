@@ -85,10 +85,10 @@ fun EpisodeScreen(
     ObserveAsEvents(downloaderViewModel.events) { event ->
         when (event) {
             is DownloaderEvent.Successful -> {
-                viewModel.loadEpisode(episodeId = episodeId)
+                viewModel.loadEpisode(episodeId = episodeId, forceRefresh = true)
             }
             is DownloaderEvent.Deleted -> {
-                viewModel.loadEpisode(episodeId = episodeId)
+                viewModel.loadEpisode(episodeId = episodeId, forceRefresh = true)
             }
         }
     }

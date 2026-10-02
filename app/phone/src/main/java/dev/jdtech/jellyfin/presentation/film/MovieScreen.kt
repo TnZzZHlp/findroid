@@ -81,10 +81,10 @@ fun MovieScreen(
     ObserveAsEvents(downloaderViewModel.events) { event ->
         when (event) {
             is DownloaderEvent.Successful -> {
-                viewModel.loadMovie(movieId = movieId)
+                viewModel.loadMovie(movieId = movieId, forceRefresh = true)
             }
             is DownloaderEvent.Deleted -> {
-                viewModel.loadMovie(movieId = movieId)
+                viewModel.loadMovie(movieId = movieId, forceRefresh = true)
             }
         }
     }

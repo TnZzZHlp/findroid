@@ -14,6 +14,7 @@ import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.common.TrackSelectionOverride
 import androidx.media3.common.TrackSelectionParameters
+import androidx.media3.common.Tracks
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.jdtech.jellyfin.api.JellyfinApi
 import dev.jdtech.jellyfin.database.ServerDatabaseDao
@@ -28,6 +29,12 @@ import dev.jdtech.jellyfin.player.local.mpv.MPVPlayer
 import dev.jdtech.jellyfin.repository.JellyfinRepository
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
 import dev.jdtech.jellyfin.settings.domain.Constants
+import dev.jdtech.jellyfin.settings.domain.SubtitleSelectionPreference
+import dev.jdtech.jellyfin.settings.domain.SubtitleSelectionScope
+import dev.jdtech.jellyfin.settings.domain.SubtitleTrackIdentity
+import dev.jdtech.jellyfin.settings.domain.findMatchingSubtitleTrack
+import dev.jdtech.jellyfin.settings.domain.findMatchingSubtitleTrackByTitle
+import dev.jdtech.jellyfin.settings.domain.subtitleSelectionPreferenceKey
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.math.ceil
@@ -44,6 +51,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.jellyfin.sdk.model.api.BaseItemKind
 import timber.log.Timber
+
+private const val SUBTITLE_SELECTION_DISABLED = "disabled"
+private const val SUBTITLE_SELECTION_TRACK = "track"
+private const val SUBTITLE_SELECTION_TITLE_SUFFIX = ":title"
+private const val SUBTITLE_SELECTION_LANGUAGE_SUFFIX = ":language"
 
 @HiltViewModel
 class PlayerViewModel
@@ -85,6 +97,9 @@ constructor(
     )
 
     private var items: MutableList<PlayerItem> = mutableListOf()
+    private var subtitleSelectionMemoryEnabled = false
+    private var subtitleSelectionHandledMediaId: String? = null
+    private var subtitleSelectionFallbackMediaId: String? = null
 
     var playWhenReady = true
     private var currentMediaItemIndex = savedStateHandle["mediaItemIndex"] ?: 0
@@ -154,6 +169,10 @@ constructor(
                 .build()
     }
 
+    fun enablePhoneSubtitleSelectionMemory() {
+        subtitleSelectionMemoryEnabled = true
+    }
+
     fun initializePlayer(itemId: UUID, itemKind: String, startFromBeginning: Boolean) {
         player.addListener(this)
 
@@ -187,6 +206,12 @@ constructor(
                 }
             } catch (e: Exception) {
                 Timber.e(e)
+            }
+
+            if (subtitleSelectionMemoryEnabled) {
+                subtitleSelectionHandledMediaId = null
+                subtitleSelectionFallbackMediaId = null
+                resetSubtitleTrackSelection()
             }
 
             val startPosition =
@@ -226,6 +251,11 @@ constructor(
             videoQuality = quality
             items = mutableListOf(item)
             currentMediaItemIndex = 0
+            if (subtitleSelectionMemoryEnabled) {
+                subtitleSelectionHandledMediaId = null
+                subtitleSelectionFallbackMediaId = null
+                resetSubtitleTrackSelection()
+            }
             player.setMediaItem(item.toMediaItem(), playbackPosition)
             player.prepare()
             player.play()
@@ -354,6 +384,12 @@ constructor(
     override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
         Timber.d("Playing MediaItem: ${mediaItem?.mediaId}")
         savedStateHandle["mediaItemIndex"] = player.currentMediaItemIndex
+        if (subtitleSelectionMemoryEnabled) {
+            subtitleSelectionHandledMediaId = null
+            subtitleSelectionFallbackMediaId = null
+            resetSubtitleTrackSelection()
+            restoreSubtitleSelection()
+        }
         viewModelScope.launch {
             try {
                 items
@@ -418,6 +454,13 @@ constructor(
         }
     }
 
+    override fun onTracksChanged(tracks: Tracks) {
+        super.onTracksChanged(tracks)
+        if (subtitleSelectionMemoryEnabled) {
+            restoreSubtitleSelection()
+        }
+    }
+
     override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
         // Report playback stopped for current item and transition to the next one
         if (
@@ -474,26 +517,170 @@ constructor(
     fun switchToTrack(trackType: @C.TrackType Int, index: Int) {
         // Index -1 equals disable track
         if (index == -1) {
-            player.trackSelectionParameters =
-                player.trackSelectionParameters
-                    .buildUpon()
-                    .clearOverridesOfType(trackType)
-                    .setTrackTypeDisabled(trackType, true)
-                    .build()
-        } else {
-            player.trackSelectionParameters =
-                player.trackSelectionParameters
-                    .buildUpon()
-                    .setOverrideForType(
-                        TrackSelectionOverride(
-                            player.currentTracks.groups
-                                .filter { it.type == trackType && it.isSupported }[index]
-                                .mediaTrackGroup,
-                            0,
-                        )
+            if (subtitleSelectionMemoryEnabled && trackType == C.TRACK_TYPE_TEXT) {
+                subtitleSelectionHandledMediaId = player.currentMediaItem?.mediaId
+                subtitleSelectionFallbackMediaId = null
+            }
+            applyTrackSelection(trackType, index)
+            if (subtitleSelectionMemoryEnabled && trackType == C.TRACK_TYPE_TEXT) {
+                currentPlayerItem()?.let { item ->
+                    saveSubtitleSelection(
+                        item,
+                        SubtitleSelectionPreference(title = null, language = null, disabled = true),
                     )
-                    .setTrackTypeDisabled(trackType, false)
-                    .build()
+                }
+            }
+            return
+        }
+
+        val groups = player.currentTracks.groups.filter { it.type == trackType && it.isSupported }
+        val group = groups.getOrNull(index) ?: return
+        if (subtitleSelectionMemoryEnabled && trackType == C.TRACK_TYPE_TEXT) {
+            subtitleSelectionHandledMediaId = player.currentMediaItem?.mediaId
+            subtitleSelectionFallbackMediaId = null
+        }
+        applyTrackSelection(trackType, index)
+        if (subtitleSelectionMemoryEnabled && trackType == C.TRACK_TYPE_TEXT) {
+            val format = group.mediaTrackGroup.getFormat(0)
+            currentPlayerItem()?.let { item ->
+                saveSubtitleSelection(
+                    item,
+                    SubtitleSelectionPreference(
+                        title = format.label,
+                        language = format.language,
+                        disabled = false,
+                    ),
+                )
+            }
+        }
+    }
+
+    private fun applyTrackSelection(trackType: @C.TrackType Int, index: Int) {
+        val builder = player.trackSelectionParameters.buildUpon().clearOverridesOfType(trackType)
+        if (index == -1) {
+            player.trackSelectionParameters = builder.setTrackTypeDisabled(trackType, true).build()
+            return
+        }
+
+        val group =
+            player.currentTracks.groups
+                .filter { it.type == trackType && it.isSupported }
+                .getOrNull(index) ?: return
+        player.trackSelectionParameters =
+            builder
+                .setOverrideForType(TrackSelectionOverride(group.mediaTrackGroup, 0))
+                .setTrackTypeDisabled(trackType, false)
+                .build()
+    }
+
+    private fun resetSubtitleTrackSelection() {
+        player.trackSelectionParameters =
+            player.trackSelectionParameters
+                .buildUpon()
+                .clearOverridesOfType(C.TRACK_TYPE_TEXT)
+                .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, false)
+                .build()
+    }
+
+    private fun restoreSubtitleSelection() {
+        val mediaId = player.currentMediaItem?.mediaId ?: return
+        if (subtitleSelectionHandledMediaId == mediaId) return
+
+        val item = currentPlayerItem() ?: return
+        val storageKey = subtitleSelectionStorageKey(item) ?: return
+        val preference = readSubtitleSelection(storageKey)
+        if (preference == null) {
+            subtitleSelectionHandledMediaId = mediaId
+            return
+        }
+
+        if (preference.disabled) {
+            subtitleSelectionHandledMediaId = mediaId
+            applyTrackSelection(C.TRACK_TYPE_TEXT, -1)
+            return
+        }
+
+        val groups =
+            player.currentTracks.groups.filter { it.type == C.TRACK_TYPE_TEXT && it.isSupported }
+        val trackIdentities = groups.map {
+            val format = it.mediaTrackGroup.getFormat(0)
+            SubtitleTrackIdentity(title = format.label, language = format.language)
+        }
+        val titleTrackIndex = findMatchingSubtitleTrackByTitle(preference, trackIdentities)
+        val trackIndex = findMatchingSubtitleTrack(preference, trackIdentities) ?: return
+        if (titleTrackIndex == null && preference.title?.isNotBlank() == true) {
+            if (subtitleSelectionFallbackMediaId == mediaId) return
+            subtitleSelectionFallbackMediaId = mediaId
+        } else {
+            subtitleSelectionHandledMediaId = mediaId
+            subtitleSelectionFallbackMediaId = null
+        }
+
+        applyTrackSelection(C.TRACK_TYPE_TEXT, trackIndex)
+    }
+
+    private fun currentPlayerItem(): PlayerItem? {
+        val mediaId = player.currentMediaItem?.mediaId ?: return null
+        return items.firstOrNull { it.itemId.toString() == mediaId }
+    }
+
+    private fun subtitleSelectionStorageKey(item: PlayerItem): String? {
+        val serverId =
+            appPreferences.getValue(appPreferences.currentServer)?.takeIf { it.isNotBlank() }
+        val userId = jellyfinApi.userId
+        if (serverId == null || userId == null) return null
+
+        return subtitleSelectionPreferenceKey(
+            serverId,
+            userId,
+            SubtitleSelectionScope(
+                id = item.seriesId ?: item.itemId,
+                isSeries = item.seriesId != null,
+            ),
+        )
+    }
+
+    private fun readSubtitleSelection(storageKey: String): SubtitleSelectionPreference? {
+        return when (appPreferences.sharedPreferences.getString(storageKey, null)) {
+            SUBTITLE_SELECTION_DISABLED ->
+                SubtitleSelectionPreference(title = null, language = null, disabled = true)
+            SUBTITLE_SELECTION_TRACK ->
+                SubtitleSelectionPreference(
+                    title =
+                        appPreferences.sharedPreferences.getString(
+                            "$storageKey$SUBTITLE_SELECTION_TITLE_SUFFIX",
+                            null,
+                        ),
+                    language =
+                        appPreferences.sharedPreferences.getString(
+                            "$storageKey$SUBTITLE_SELECTION_LANGUAGE_SUFFIX",
+                            null,
+                        ),
+                    disabled = false,
+                )
+            else -> null
+        }
+    }
+
+    private fun saveSubtitleSelection(item: PlayerItem, preference: SubtitleSelectionPreference) {
+        val storageKey = subtitleSelectionStorageKey(item) ?: return
+        appPreferences.sharedPreferences.edit().apply {
+            putString(
+                storageKey,
+                if (preference.disabled) {
+                    SUBTITLE_SELECTION_DISABLED
+                } else {
+                    SUBTITLE_SELECTION_TRACK
+                },
+            )
+            if (preference.disabled) {
+                remove("$storageKey$SUBTITLE_SELECTION_TITLE_SUFFIX")
+                remove("$storageKey$SUBTITLE_SELECTION_LANGUAGE_SUFFIX")
+            } else {
+                putString("$storageKey$SUBTITLE_SELECTION_TITLE_SUFFIX", preference.title)
+                putString("$storageKey$SUBTITLE_SELECTION_LANGUAGE_SUFFIX", preference.language)
+            }
+            apply()
         }
     }
 

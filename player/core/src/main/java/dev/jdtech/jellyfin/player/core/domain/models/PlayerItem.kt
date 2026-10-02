@@ -11,6 +11,7 @@ data class PlayerItem(
     val mediaSourceId: String,
     val playbackPosition: Long,
     val mediaSourceUri: String = "",
+    val seriesId: UUID? = null,
     val parentIndexNumber: Int? = null,
     val indexNumber: Int? = null,
     val indexNumberEnd: Int? = null,

@@ -333,6 +333,7 @@ class PlayerActivity : BasePlayerActivity() {
             timeBar.addListener(previewScrubListener!!)
         }
 
+        viewModel.enablePhoneSubtitleSelectionMemory()
         viewModel.initializePlayer(
             itemId = itemId,
             itemKind = itemKind ?: "",
