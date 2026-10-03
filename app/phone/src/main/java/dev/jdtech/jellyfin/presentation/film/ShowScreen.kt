@@ -19,7 +19,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -51,6 +50,7 @@ import dev.jdtech.jellyfin.film.presentation.show.ShowState
 import dev.jdtech.jellyfin.film.presentation.show.ShowViewModel
 import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.presentation.film.components.ActorsRow
+import dev.jdtech.jellyfin.presentation.film.components.DetailLoading
 import dev.jdtech.jellyfin.presentation.film.components.Direction
 import dev.jdtech.jellyfin.presentation.film.components.InfoText
 import dev.jdtech.jellyfin.presentation.film.components.ItemButtonsBar
@@ -296,7 +296,12 @@ private fun ShowScreenLayout(state: ShowState, onAction: (ShowAction) -> Unit) {
                 }
                 Spacer(Modifier.height(paddingBottom))
             }
-        } ?: CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+        }
+            ?: DetailLoading(
+                error = state.error,
+                onRetry = { onAction(ShowAction.Retry) },
+                modifier = Modifier.align(Alignment.Center).padding(MaterialTheme.spacings.default),
+            )
 
         ItemTopBar(
             hasBackButton = true,

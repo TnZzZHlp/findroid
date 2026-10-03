@@ -370,7 +370,18 @@ fun NavigationRoot(
                 }
                 composable<DownloadsRoute> {
                     ContainerTransformScreen(consumePendingTransform = true) {
-                        DownloadsScreen(navigateBack = { navController.safePopBackStack() })
+                        DownloadsScreen(
+                            navigateBack = { navController.safePopBackStack() },
+                            navigateToShow = {
+                                navController.safeNavigate(ShowRoute(it.toString()))
+                            },
+                            navigateToSeason = {
+                                navController.safeNavigate(SeasonRoute(it.toString()))
+                            },
+                            navigateToEpisode = {
+                                navController.safeNavigate(EpisodeRoute(it.toString()))
+                            },
+                        )
                     }
                 }
                 composable<MovieRoute> { backStackEntry ->

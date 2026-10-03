@@ -18,7 +18,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -66,6 +65,7 @@ import dev.jdtech.jellyfin.film.presentation.show.ShowViewModel
 import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.presentation.theme.spacings
+import dev.jdtech.jellyfin.ui.components.DetailLoading
 import dev.jdtech.jellyfin.ui.components.Direction
 import dev.jdtech.jellyfin.ui.components.ItemCard
 import dev.jdtech.jellyfin.utils.getShowDateString
@@ -386,7 +386,12 @@ private fun ShowScreenLayout(state: ShowState, onAction: (ShowAction) -> Unit) {
             }
 
             LaunchedEffect(true) { focusRequester.requestFocus() }
-        } ?: CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+        }
+            ?: DetailLoading(
+                error = state.error,
+                onRetry = { onAction(ShowAction.Retry) },
+                modifier = Modifier.align(Alignment.Center),
+            )
     }
 }
 

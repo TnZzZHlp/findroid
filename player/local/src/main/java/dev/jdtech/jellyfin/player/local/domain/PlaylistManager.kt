@@ -84,7 +84,7 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
                     episode
                 }
                 BaseItemKind.SEASON -> {
-                    val season = repository.getSeason(itemId)
+                    val season = repository.getLocalSeason(itemId) ?: repository.getSeason(itemId)
                     val localEpisodes =
                         repository.getEpisodes(
                             seriesId = season.seriesId,
@@ -115,7 +115,8 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
                     episode
                 }
                 BaseItemKind.EPISODE -> {
-                    val episode = repository.getEpisode(itemId)
+                    val episode =
+                        repository.getLocalEpisode(itemId) ?: repository.getEpisode(itemId)
 
                     val localEpisodes =
                         repository.getEpisodes(

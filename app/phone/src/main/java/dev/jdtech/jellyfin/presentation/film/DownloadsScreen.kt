@@ -1,6 +1,7 @@
 package dev.jdtech.jellyfin.presentation.film
 
 import android.content.Intent
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -49,10 +50,17 @@ import dev.jdtech.jellyfin.presentation.film.components.Direction
 import dev.jdtech.jellyfin.presentation.film.components.ErrorCard
 import dev.jdtech.jellyfin.presentation.film.components.ItemPoster
 import dev.jdtech.jellyfin.presentation.theme.spacings
+import java.util.UUID
 import org.jellyfin.sdk.model.api.BaseItemKind
 
 @Composable
-fun DownloadsScreen(navigateBack: () -> Unit, viewModel: DownloadsViewModel = hiltViewModel()) {
+fun DownloadsScreen(
+    navigateBack: () -> Unit,
+    navigateToShow: (UUID) -> Unit,
+    navigateToSeason: (UUID) -> Unit,
+    navigateToEpisode: (UUID) -> Unit,
+    viewModel: DownloadsViewModel = hiltViewModel(),
+) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
@@ -64,6 +72,9 @@ fun DownloadsScreen(navigateBack: () -> Unit, viewModel: DownloadsViewModel = hi
     DownloadsScreenLayout(
         state = state,
         navigateBack = navigateBack,
+        navigateToShow = navigateToShow,
+        navigateToSeason = navigateToSeason,
+        navigateToEpisode = navigateToEpisode,
         onPlay = { episode ->
             context.startActivity(
                 Intent(context, PlayerActivity::class.java).apply {
@@ -83,6 +94,9 @@ fun DownloadsScreen(navigateBack: () -> Unit, viewModel: DownloadsViewModel = hi
 private fun DownloadsScreenLayout(
     state: DownloadsState,
     navigateBack: () -> Unit,
+    navigateToShow: (UUID) -> Unit,
+    navigateToSeason: (UUID) -> Unit,
+    navigateToEpisode: (UUID) -> Unit,
     onPlay: (FindroidEpisode) -> Unit,
     onDelete: (FindroidEpisode) -> Unit,
     onRetry: () -> Unit,
@@ -131,7 +145,9 @@ private fun DownloadsScreenLayout(
                                 text = group.name,
                                 style = MaterialTheme.typography.titleLarge,
                                 modifier =
-                                    Modifier.padding(vertical = MaterialTheme.spacings.small),
+                                    Modifier.fillMaxWidth()
+                                        .clickable { navigateToShow(group.seriesId) }
+                                        .padding(vertical = MaterialTheme.spacings.small),
                             )
                         }
                         group.episodes
@@ -141,6 +157,12 @@ private fun DownloadsScreenLayout(
                                     Text(
                                         text = stringResource(CoreR.string.season_number, season),
                                         style = MaterialTheme.typography.titleMedium,
+                                        modifier =
+                                            Modifier.fillMaxWidth()
+                                                .clickable {
+                                                    navigateToSeason(episodes.first().seasonId)
+                                                }
+                                                .padding(vertical = MaterialTheme.spacings.small),
                                     )
                                 }
                                 items(episodes, key = { it.id }) { episode ->
@@ -148,6 +170,7 @@ private fun DownloadsScreenLayout(
                                         episode = episode,
                                         enabled = episode.id !in state.deletingIds,
                                         onPlay = { onPlay(episode) },
+                                        onDetails = { navigateToEpisode(episode.id) },
                                         onDelete = { pendingDeletion = episode },
                                     )
                                 }
@@ -187,6 +210,7 @@ private fun DownloadedEpisodeRow(
     episode: FindroidEpisode,
     enabled: Boolean,
     onPlay: () -> Unit,
+    onDetails: () -> Unit,
     onDelete: () -> Unit,
 ) {
     Row(
@@ -226,6 +250,12 @@ private fun DownloadedEpisodeRow(
                     )
                 }
             }
+        }
+        IconButton(onClick = onDetails, enabled = enabled) {
+            Icon(
+                painter = painterResource(CoreR.drawable.ic_info),
+                contentDescription = stringResource(CoreR.string.view_details),
+            )
         }
         IconButton(onClick = onDelete, enabled = enabled) {
             Icon(

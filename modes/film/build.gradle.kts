@@ -27,6 +27,7 @@ dependencies {
     implementation(projects.settings)
     implementation(libs.timber)
     testImplementation("junit:junit:4.13.2")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
 
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.runtime)

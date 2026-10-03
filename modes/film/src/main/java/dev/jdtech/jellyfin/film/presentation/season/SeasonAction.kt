@@ -4,6 +4,8 @@ import dev.jdtech.jellyfin.models.FindroidItem
 import java.util.UUID
 
 sealed interface SeasonAction {
+    data object Retry : SeasonAction
+
     data class Play(val startFromBeginning: Boolean = false) : SeasonAction
 
     data object MarkAsPlayed : SeasonAction

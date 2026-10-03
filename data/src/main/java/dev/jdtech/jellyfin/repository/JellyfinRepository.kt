@@ -27,6 +27,14 @@ interface JellyfinRepository {
 
     suspend fun getEpisode(itemId: UUID): FindroidEpisode
 
+    suspend fun getLocalEpisode(itemId: UUID): FindroidEpisode?
+
+    suspend fun getLocalShow(itemId: UUID): FindroidShow?
+
+    suspend fun getLocalSeason(itemId: UUID): FindroidSeason?
+
+    suspend fun getLocalNextUp(seriesId: UUID): List<FindroidEpisode>
+
     suspend fun getMovie(itemId: UUID): FindroidMovie
 
     suspend fun getShow(itemId: UUID, forceRefresh: Boolean = false): FindroidShow

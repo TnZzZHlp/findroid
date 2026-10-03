@@ -3,13 +3,14 @@ package dev.jdtech.jellyfin.film.presentation.show
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dev.jdtech.jellyfin.models.FindroidEpisode
+import dev.jdtech.jellyfin.film.presentation.loadCachedDetail
 import dev.jdtech.jellyfin.models.FindroidItemPerson
 import dev.jdtech.jellyfin.models.FindroidShow
 import dev.jdtech.jellyfin.repository.JellyfinRepository
 import java.util.UUID
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -22,39 +23,48 @@ class ShowViewModel @Inject constructor(private val repository: JellyfinReposito
     val state = _state.asStateFlow()
 
     lateinit var showId: UUID
+    private var loadJob: Job? = null
 
     fun loadShow(showId: UUID, forceRefresh: Boolean = false) {
         this.showId = showId
         if (!forceRefresh && _state.value.show?.id == showId) return
 
-        viewModelScope.launch {
-            try {
-                val show = repository.getShow(showId, forceRefresh = forceRefresh)
-                val nextUp = getNextUp(showId, forceRefresh = forceRefresh)
-                val seasons = repository.getSeasons(showId, forceRefresh = forceRefresh)
-                val actors = getActors(show)
-                val director = getDirector(show)
-                val writers = getWriters(show)
-                _state.emit(
-                    _state.value.copy(
-                        show = show,
-                        nextUp = nextUp,
-                        seasons = seasons,
-                        actors = actors,
-                        director = director,
-                        writers = writers,
-                        error = null,
-                    )
-                )
-            } catch (e: Exception) {
-                _state.emit(_state.value.copy(error = e))
-            }
+        loadJob?.cancel()
+        if (_state.value.show?.id != showId) _state.value = ShowState()
+        else _state.value = _state.value.copy(error = null)
+        loadJob = viewModelScope.launch {
+            loadCachedDetail(
+                readCache = { loadShowState(showId, localOnly = true) },
+                fetchRemote = { hasCachedData ->
+                    loadShowState(showId, forceRefresh = forceRefresh || hasCachedData)!!
+                },
+                onLoaded = { _state.emit(it) },
+                onError = { _state.emit(_state.value.copy(error = it)) },
+            )
         }
     }
 
-    private suspend fun getNextUp(showId: UUID, forceRefresh: Boolean): FindroidEpisode? {
-        val nextUpItems = repository.getNextUp(showId, forceRefresh = forceRefresh)
-        return nextUpItems.getOrNull(0)
+    private suspend fun loadShowState(
+        showId: UUID,
+        localOnly: Boolean = false,
+        forceRefresh: Boolean = false,
+    ): ShowState? {
+        val show =
+            if (localOnly) repository.getLocalShow(showId) ?: return null
+            else repository.getShow(showId, forceRefresh = forceRefresh)
+        val nextUp =
+            if (localOnly) repository.getLocalNextUp(showId)
+            else repository.getNextUp(showId, forceRefresh = forceRefresh)
+        val seasons =
+            repository.getSeasons(showId, localOnly = localOnly, forceRefresh = forceRefresh)
+        return ShowState(
+            show = show,
+            nextUp = nextUp.firstOrNull(),
+            seasons = seasons,
+            actors = getActors(show),
+            director = getDirector(show),
+            writers = getWriters(show),
+        )
     }
 
     private suspend fun getActors(item: FindroidShow): List<FindroidItemPerson> {
@@ -77,6 +87,7 @@ class ShowViewModel @Inject constructor(private val repository: JellyfinReposito
 
     fun onAction(action: ShowAction) {
         when (action) {
+            is ShowAction.Retry -> loadShow(showId, forceRefresh = true)
             is ShowAction.MarkAsPlayed -> {
                 viewModelScope.launch {
                     repository.markAsPlayed(showId)

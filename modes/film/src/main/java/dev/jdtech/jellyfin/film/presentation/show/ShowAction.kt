@@ -4,6 +4,8 @@ import dev.jdtech.jellyfin.models.FindroidItem
 import java.util.UUID
 
 sealed interface ShowAction {
+    data object Retry : ShowAction
+
     data class Play(val startFromBeginning: Boolean = false) : ShowAction
 
     data class PlayTrailer(val trailer: String) : ShowAction

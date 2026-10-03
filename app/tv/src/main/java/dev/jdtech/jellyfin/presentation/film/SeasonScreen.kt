@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -27,6 +26,7 @@ import dev.jdtech.jellyfin.film.presentation.season.SeasonState
 import dev.jdtech.jellyfin.film.presentation.season.SeasonViewModel
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.presentation.theme.spacings
+import dev.jdtech.jellyfin.ui.components.DetailLoading
 import dev.jdtech.jellyfin.ui.components.EpisodeCard
 import java.util.UUID
 
@@ -47,6 +47,7 @@ fun SeasonScreen(
                 is SeasonAction.NavigateToItem -> navigateToPlayer(action.item.id)
                 else -> Unit
             }
+            viewModel.onAction(action)
         },
     )
 }
@@ -85,7 +86,12 @@ private fun SeasonScreenLayout(state: SeasonState, onAction: (SeasonAction) -> U
                     }
                 }
             }
-        } ?: CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+        }
+            ?: DetailLoading(
+                error = state.error,
+                onRetry = { onAction(SeasonAction.Retry) },
+                modifier = Modifier.align(Alignment.Center),
+            )
     }
 }
 
