@@ -41,6 +41,8 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jdtech.jellyfin.PlayerActivity
 import dev.jdtech.jellyfin.core.R as CoreR
+import dev.jdtech.jellyfin.core.presentation.downloader.DownloadQueueState
+import dev.jdtech.jellyfin.core.presentation.downloader.DownloadQueueViewModel
 import dev.jdtech.jellyfin.film.presentation.downloads.DownloadsState
 import dev.jdtech.jellyfin.film.presentation.downloads.DownloadsViewModel
 import dev.jdtech.jellyfin.models.FindroidEpisode
@@ -49,6 +51,7 @@ import dev.jdtech.jellyfin.presentation.film.components.DeleteDownloadDialog
 import dev.jdtech.jellyfin.presentation.film.components.Direction
 import dev.jdtech.jellyfin.presentation.film.components.ErrorCard
 import dev.jdtech.jellyfin.presentation.film.components.ItemPoster
+import dev.jdtech.jellyfin.presentation.film.components.downloadQueueItems
 import dev.jdtech.jellyfin.presentation.theme.spacings
 import java.util.UUID
 import org.jellyfin.sdk.model.api.BaseItemKind
@@ -59,14 +62,21 @@ fun DownloadsScreen(
     navigateToShow: (UUID) -> Unit,
     navigateToSeason: (UUID) -> Unit,
     navigateToEpisode: (UUID) -> Unit,
+    navigateToMovie: (UUID) -> Unit,
     viewModel: DownloadsViewModel = hiltViewModel(),
+    queueViewModel: DownloadQueueViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val queueState by queueViewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     LifecycleResumeEffect(Unit) {
         viewModel.loadDownloads()
-        onPauseOrDispose { viewModel.stopObserving() }
+        queueViewModel.observe()
+        onPauseOrDispose {
+            viewModel.stopObserving()
+            queueViewModel.stopObserving()
+        }
     }
 
     DownloadsScreenLayout(
@@ -75,6 +85,7 @@ fun DownloadsScreen(
         navigateToShow = navigateToShow,
         navigateToSeason = navigateToSeason,
         navigateToEpisode = navigateToEpisode,
+        navigateToMovie = navigateToMovie,
         onPlay = { episode ->
             context.startActivity(
                 Intent(context, PlayerActivity::class.java).apply {
@@ -86,6 +97,11 @@ fun DownloadsScreen(
         },
         onDelete = viewModel::deleteDownload,
         onRetry = viewModel::loadDownloads,
+        queueState = queueState,
+        onQueuePause = queueViewModel::pause,
+        onQueueResume = queueViewModel::resume,
+        onQueueRetry = queueViewModel::retry,
+        onQueueCancel = queueViewModel::cancel,
     )
 }
 
@@ -97,9 +113,15 @@ private fun DownloadsScreenLayout(
     navigateToShow: (UUID) -> Unit,
     navigateToSeason: (UUID) -> Unit,
     navigateToEpisode: (UUID) -> Unit,
+    navigateToMovie: (UUID) -> Unit,
     onPlay: (FindroidEpisode) -> Unit,
     onDelete: (FindroidEpisode) -> Unit,
     onRetry: () -> Unit,
+    queueState: DownloadQueueState,
+    onQueuePause: (Long) -> Unit,
+    onQueueResume: (Long) -> Unit,
+    onQueueRetry: (Long) -> Unit,
+    onQueueCancel: (Long) -> Unit,
 ) {
     var pendingDeletion by remember { mutableStateOf<FindroidEpisode?>(null) }
     var showErrorDialog by remember { mutableStateOf(false) }
@@ -130,6 +152,17 @@ private fun DownloadsScreenLayout(
                     contentPadding = PaddingValues(MaterialTheme.spacings.default),
                     verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.small),
                 ) {
+                    downloadQueueItems(
+                        queueState,
+                        onQueuePause,
+                        onQueueResume,
+                        onQueueRetry,
+                        onQueueCancel,
+                        onDetails = { task ->
+                            if (task.movie) navigateToMovie(task.itemId)
+                            else navigateToEpisode(task.itemId)
+                        },
+                    )
                     if (state.error != null) {
                         item(key = "error") {
                             ErrorCard(
@@ -177,7 +210,12 @@ private fun DownloadsScreenLayout(
                             }
                     }
                 }
-                if (state.groups.isEmpty() && state.error == null) {
+                if (
+                    state.groups.isEmpty() &&
+                        state.error == null &&
+                        queueState.tasks.isEmpty() &&
+                        queueState.error == null
+                ) {
                     Text(
                         text = stringResource(CoreR.string.no_downloaded_episodes),
                         modifier =

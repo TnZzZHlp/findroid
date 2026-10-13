@@ -105,4 +105,20 @@
     <string name="download_paused">Paused</string>
     <string name="download_downloading">Downloading…</string>
     <string name="download_failed">Failed to download</string>
+    <string name="download_pause">Pause download</string>
+    <string name="download_resume">Resume download</string>
+    <string name="download_retry">Retry download</string>
+    <string name="download_completed">Download complete</string>
+    <string name="download_queue">Download queue</string>
+    <string name="download_external_stream">External media stream</string>
+    <string name="download_size">%1$s / %2$s</string>
+    <string name="download_speed">%1$s/s</string>
+    <string name="download_eta">%1$d min remaining</string>
+    <string name="download_unknown_size">Unknown size</string>
+    <string name="download_error_http">The server returned HTTP %1$d. Check your connection and account.</string>
+    <string name="download_error_range">The server changed the file or returned an invalid byte range.</string>
+    <string name="download_error_finalize">The downloaded file could not be verified or saved. Check storage and retry.</string>
+    <string name="download_error_storage">Not enough storage space.</string>
+    <string name="download_error_permission">Cannot write to the selected storage.</string>
+    <string name="download_error_content">The server returned a web page or error response instead of the requested media. Check the server configuration.</string>
 </resources>

@@ -381,6 +381,9 @@ fun NavigationRoot(
                             navigateToEpisode = {
                                 navController.safeNavigate(EpisodeRoute(it.toString()))
                             },
+                            navigateToMovie = {
+                                navController.safeNavigate(MovieRoute(it.toString()))
+                            },
                         )
                     }
                 }

@@ -1,17 +1,23 @@
 package dev.jdtech.jellyfin.utils
 
-import android.app.DownloadManager
 import android.content.Context
 import android.net.Uri
 import android.os.Environment
 import android.os.StatFs
 import android.text.format.Formatter
-import androidx.core.net.toUri
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
+import com.tonyodev.fetch2.Request
+import com.tonyodev.fetch2.Status
+import com.tonyodev.fetch2core.Extras
 import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.database.ServerDatabaseDao
+import dev.jdtech.jellyfin.downloads.DownloadFileFinalizer
+import dev.jdtech.jellyfin.downloads.DownloadProgress
+import dev.jdtech.jellyfin.downloads.DownloadScheduler
+import dev.jdtech.jellyfin.downloads.FetchDownloadEngine
+import dev.jdtech.jellyfin.downloads.LegacyDownloadCleanup
 import dev.jdtech.jellyfin.models.FindroidEpisode
 import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.models.FindroidMovie
@@ -19,6 +25,7 @@ import dev.jdtech.jellyfin.models.FindroidSource
 import dev.jdtech.jellyfin.models.FindroidSources
 import dev.jdtech.jellyfin.models.FindroidTrickplayInfo
 import dev.jdtech.jellyfin.models.UiText
+import dev.jdtech.jellyfin.models.isPlayableLocalFile
 import dev.jdtech.jellyfin.models.localSourceId
 import dev.jdtech.jellyfin.models.toFindroidEpisodeDto
 import dev.jdtech.jellyfin.models.toFindroidMediaStreamDto
@@ -37,7 +44,10 @@ import java.io.File
 import java.util.UUID
 import kotlin.Exception
 import kotlin.math.ceil
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.jellyfin.sdk.model.api.MediaStreamType
@@ -49,29 +59,47 @@ class DownloaderImpl(
     private val jellyfinRepository: JellyfinRepository,
     private val appPreferences: AppPreferences,
     private val workManager: WorkManager,
+    private val engine: FetchDownloadEngine,
+    private val scheduler: DownloadScheduler,
+    private val finalizer: DownloadFileFinalizer,
+    private val legacyCleanup: LegacyDownloadCleanup,
 ) : Downloader {
-    private val downloadManager = context.getSystemService(DownloadManager::class.java)
-    private val finalizeMutex = Mutex()
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val operationMutex = Mutex()
 
-    // TODO: We should probably move most (if not all) code to a worker.
-    //  At this moment it is possible that some things are not downloaded due to the user leaving
-    //  the current screen
     override suspend fun downloadItem(
         item: FindroidItem,
         sourceId: String,
         storageIndex: Int,
-    ): Pair<Long, UiText?> = coroutineScope {
+    ): Pair<Long, UiText?> =
+        scope
+            .async { operationMutex.withLock { prepareDownload(item, sourceId, storageIndex) } }
+            .await()
+
+    private suspend fun prepareDownload(
+        item: FindroidItem,
+        sourceId: String,
+        storageIndex: Int,
+    ): Pair<Long, UiText?> {
+        legacyCleanup.run()
         var enqueuedDownloadId: Long? = null
         try {
+            if (
+                database.getSources(item.id).any {
+                    it.toFindroidSource(database).isPlayableLocalFile()
+                }
+            ) {
+                return Pair(-1, UiText.StringResource(CoreR.string.download_completed))
+            }
             val mediaSources = jellyfinRepository.getMediaSources(item.id, true)
             val source =
                 mediaSources.firstOrNull { it.id == sourceId }
                     ?: mediaSources.firstOrNull()
-                    ?: return@coroutineScope Pair(
+                    ?: return Pair(
                         -1,
                         UiText.StringResource(CoreR.string.downloading_error),
                     )
-            val localSourceId = "${localSourceId(item.id, source.id)}-${UUID.randomUUID()}"
+            val localSourceId = localSourceId(item.id, UUID.randomUUID().toString())
             val segments = jellyfinRepository.getSegments(item.id)
             val trickplayInfo =
                 if (item is FindroidSources) {
@@ -79,13 +107,13 @@ class DownloaderImpl(
                 } else {
                     null
                 }
-            val storageLocation = context.getExternalFilesDirs(null)[storageIndex]
+            val storageLocation = context.getExternalFilesDirs(null).getOrNull(storageIndex)
             if (
                 storageLocation == null ||
                     Environment.getExternalStorageState(storageLocation) !=
                         Environment.MEDIA_MOUNTED
             ) {
-                return@coroutineScope Pair(
+                return Pair(
                     -1,
                     UiText.StringResource(CoreR.string.storage_unavailable),
                 )
@@ -93,7 +121,7 @@ class DownloaderImpl(
             val path = Uri.fromFile(File(storageLocation, "downloads/$localSourceId.download"))
             val stats = StatFs(storageLocation.path)
             if (stats.availableBytes < source.size) {
-                return@coroutineScope Pair(
+                return Pair(
                     -1,
                     UiText.StringResource(
                         CoreR.string.not_enough_storage,
@@ -144,21 +172,18 @@ class DownloaderImpl(
             database.insertSource(sourceDto)
 
             val request =
-                DownloadManager.Request(source.path.toUri())
-                    .setTitle(item.name)
-                    .setAllowedOverMetered(
-                        appPreferences.getValue(appPreferences.downloadOverMobileData)
-                    )
-                    .setAllowedOverRoaming(
-                        appPreferences.getValue(appPreferences.downloadWhenRoaming)
-                    )
-                    .setNotificationVisibility(
-                        DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED
-                    )
-                    .setDestinationUri(path)
-            val downloadId = downloadManager.enqueue(request)
+                createRequest(
+                    source.path,
+                    path.path.orEmpty(),
+                    item,
+                    localSourceId,
+                    true,
+                    item.name,
+                )
+            database.setSourceDownloadId(localSourceId, request.id.toLong())
+            val downloadId = engine.enqueue(request)
             enqueuedDownloadId = downloadId
-            database.setSourceDownloadId(localSourceId, downloadId)
+            scheduler.schedule(immediate = true)
             database.insertUserData(item.toFindroidUserDataDto(jellyfinRepository.getUserId()))
 
             saveVideoStreamMetadata(source, localSourceId)
@@ -171,9 +196,10 @@ class DownloaderImpl(
             }
 
             startImagesDownloader(item)
-            return@coroutineScope Pair(downloadId, null)
+            scheduler.schedule()
+            return Pair(downloadId, null)
         } catch (e: Exception) {
-            enqueuedDownloadId?.let { downloadManager.remove(it) }
+            enqueuedDownloadId?.let { engine.delete(it) }
             try {
                 database
                     .getSources(item.id)
@@ -181,20 +207,21 @@ class DownloaderImpl(
                     ?.toFindroidSource(database)
                     ?.let { deleteItem(item, it) }
             } catch (_: Exception) {}
-            Timber.e(e)
-            return@coroutineScope Pair(
-                -1,
-                if (e.message != null) UiText.DynamicString(e.message!!)
-                else UiText.StringResource(CoreR.string.unknown_error),
-            )
+            Timber.e("Unable to prepare a media download")
+            return Pair(-1, UiText.StringResource(CoreR.string.downloading_error))
         }
     }
 
-    override suspend fun cancelDownload(item: FindroidItem, downloadId: Long) {
-        val source =
-            database.getSourceByDownloadId(downloadId)?.toFindroidSource(database) ?: return
-        deleteItem(item, source)
-    }
+    override suspend fun cancelDownload(item: FindroidItem, downloadId: Long) =
+        operationMutex.withLock {
+            val source =
+                (database.getSourceByDownloadId(downloadId)
+                        ?: database.getSources(item.id).firstOrNull {
+                            it.type == dev.jdtech.jellyfin.models.FindroidSourceType.LOCAL
+                        })
+                    ?.toFindroidSource(database) ?: return@withLock
+            deleteItem(item, source)
+        }
 
     override suspend fun deleteItem(item: FindroidItem, source: FindroidSource) {
         when (item) {
@@ -229,12 +256,16 @@ class DownloaderImpl(
     }
 
     private suspend fun deleteSource(itemId: UUID, source: FindroidSource) {
-        source.downloadId?.let { downloadManager.remove(it) }
+        engine
+            .downloads()
+            .filter { it.extras.getString("sourceId", "") == source.id }
+            .forEach { engine.delete(it.id.toLong()) }
         File(source.path).delete()
+        File(source.path.removeSuffix(".download")).delete()
         database.getMediaStreamsBySourceId(source.id).forEach { mediaStream ->
             if (mediaStream.isExternal) {
-                mediaStream.downloadId?.let { downloadManager.remove(it) }
                 File(mediaStream.path).delete()
+                File(mediaStream.path.removeSuffix(".download")).delete()
             }
         }
         database.deleteMediaStreamsBySourceId(source.id)
@@ -242,119 +273,144 @@ class DownloaderImpl(
         File(context.filesDir, "trickplay/$itemId/${source.id}").deleteRecursively()
     }
 
-    override suspend fun getProgress(downloadId: Long?): Pair<Int, Int> {
-        var downloadStatus = -1
-        var progress = -1
-        if (downloadId == null) {
-            return Pair(downloadStatus, progress)
+    override suspend fun cancelTask(downloadId: Long): Unit = operationMutex.withLock {
+        val source = database.getSourceByDownloadId(downloadId)
+        if (source != null) {
+            deleteSource(source.itemId, source.toFindroidSource(database))
+        } else {
+            engine.delete(downloadId)
+            database.getMediaStreamByDownloadId(downloadId)?.let { stream ->
+                File(stream.path).delete()
+                File(stream.path.removeSuffix(".download")).delete()
+                database.deleteMediaStream(stream.id)
+            }
         }
-        val query = DownloadManager.Query().setFilterById(downloadId)
-        downloadManager.query(query).use { cursor ->
-            if (cursor.moveToFirst()) {
-                downloadStatus =
-                    cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS))
-                when (downloadStatus) {
-                    DownloadManager.STATUS_RUNNING -> {
-                        val totalBytes =
-                            cursor.getLong(
-                                cursor.getColumnIndexOrThrow(
-                                    DownloadManager.COLUMN_TOTAL_SIZE_BYTES
-                                )
-                            )
-                        if (totalBytes > 0) {
-                            val downloadedBytes =
-                                cursor.getLong(
-                                    cursor.getColumnIndexOrThrow(
-                                        DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR
-                                    )
-                                )
-                            progress = downloadedBytes.times(100).div(totalBytes).toInt()
+    }
+
+    override suspend fun getProgress(downloadId: Long?): Pair<Int, Int> {
+        val snapshot = getSnapshot(downloadId)
+        return snapshot.status to (snapshot.progress * 100).toInt()
+    }
+
+    override suspend fun getSnapshot(downloadId: Long?): DownloadProgress {
+        val download =
+            engine.refresh().firstOrNull { it.id.toLong() == downloadId }
+                ?: return DownloadProgress()
+        return engine.progress(download)
+    }
+
+    override suspend fun finalizeDownload(downloadId: Long): Boolean {
+        val download =
+            engine.downloads().firstOrNull { it.id.toLong() == downloadId } ?: return false
+        return finalizer.finalize(download)
+    }
+
+    override suspend fun pauseDownload(downloadId: Long) {
+        group(downloadId)
+            .filter { it.status != Status.COMPLETED }
+            .forEach { engine.pause(it.id.toLong()) }
+    }
+
+    override suspend fun resumeDownload(downloadId: Long) {
+        group(downloadId)
+            .filter { it.status != Status.COMPLETED }
+            .forEach { engine.resume(it.id.toLong()) }
+        scheduler.schedule(immediate = true)
+    }
+
+    override suspend fun retryDownload(downloadId: Long) {
+        group(downloadId)
+            .filter {
+                it.status == Status.FAILED ||
+                    (it.status == Status.COMPLETED &&
+                        it.extras.getString("failure", "").isNotEmpty())
+            }
+            .forEach { engine.retry(it.id.toLong()) }
+        scheduler.schedule(immediate = true)
+    }
+
+    private suspend fun group(downloadId: Long): List<com.tonyodev.fetch2.Download> {
+        val downloads = engine.downloads()
+        val task = downloads.firstOrNull { it.id.toLong() == downloadId } ?: return emptyList()
+        if (!task.extras.getBoolean("primary", false)) return listOf(task)
+        val sourceId = task.extras.getString("sourceId", "")
+        return downloads.filter { it.extras.getString("sourceId", "") == sourceId }
+    }
+
+    override suspend fun discardOtherIdentities(serverId: String?, userId: String?) =
+        operationMutex.withLock {
+            legacyCleanup.run()
+            engine
+                .downloads()
+                .filter {
+                    (it.extras.getString("serverId", "") != serverId ||
+                        it.extras.getString("userId", "") != userId)
+                }
+                .forEach { task ->
+                    if (
+                        task.status == Status.COMPLETED &&
+                            (task.extras.getBoolean("finalized", false) || finalizer.finalize(task))
+                    )
+                        return@forEach
+                    val source = database.getSourceByDownloadId(task.id.toLong())
+                    if (source != null) {
+                        deleteSource(source.itemId, source.toFindroidSource(database))
+                    } else {
+                        engine
+                            .downloads()
+                            .firstOrNull { it.id == task.id }
+                            ?.let { engine.delete(task.id.toLong()) }
+                        database.getMediaStreamByDownloadId(task.id.toLong())?.let { stream ->
+                            File(stream.path).delete()
+                            File(stream.path.removeSuffix(".download")).delete()
+                            database.deleteMediaStream(stream.id)
                         }
                     }
-
-                    DownloadManager.STATUS_SUCCESSFUL -> {
-                        progress = 100
-                    }
                 }
-            } else {
-                downloadStatus = DownloadManager.STATUS_FAILED
-            }
         }
-        return Pair(downloadStatus, progress)
-    }
 
-    override suspend fun finalizeDownload(downloadId: Long): Boolean = finalizeMutex.withLock {
-        val query = DownloadManager.Query().setFilterById(downloadId)
-        val download =
-            downloadManager.query(query).use { cursor ->
-                if (!cursor.moveToFirst()) return@withLock false
-                DownloadResult(
-                    status =
-                        cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS)),
-                    downloadedBytes =
-                        cursor.getLong(
-                            cursor.getColumnIndexOrThrow(
-                                DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR
-                            )
-                        ),
-                    totalBytes =
-                        cursor.getLong(
-                            cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES)
-                        ),
+    private suspend fun createRequest(
+        url: String,
+        path: String,
+        item: FindroidItem,
+        localSourceId: String,
+        primary: Boolean,
+        title: String,
+    ): Request {
+        val serverId = appPreferences.getValue(appPreferences.currentServer) ?: error("No server")
+        val userId = jellyfinRepository.getUserId()
+        check(database.getServerCurrentUser(serverId)?.id == userId)
+        File(path).parentFile?.mkdirs()
+        val uri = Uri.parse(url)
+        val origin = Uri.parse(jellyfinRepository.getBaseUrl())
+        check(
+            uri.scheme in setOf("http", "https") &&
+                uri.scheme == origin.scheme &&
+                uri.host.equals(origin.host, ignoreCase = true) &&
+                (uri.port.takeIf { it >= 0 } ?: if (uri.scheme == "https") 443 else 80) ==
+                    (origin.port.takeIf { it >= 0 } ?: if (origin.scheme == "https") 443 else 80)
+        )
+        val builder = uri.buildUpon().clearQuery()
+        uri.queryParameterNames
+            .filterNot { it.equals("api_key", true) || it.equals("access_token", true) }
+            .forEach { name ->
+                uri.getQueryParameters(name).forEach { builder.appendQueryParameter(name, it) }
+            }
+        return Request(builder.build().toString(), path).apply {
+            tag = title
+            extras =
+                Extras(
+                    mapOf(
+                        "itemId" to item.id.toString(),
+                        "sourceId" to localSourceId,
+                        "serverId" to serverId,
+                        "userId" to userId.toString(),
+                        "primary" to primary.toString(),
+                        "movie" to (item is FindroidMovie).toString(),
+                    )
                 )
-            }
-
-        if (download.status != DownloadManager.STATUS_SUCCESSFUL) return@withLock false
-
-        database.getSourceByDownloadId(downloadId)?.let { source ->
-            return@withLock finalizeFile(
-                temporaryPath = source.path,
-                download = download,
-                updatePath = { database.setSourcePath(source.id, it) },
-            )
         }
-
-        database.getMediaStreamByDownloadId(downloadId)?.let { mediaStream ->
-            return@withLock finalizeFile(
-                temporaryPath = mediaStream.path,
-                download = download,
-                updatePath = { database.setMediaStreamPath(mediaStream.id, it) },
-            )
-        }
-
-        false
     }
-
-    private suspend fun finalizeFile(
-        temporaryPath: String,
-        download: DownloadResult,
-        updatePath: suspend (String) -> Unit,
-    ): Boolean {
-        val temporaryFile = File(temporaryPath)
-        if (!temporaryFile.isFile) return false
-        if (temporaryFile.length() <= 0L) return false
-        if (
-            download.totalBytes > 0L &&
-                ((download.downloadedBytes >= 0L &&
-                    download.downloadedBytes != download.totalBytes) ||
-                    temporaryFile.length() != download.totalBytes)
-        ) {
-            return false
-        }
-
-        if (!temporaryPath.endsWith(".download")) return true
-
-        val finalPath = temporaryPath.removeSuffix(".download")
-        if (!temporaryFile.renameTo(File(finalPath))) return false
-        updatePath(finalPath)
-        return true
-    }
-
-    private data class DownloadResult(
-        val status: Int,
-        val downloadedBytes: Long,
-        val totalBytes: Long,
-    )
 
     private suspend fun saveVideoStreamMetadata(source: FindroidSource, localSourceId: String) {
         val videoStream =
@@ -377,13 +433,12 @@ class DownloaderImpl(
         localSourceId: String,
         storageIndex: Int = 0,
     ) {
-        val storageLocation = context.getExternalFilesDirs(null)[storageIndex]
+        val storageLocation = context.getExternalFilesDirs(null).getOrNull(storageIndex)
         for (mediaStream in source.mediaStreams.filter { it.isExternal }) {
+            val url = mediaStream.path ?: continue
             val id = UUID.randomUUID()
             val streamPath =
-                Uri.fromFile(
-                    File(storageLocation, "downloads/${item.id}.${source.id}.$id.download")
-                )
+                Uri.fromFile(File(storageLocation, "downloads/$localSourceId.$id.download"))
             database.insertMediaStream(
                 mediaStream.toFindroidMediaStreamDto(
                     id,
@@ -392,18 +447,17 @@ class DownloaderImpl(
                 )
             )
             val request =
-                DownloadManager.Request(mediaStream.path!!.toUri())
-                    .setTitle(mediaStream.title)
-                    .setAllowedOverMetered(
-                        appPreferences.getValue(appPreferences.downloadOverMobileData)
-                    )
-                    .setAllowedOverRoaming(
-                        appPreferences.getValue(appPreferences.downloadWhenRoaming)
-                    )
-                    .setNotificationVisibility(DownloadManager.Request.VISIBILITY_HIDDEN)
-                    .setDestinationUri(streamPath)
-            val downloadId = downloadManager.enqueue(request)
-            database.setMediaStreamDownloadId(id, downloadId)
+                createRequest(
+                    url,
+                    streamPath.path.orEmpty(),
+                    item,
+                    localSourceId,
+                    false,
+                    "${item.name} - ${mediaStream.title}",
+                )
+            database.setMediaStreamDownloadId(id, request.id.toLong())
+            engine.enqueue(request)
+            scheduler.schedule()
         }
     }
 

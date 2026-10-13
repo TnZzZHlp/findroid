@@ -105,4 +105,5 @@
     <string name="advanced">Advanced</string>
     <string name="discard_changes_dialog_title">Discard changes?</string>
     <string name="discard_changes_dialog_text">You have unsaved changes.</string>
+    <string name="download_concurrent_limit">Simultaneous downloads</string>
 </resources>

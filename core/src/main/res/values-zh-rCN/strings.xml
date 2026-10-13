@@ -104,4 +104,20 @@
     <string name="download_paused">已暂停</string>
     <string name="download_downloading">正在下载…</string>
     <string name="download_failed">下载失败</string>
+    <string name="download_pause">暂停下载</string>
+    <string name="download_resume">继续下载</string>
+    <string name="download_retry">重试下载</string>
+    <string name="download_completed">下载完成</string>
+    <string name="download_queue">下载任务</string>
+    <string name="download_external_stream">外部媒体流</string>
+    <string name="download_size">%1$s / %2$s</string>
+    <string name="download_speed">%1$s/秒</string>
+    <string name="download_eta">预计剩余 %1$d 分钟</string>
+    <string name="download_unknown_size">大小未知</string>
+    <string name="download_error_http">服务器返回 HTTP %1$d，请检查连接和账号。</string>
+    <string name="download_error_range">远端文件已变化或服务器返回了无效的字节范围。</string>
+    <string name="download_error_finalize">无法验证或保存下载文件，请检查存储后重试。</string>
+    <string name="download_error_storage">存储空间不足。</string>
+    <string name="download_error_permission">无法写入所选存储位置。</string>
+    <string name="download_error_content">服务器返回了网页或错误响应，而非所需的媒体文件。请检查服务器配置。</string>
 </resources>

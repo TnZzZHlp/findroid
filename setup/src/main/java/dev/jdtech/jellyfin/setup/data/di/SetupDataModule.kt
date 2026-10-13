@@ -9,6 +9,7 @@ import dev.jdtech.jellyfin.database.ServerDatabaseDao
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
 import dev.jdtech.jellyfin.setup.data.SetupRepositoryImpl
 import dev.jdtech.jellyfin.setup.domain.SetupRepository
+import dev.jdtech.jellyfin.utils.Downloader
 import javax.inject.Singleton
 
 @Module
@@ -20,11 +21,13 @@ object SetupDataModule {
         jellyfinApi: JellyfinApi,
         serverDatabase: ServerDatabaseDao,
         appPreferences: AppPreferences,
+        downloader: Downloader,
     ): SetupRepository {
         return SetupRepositoryImpl(
             jellyfinApi = jellyfinApi,
             database = serverDatabase,
             appPreferences = appPreferences,
+            downloader = downloader,
         )
     }
 }

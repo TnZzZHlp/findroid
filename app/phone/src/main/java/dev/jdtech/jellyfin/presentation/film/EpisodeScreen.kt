@@ -240,6 +240,15 @@ private fun EpisodeScreenLayout(
                         onDownloadDeleteClick = {
                             onDownloaderAction(DownloaderAction.DeleteDownload(episode))
                         },
+                        onDownloadPauseClick = {
+                            onDownloaderAction(DownloaderAction.PauseDownload)
+                        },
+                        onDownloadResumeClick = {
+                            onDownloaderAction(DownloaderAction.ResumeDownload)
+                        },
+                        onDownloadRetryClick = {
+                            onDownloaderAction(DownloaderAction.RetryDownload)
+                        },
                         modifier = Modifier.fillMaxWidth(),
                     )
                     Spacer(Modifier.height(MaterialTheme.spacings.small))

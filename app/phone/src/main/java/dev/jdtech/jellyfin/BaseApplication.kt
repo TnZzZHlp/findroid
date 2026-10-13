@@ -22,6 +22,7 @@ import coil3.request.crossfade
 import coil3.svg.SvgDecoder
 import com.google.android.material.color.DynamicColors
 import dagger.hilt.android.HiltAndroidApp
+import dev.jdtech.jellyfin.downloads.DownloadCoordinator
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
 import dev.jdtech.jellyfin.work.MpvCleanupWorker
 import dev.jdtech.jellyfin.work.SyncWorker
@@ -35,6 +36,8 @@ class BaseApplication : Application(), Configuration.Provider, SingletonImageLoa
     @Inject lateinit var appPreferences: AppPreferences
 
     @Inject lateinit var workerFactory: HiltWorkerFactory
+
+    @Inject lateinit var downloadCoordinator: DownloadCoordinator
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder().setWorkerFactory(workerFactory).build()
@@ -62,6 +65,8 @@ class BaseApplication : Application(), Configuration.Provider, SingletonImageLoa
         }
 
         val workManager = WorkManager.getInstance(applicationContext)
+
+        downloadCoordinator.initialize()
 
         scheduleUserDataSync(workManager)
 

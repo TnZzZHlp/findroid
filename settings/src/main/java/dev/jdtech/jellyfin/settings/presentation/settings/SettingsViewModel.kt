@@ -654,6 +654,17 @@ class SettingsViewModel @Inject constructor(private val appPreferences: AppPrefe
                                     PreferenceGroup(
                                         preferences =
                                             listOf(
+                                                PreferenceSelect(
+                                                    nameStringResource =
+                                                        R.string.download_concurrent_limit,
+                                                    supportedDeviceTypes = listOf(DeviceType.PHONE),
+                                                    backendPreference =
+                                                        appPreferences.downloadConcurrentLimit,
+                                                    options =
+                                                        R.array.download_concurrent_limit_options,
+                                                    optionValues =
+                                                        R.array.download_concurrent_limit_options,
+                                                ),
                                                 PreferenceSwitch(
                                                     nameStringResource =
                                                         R.string.download_mobile_data,

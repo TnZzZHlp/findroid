@@ -7,6 +7,10 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dev.jdtech.jellyfin.database.ServerDatabaseDao
+import dev.jdtech.jellyfin.downloads.DownloadFileFinalizer
+import dev.jdtech.jellyfin.downloads.DownloadScheduler
+import dev.jdtech.jellyfin.downloads.FetchDownloadEngine
+import dev.jdtech.jellyfin.downloads.LegacyDownloadCleanup
 import dev.jdtech.jellyfin.repository.JellyfinRepository
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
 import dev.jdtech.jellyfin.utils.Downloader
@@ -24,6 +28,10 @@ object DownloaderModule {
         jellyfinRepository: JellyfinRepository,
         appPreferences: AppPreferences,
         workManager: WorkManager,
+        engine: FetchDownloadEngine,
+        scheduler: DownloadScheduler,
+        finalizer: DownloadFileFinalizer,
+        legacyCleanup: LegacyDownloadCleanup,
     ): Downloader {
         return DownloaderImpl(
             application,
@@ -31,6 +39,10 @@ object DownloaderModule {
             jellyfinRepository,
             appPreferences,
             workManager,
+            engine,
+            scheduler,
+            finalizer,
+            legacyCleanup,
         )
     }
 }

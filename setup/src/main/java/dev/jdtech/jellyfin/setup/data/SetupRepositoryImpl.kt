@@ -13,6 +13,7 @@ import dev.jdtech.jellyfin.models.User
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
 import dev.jdtech.jellyfin.setup.R as SetupR
 import dev.jdtech.jellyfin.setup.domain.SetupRepository
+import dev.jdtech.jellyfin.utils.Downloader
 import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -31,6 +32,7 @@ class SetupRepositoryImpl(
     private val jellyfinApi: JellyfinApi,
     private val database: ServerDatabaseDao,
     private val appPreferences: AppPreferences,
+    private val downloader: Downloader,
 ) : SetupRepository {
     override fun discoverServers(): Flow<ServerDiscoveryInfo> {
         return jellyfinApi.jellyfin.discovery.discoverLocalServers()
@@ -47,6 +49,8 @@ class SetupRepositoryImpl(
     }
 
     override suspend fun deleteServer(serverId: String) {
+        if (appPreferences.getValue(appPreferences.currentServer) == serverId)
+            downloader.discardOtherIdentities(null, null)
         database.deleteServer(serverId)
     }
 
@@ -65,6 +69,7 @@ class SetupRepositoryImpl(
         val serverWithAddressAndUser = database.getServerWithAddressAndUser(serverId) ?: return
         val serverAddress = serverWithAddressAndUser.address ?: return
         val user = serverWithAddressAndUser.user
+        downloader.discardOtherIdentities(serverId, user?.id?.toString())
 
         jellyfinApi.apply {
             api.update(baseUrl = serverAddress.address, accessToken = user?.accessToken)
@@ -239,6 +244,7 @@ class SetupRepositoryImpl(
                 accessToken = authenticationResult.accessToken!!,
             )
 
+        downloader.discardOtherIdentities(user.serverId, user.id.toString())
         database.insertUser(user)
         database.updateServerCurrentUser(authenticationResult.serverId!!, user.id)
 
@@ -265,6 +271,7 @@ class SetupRepositoryImpl(
     }
 
     override suspend fun deleteUser(userId: UUID) {
+        if (getCurrentUser()?.id == userId) downloader.discardOtherIdentities(null, null)
         // Let the user delete the current active user for now
         /*val currentUser = getCurrentUser() ?: return
         if (userId == currentUser.id) {
@@ -277,6 +284,8 @@ class SetupRepositoryImpl(
     override suspend fun setCurrentUser(userId: UUID) {
         val server = getCurrentServer() ?: return
         val user = database.getUser(userId) ?: return
+        if (user.serverId != server.id) return
+        downloader.discardOtherIdentities(server.id, user.id.toString())
         server.currentUserId = user.id
         database.updateServer(server)
 

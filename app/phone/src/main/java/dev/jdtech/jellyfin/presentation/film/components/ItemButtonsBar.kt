@@ -1,6 +1,5 @@
 package dev.jdtech.jellyfin.presentation.film.components
 
-import android.app.DownloadManager
 import android.os.Environment
 import android.os.StatFs
 import androidx.compose.animation.AnimatedVisibility
@@ -32,6 +31,7 @@ import androidx.window.core.layout.WindowSizeClass
 import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.core.presentation.downloader.DownloaderState
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyEpisode
+import dev.jdtech.jellyfin.downloads.DownloadStatus
 import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.models.FindroidMovie
 import dev.jdtech.jellyfin.models.FindroidShow
@@ -52,8 +52,12 @@ fun ItemButtonsBar(
     modifier: Modifier = Modifier,
     downloaderState: DownloaderState? = null,
     canPlay: Boolean = true,
+    onDownloadPauseClick: () -> Unit = {},
+    onDownloadResumeClick: () -> Unit = {},
+    onDownloadRetryClick: () -> Unit = { onDownloadClick(0) },
 ) {
     val context = LocalContext.current
+    val startDownload = rememberDownloadStart(onDownloadClick)
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
 
     val trailerUri =
@@ -169,7 +173,7 @@ fun ItemButtonsBar(
                                     storageSelectionDialogOpen = true
                                 } else {
                                     selectedStorageIndex = 0
-                                    onDownloadClick(selectedStorageIndex)
+                                    startDownload(selectedStorageIndex)
                                 }
                             }
                         ) {
@@ -187,7 +191,9 @@ fun ItemButtonsBar(
                         DownloaderCard(
                             state = downloaderState,
                             onCancelClick = { cancelDownloadDialogOpen = true },
-                            onRetryClick = { onDownloadClick(selectedStorageIndex) },
+                            onRetryClick = onDownloadRetryClick,
+                            onPauseClick = onDownloadPauseClick,
+                            onResumeClick = onDownloadResumeClick,
                         )
                         Spacer(Modifier.height(MaterialTheme.spacings.small))
                     }
@@ -211,7 +217,7 @@ fun ItemButtonsBar(
                 storageLocations = locations,
                 onSelect = { storageIndex ->
                     selectedStorageIndex = storageIndex
-                    onDownloadClick(selectedStorageIndex)
+                    startDownload(selectedStorageIndex)
                     storageSelectionDialogOpen = false
                 },
                 onDismiss = { storageSelectionDialogOpen = false },
@@ -261,8 +267,7 @@ private fun ItemButtonsBarDownloadingPreview() {
     FindroidTheme {
         ItemButtonsBar(
             item = dummyEpisode,
-            downloaderState =
-                DownloaderState(status = DownloadManager.STATUS_RUNNING, progress = 0.3f),
+            downloaderState = DownloaderState(status = DownloadStatus.RUNNING, progress = 0.3f),
             onPlayClick = {},
             onMarkAsPlayedClick = {},
             onMarkAsFavoriteClick = {},

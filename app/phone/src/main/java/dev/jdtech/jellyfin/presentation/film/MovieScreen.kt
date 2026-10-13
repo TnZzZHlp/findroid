@@ -237,6 +237,15 @@ private fun MovieScreenLayout(
                         onDownloadDeleteClick = {
                             onDownloaderAction(DownloaderAction.DeleteDownload(movie))
                         },
+                        onDownloadPauseClick = {
+                            onDownloaderAction(DownloaderAction.PauseDownload)
+                        },
+                        onDownloadResumeClick = {
+                            onDownloaderAction(DownloaderAction.ResumeDownload)
+                        },
+                        onDownloadRetryClick = {
+                            onDownloaderAction(DownloaderAction.RetryDownload)
+                        },
                         modifier = Modifier.fillMaxWidth(),
                     )
                     Spacer(Modifier.height(MaterialTheme.spacings.small))

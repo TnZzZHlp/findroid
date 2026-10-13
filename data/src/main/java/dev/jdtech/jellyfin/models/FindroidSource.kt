@@ -96,7 +96,16 @@ suspend fun FindroidSourceDto.toFindroidSource(
         path = path,
         size = File(path).length(),
         mediaStreams =
-            serverDatabaseDao.getMediaStreamsBySourceId(id).map { it.toFindroidMediaStream() },
+            serverDatabaseDao
+                .getMediaStreamsBySourceId(id)
+                .filter {
+                    type != FindroidSourceType.LOCAL ||
+                        !it.isExternal ||
+                        (!it.path.endsWith(".download") &&
+                            File(it.path).isFile &&
+                            File(it.path).length() > 0)
+                }
+                .map { it.toFindroidMediaStream() },
         downloadId = downloadId,
     )
 }

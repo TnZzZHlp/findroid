@@ -101,6 +101,14 @@ interface ServerDatabaseDao {
     @Query("SELECT * FROM sources WHERE downloadId = :downloadId")
     suspend fun getSourceByDownloadId(downloadId: Long): FindroidSourceDto?
 
+    @Query("SELECT * FROM sources WHERE type = :type AND path LIKE '%.download'")
+    suspend fun getIncompleteSources(
+        type: FindroidSourceType = FindroidSourceType.LOCAL
+    ): List<FindroidSourceDto>
+
+    @Query("SELECT * FROM mediastreams WHERE isExternal = 1 AND path LIKE '%.download'")
+    suspend fun getIncompleteMediaStreams(): List<FindroidMediaStreamDto>
+
     @Query("UPDATE sources SET downloadId = :downloadId WHERE id = :id")
     suspend fun setSourceDownloadId(id: String, downloadId: Long)
 
