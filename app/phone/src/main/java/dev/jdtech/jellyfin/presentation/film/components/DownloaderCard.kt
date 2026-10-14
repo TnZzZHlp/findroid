@@ -1,6 +1,7 @@
 package dev.jdtech.jellyfin.presentation.film.components
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,19 +9,25 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.ProgressIndicatorDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -40,125 +47,143 @@ fun DownloaderCard(
     onRetryClick: () -> Unit,
     onPauseClick: () -> Unit = {},
     onResumeClick: () -> Unit = {},
+    modifier: Modifier = Modifier,
+    header: (@Composable () -> Unit)? = null,
 ) {
+    val progress =
+        if (state.status == DownloadStatus.SUCCESSFUL) 1f else state.progress.coerceIn(0f, 1f)
     val animatedProgress by
         animateFloatAsState(
-            targetValue = state.progress,
+            targetValue = progress,
             animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec,
         )
-
-    val textColor =
+    val progressColor =
         when (state.status) {
-            DownloadStatus.PAUSED -> Color.Yellow
+            DownloadStatus.PAUSED -> MaterialTheme.colorScheme.tertiary
             DownloadStatus.FAILED -> MaterialTheme.colorScheme.error
-            else -> MaterialTheme.colorScheme.onSurface
+            else -> MaterialTheme.colorScheme.primary
         }
 
-    val statusText =
-        when (state.status) {
-            DownloadStatus.PENDING -> stringResource(CoreR.string.download_pending)
-            DownloadStatus.PAUSED -> stringResource(CoreR.string.download_paused)
-            DownloadStatus.FAILED -> stringResource(CoreR.string.download_failed)
-            DownloadStatus.SUCCESSFUL -> stringResource(CoreR.string.download_completed)
-            else -> stringResource(CoreR.string.download_downloading)
-        }
-
-    val progressIndicatorColor =
-        when (state.status) {
-            DownloadStatus.PAUSED -> Color.Yellow
-            DownloadStatus.SUCCESSFUL -> Color.Green
-            DownloadStatus.FAILED -> MaterialTheme.colorScheme.error
-            else -> ProgressIndicatorDefaults.linearColor
-        }
-
-    val progressTrackColor =
-        when (state.status) {
-            DownloadStatus.FAILED -> MaterialTheme.colorScheme.errorContainer
-            else -> ProgressIndicatorDefaults.linearTrackColor
-        }
-
-    OutlinedCard {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(MaterialTheme.spacings.medium),
-            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.medium),
+    OutlinedCard(
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        colors =
+            CardDefaults.outlinedCardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+            ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+    ) {
+        Column(
+            modifier = Modifier.padding(MaterialTheme.spacings.medium),
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.small),
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
+            header?.invoke()
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                DownloadStatusBadge(state.status, modifier = Modifier.weight(1f, fill = false))
+                if (state.totalBytes > 0 || state.status == DownloadStatus.SUCCESSFUL) {
                     Text(
-                        text = statusText,
-                        color = textColor,
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
-                    Text(
-                        text = animatedProgress.times(100).roundToInt().toString() + "%",
-                        color = textColor,
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
-                }
-                Spacer(Modifier.height(MaterialTheme.spacings.small))
-                when (state.status) {
-                    DownloadStatus.PENDING -> {
-                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                    }
-                    else -> {
-                        LinearProgressIndicator(
-                            progress = { animatedProgress },
-                            modifier = Modifier.fillMaxWidth(),
-                            color = progressIndicatorColor,
-                            trackColor = progressTrackColor,
-                        )
-                    }
-                }
-                Spacer(Modifier.height(MaterialTheme.spacings.small))
-                DownloadTransferDetails(state)
-                if (state.errorText != null) {
-                    Text(
-                        text = state.errorText!!.asString(),
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodyMedium,
+                        text = "${(progress * 100).roundToInt()}%",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
-            CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
-                Column {
-                    when (state.status) {
-                        DownloadStatus.PENDING,
-                        DownloadStatus.RUNNING -> {
-                            FilledTonalIconButton(onClick = onPauseClick) {
-                                Icon(
-                                    painterResource(CoreR.drawable.ic_pause),
-                                    stringResource(CoreR.string.download_pause),
-                                )
-                            }
-                        }
-                        DownloadStatus.PAUSED -> {
-                            FilledTonalIconButton(onClick = onResumeClick) {
-                                Icon(
-                                    painterResource(CoreR.drawable.ic_play),
-                                    stringResource(CoreR.string.download_resume),
-                                )
-                            }
-                        }
-                        DownloadStatus.FAILED -> {
-                            FilledTonalIconButton(onClick = onRetryClick) {
-                                Icon(
-                                    painterResource(CoreR.drawable.ic_rotate_ccw),
-                                    stringResource(CoreR.string.download_retry),
-                                )
-                            }
-                        }
-                    }
-                    if (state.status != DownloadStatus.SUCCESSFUL) {
-                        FilledTonalIconButton(onClick = onCancelClick) {
-                            Icon(
-                                painterResource(CoreR.drawable.ic_x),
-                                stringResource(CoreR.string.cancel_download),
-                            )
-                        }
-                    }
+            val indicatorModifier = Modifier.fillMaxWidth().height(6.dp)
+            if (
+                state.totalBytes <= 0 &&
+                    state.status in setOf(DownloadStatus.PENDING, DownloadStatus.RUNNING)
+            ) {
+                LinearProgressIndicator(
+                    modifier = indicatorModifier,
+                    color = progressColor,
+                    trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                )
+            } else {
+                LinearProgressIndicator(
+                    progress = { animatedProgress },
+                    modifier = indicatorModifier,
+                    color = progressColor,
+                    trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                )
+            }
+            DownloadTransferDetails(state)
+            state.errorText?.let { error ->
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.small,
+                    color = MaterialTheme.colorScheme.errorContainer,
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                ) {
+                    Text(
+                        text = error.asString(),
+                        modifier = Modifier.padding(MaterialTheme.spacings.small),
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+            }
+            if (state.status != DownloadStatus.SUCCESSFUL) {
+                DownloadActions(
+                    state.status,
+                    onCancelClick,
+                    onRetryClick,
+                    onPauseClick,
+                    onResumeClick,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DownloadActions(
+    status: Int,
+    onCancelClick: () -> Unit,
+    onRetryClick: () -> Unit,
+    onPauseClick: () -> Unit,
+    onResumeClick: () -> Unit,
+) {
+    CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 48.dp) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement =
+                Arrangement.spacedBy(MaterialTheme.spacings.small, Alignment.End),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconButton(onClick = onCancelClick) {
+                Icon(
+                    painter = painterResource(CoreR.drawable.ic_x),
+                    contentDescription = stringResource(CoreR.string.cancel_download),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            val action =
+                when (status) {
+                    DownloadStatus.PENDING,
+                    DownloadStatus.RUNNING ->
+                        Triple(CoreR.string.download_pause, CoreR.drawable.ic_pause, onPauseClick)
+                    DownloadStatus.PAUSED ->
+                        Triple(CoreR.string.download_resume, CoreR.drawable.ic_play, onResumeClick)
+                    DownloadStatus.FAILED ->
+                        Triple(
+                            CoreR.string.download_retry,
+                            CoreR.drawable.ic_rotate_ccw,
+                            onRetryClick,
+                        )
+                    else -> null
+                }
+            action?.let { (label, icon, onClick) ->
+                FilledTonalButton(onClick = onClick, modifier = Modifier.weight(1f, fill = false)) {
+                    Icon(
+                        painter = painterResource(icon),
+                        contentDescription = null,
+                        modifier = Modifier.size(ButtonDefaults.IconSize),
+                    )
+                    Spacer(Modifier.width(ButtonDefaults.IconSpacing))
+                    Text(stringResource(label))
                 }
             }
         }
@@ -166,7 +191,7 @@ fun DownloaderCard(
 }
 
 @Composable
-@Preview
+@Preview(widthDp = 360)
 private fun DownloaderCardPendingPreview() {
     FindroidTheme {
         DownloaderCard(
@@ -178,11 +203,19 @@ private fun DownloaderCardPendingPreview() {
 }
 
 @Composable
-@Preview
+@Preview(widthDp = 360)
 private fun DownloaderCardDownloadingPreview() {
     FindroidTheme {
         DownloaderCard(
-            state = DownloaderState(status = DownloadStatus.RUNNING, progress = 0.5f),
+            state =
+                DownloaderState(
+                    status = DownloadStatus.RUNNING,
+                    progress = 0.5f,
+                    downloadedBytes = 536_870_912,
+                    totalBytes = 1_073_741_824,
+                    bytesPerSecond = 4_194_304,
+                    remainingMillis = 128_000,
+                ),
             onCancelClick = {},
             onRetryClick = {},
         )
@@ -190,7 +223,25 @@ private fun DownloaderCardDownloadingPreview() {
 }
 
 @Composable
-@Preview
+@Preview(widthDp = 360)
+private fun DownloaderCardPausedPreview() {
+    FindroidTheme(darkTheme = true) {
+        DownloaderCard(
+            state =
+                DownloaderState(
+                    status = DownloadStatus.PAUSED,
+                    progress = 0.5f,
+                    downloadedBytes = 536_870_912,
+                    totalBytes = 1_073_741_824,
+                ),
+            onCancelClick = {},
+            onRetryClick = {},
+        )
+    }
+}
+
+@Composable
+@Preview(widthDp = 320, fontScale = 1.5f)
 private fun DownloaderCardFailedPreview() {
     FindroidTheme {
         DownloaderCard(
@@ -198,7 +249,9 @@ private fun DownloaderCardFailedPreview() {
                 DownloaderState(
                     status = DownloadStatus.FAILED,
                     progress = 0.5f,
-                    errorText = UiText.DynamicString("Not enough storage space"),
+                    downloadedBytes = 536_870_912,
+                    totalBytes = 1_073_741_824,
+                    errorText = UiText.StringResource(CoreR.string.download_error_storage),
                 ),
             onCancelClick = {},
             onRetryClick = {},
