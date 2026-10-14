@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.jdtech.jellyfin.core.R
 import dev.jdtech.jellyfin.database.ServerDatabaseDao
+import dev.jdtech.jellyfin.downloads.DownloadStatus
 import dev.jdtech.jellyfin.downloads.DownloadTask
 import dev.jdtech.jellyfin.downloads.FetchDownloadEngine
 import dev.jdtech.jellyfin.models.UiText
@@ -61,7 +62,11 @@ constructor(
                             observationError = null
                             _state.value =
                                 _state.value.copy(
-                                    tasks = engine.tasks.value.filter { it.id in ids },
+                                    tasks =
+                                        engine.tasks.value.filter {
+                                            it.id in ids &&
+                                                it.progress.status != DownloadStatus.SUCCESSFUL
+                                        },
                                     error = operationError,
                                 )
                         }
