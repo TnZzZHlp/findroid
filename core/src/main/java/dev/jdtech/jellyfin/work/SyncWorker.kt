@@ -8,12 +8,15 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import dev.jdtech.jellyfin.api.JellyfinApi
 import dev.jdtech.jellyfin.database.ServerDatabaseDao
+import dev.jdtech.jellyfin.logging.NetworkDiagnostics
 import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.models.User
 import dev.jdtech.jellyfin.models.toFindroidEpisode
 import dev.jdtech.jellyfin.models.toFindroidMovie
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
+import kotlinx.coroutines.CancellationException
 import org.jellyfin.sdk.model.api.UpdateUserItemDataDto
+import timber.log.Timber
 
 @HiltWorker
 class SyncWorker
@@ -26,12 +29,14 @@ constructor(
 ) : CoroutineWorker(context, workerParams) {
 
     override suspend fun doWork(): Result {
+        Timber.i("User data synchronization started")
         val jellyfinApi =
             JellyfinApi(
                 androidContext = context.applicationContext,
                 requestTimeout = appPreferences.getValue(appPreferences.requestTimeout),
                 connectTimeout = appPreferences.getValue(appPreferences.connectTimeout),
                 socketTimeout = appPreferences.getValue(appPreferences.socketTimeout),
+                apiClientFactory = NetworkDiagnostics.factory,
             )
 
         val servers = database.getServers()
@@ -62,6 +67,7 @@ constructor(
             }
         }
 
+        Timber.i("User data synchronization finished")
         return Result.success()
     }
 
@@ -86,7 +92,16 @@ constructor(
                 )
 
                 database.setUserDataToBeSynced(user.id, item.id, false)
-            } catch (_: Exception) {}
+                Timber.i("User data synchronized: item=%s", item.id)
+            } catch (e: Exception) {
+                if (e !is CancellationException) {
+                    Timber.w(
+                        "User data synchronization deferred: item=%s failure=%s",
+                        item.id,
+                        e.javaClass.simpleName,
+                    )
+                }
+            }
         }
     }
 }

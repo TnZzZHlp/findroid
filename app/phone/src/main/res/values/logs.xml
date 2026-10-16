@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="logs_title">Logs</string>
+    <string name="logs_back">Back</string>
+    <string name="logs_enabled">Collect diagnostic logs</string>
+    <string name="logs_detailed">Include detailed debug logs</string>
+    <string name="logs_retention">Stored locally for up to 7 days, limited to 10 MB. No automatic uploads. Native crashes, ANRs and system kills are not captured.</string>
+    <string name="logs_privacy">Credentials, full URLs and file paths are filtered. Server hosts and media titles or identifiers may remain.</string>
+    <string name="logs_disabled">Collection is off. Existing logs remain available until cleared or expired.</string>
+    <string name="logs_search">Search recent logs</string>
+    <string name="logs_all_levels">All levels</string>
+    <string name="logs_recent">%1$d matches in the latest 500 entries. Export includes all retained logs, without search or level filters.</string>
+    <string name="logs_empty">No matching logs.</string>
+    <string name="logs_clear">Clear logs</string>
+    <string name="logs_clear_confirmation">Delete all locally stored logs and temporary exports? New events may appear while collection is on. Files already saved or shared outside the app cannot be deleted here.</string>
+    <string name="logs_export">Export logs</string>
+    <string name="logs_export_confirmation">Export all retained logs? Credentials and paths are filtered, but server hosts and media information may remain. Only share logs with people you trust.</string>
+    <string name="logs_save">Save file</string>
+    <string name="logs_copy">Copy</string>
+    <string name="logs_copied">Log copied</string>
+    <string name="logs_saved">Logs saved</string>
+    <string name="logs_operation_failed">Unable to complete the log operation. Check available storage or try another app.</string>
+    <string name="logs_storage_error">Unable to read or write diagnostic logs. Check available storage.</string>
+    <string name="logs_dropped">%1$d log events were skipped because the logging queue was full.</string>
+</resources>

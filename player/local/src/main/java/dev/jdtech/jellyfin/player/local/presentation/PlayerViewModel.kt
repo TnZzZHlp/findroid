@@ -11,6 +11,7 @@ import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.TrackSelectionOverride
 import androidx.media3.common.TrackSelectionParameters
@@ -267,6 +268,7 @@ constructor(
     }
 
     fun selectVideoQuality(quality: VideoQuality) {
+        Timber.i("Video quality change requested: %s", quality)
         viewModelScope.launch {
             _uiState.update { it.copy(fileLoaded = false) }
             val playbackPosition = player.currentPosition
@@ -318,7 +320,7 @@ constructor(
                 .build()
         }
 
-        Timber.d("Stream url: $streamUrl")
+        Timber.d("Prepared media item: %s", itemId)
         val mediaItem =
             MediaItem.Builder()
                 .setMediaId(itemId.toString())
@@ -360,7 +362,6 @@ constructor(
     }
 
     fun updatePlaybackProgress() {
-        Timber.d("Updating playback progress")
         viewModelScope.launch(Dispatchers.Main) {
             savedStateHandle["position"] = player.currentPosition
             if (player.currentMediaItem != null && player.currentMediaItem!!.mediaId.isNotEmpty()) {
@@ -379,7 +380,6 @@ constructor(
     }
 
     fun updateCurrentSegment() {
-        Timber.d("Updating current segment")
         viewModelScope.launch(Dispatchers.Main) {
             if (currentMediaItemSegments.isEmpty()) {
                 return@launch
@@ -400,7 +400,9 @@ constructor(
                 return@launch
             }
 
-            Timber.tag("SegmentInfo").d("currentSegment: %s", currentSegment)
+            if (_uiState.value.currentSegment != currentSegment) {
+                Timber.tag("SegmentInfo").d("Current segment: %s", currentSegment.type)
+            }
 
             if (
                 segmentsAutoSkip &&
@@ -426,7 +428,7 @@ constructor(
     }
 
     override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-        Timber.d("Playing MediaItem: ${mediaItem?.mediaId}")
+        Timber.i("Media item changed: %s", mediaItem?.mediaId)
         savedStateHandle["mediaItemIndex"] = player.currentMediaItemIndex
         if (subtitleSelectionMemoryEnabled) {
             subtitleSelectionHandledMediaId = null
@@ -506,7 +508,12 @@ constructor(
         }
     }
 
+    override fun onPlayerError(error: PlaybackException) {
+        Timber.e(error, "Playback failed: %s", error.errorCodeName)
+    }
+
     override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+        Timber.i("Playback requested: play=%s reason=%d", playWhenReady, reason)
         // Report playback stopped for current item and transition to the next one
         if (
             !playWhenReady &&
@@ -550,7 +557,7 @@ constructor(
                 eventsChannel.trySend(PlayerEvents.NavigateBack)
             }
         }
-        Timber.d("Changed player state to $stateString")
+        Timber.i("Changed player state to %s", stateString.trim())
     }
 
     override fun onCleared() {

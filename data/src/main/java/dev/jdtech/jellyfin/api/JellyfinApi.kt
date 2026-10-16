@@ -6,6 +6,7 @@ import dev.jdtech.jellyfin.settings.domain.Constants
 import java.util.UUID
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
+import org.jellyfin.sdk.api.client.ApiClientFactory
 import org.jellyfin.sdk.api.client.HttpClientOptions
 import org.jellyfin.sdk.api.client.extensions.brandingApi
 import org.jellyfin.sdk.api.client.extensions.devicesApi
@@ -39,6 +40,7 @@ class JellyfinApi(
     requestTimeout: Long = Constants.NETWORK_DEFAULT_REQUEST_TIMEOUT,
     connectTimeout: Long = Constants.NETWORK_DEFAULT_CONNECT_TIMEOUT,
     socketTimeout: Long = Constants.NETWORK_DEFAULT_SOCKET_TIMEOUT,
+    apiClientFactory: ApiClientFactory? = null,
 ) {
     val jellyfin = createJellyfin {
         clientInfo =
@@ -50,6 +52,7 @@ class JellyfinApi(
                 version = BuildConfig.VERSION_NAME,
             )
         context = androidContext
+        if (apiClientFactory != null) this.apiClientFactory = apiClientFactory
     }
     val api =
         jellyfin.createApi(
@@ -88,6 +91,7 @@ class JellyfinApi(
             requestTimeout: Long = Constants.NETWORK_DEFAULT_REQUEST_TIMEOUT,
             connectTimeout: Long = Constants.NETWORK_DEFAULT_CONNECT_TIMEOUT,
             socketTimeout: Long = Constants.NETWORK_DEFAULT_SOCKET_TIMEOUT,
+            apiClientFactory: ApiClientFactory? = null,
         ): JellyfinApi {
             synchronized(this) {
                 var instance = INSTANCE
@@ -98,6 +102,7 @@ class JellyfinApi(
                             requestTimeout = requestTimeout,
                             connectTimeout = connectTimeout,
                             socketTimeout = socketTimeout,
+                            apiClientFactory = apiClientFactory,
                         )
                     INSTANCE = instance
                 }

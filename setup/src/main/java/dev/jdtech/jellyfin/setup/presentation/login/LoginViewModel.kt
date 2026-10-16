@@ -8,6 +8,7 @@ import dev.jdtech.jellyfin.models.UiText
 import dev.jdtech.jellyfin.setup.R as SetupR
 import dev.jdtech.jellyfin.setup.domain.SetupRepository
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -15,6 +16,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(private val repository: SetupRepository) : ViewModel() {
@@ -61,6 +63,8 @@ class LoginViewModel @Inject constructor(private val repository: SetupRepository
                 _state.emit(_state.value.copy(isLoading = false))
                 eventsChannel.send(LoginEvent.Success)
             } catch (e: Exception) {
+                if (e !is CancellationException)
+                    Timber.w("Password login failed: %s", e.javaClass.simpleName)
                 val message =
                     if (e.message?.contains("401") == true) {
                         UiText.StringResource(SetupR.string.login_error_wrong_username_password)
@@ -91,7 +95,9 @@ class LoginViewModel @Inject constructor(private val repository: SetupRepository
 
                 _state.emit(_state.value.copy(quickConnectCode = null))
                 eventsChannel.send(LoginEvent.Success)
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                if (e !is CancellationException)
+                    Timber.w("Quick Connect failed: %s", e.javaClass.simpleName)
                 _state.emit(_state.value.copy(quickConnectCode = null))
             }
         }

@@ -78,6 +78,7 @@ class SetupRepositoryImpl(
     }
 
     override suspend fun addServer(address: String): Server {
+        Timber.i("Server connection started")
         // Check if address is not blank
         if (address.isBlank()) {
             throw ExceptionUiText(
@@ -128,7 +129,7 @@ class SetupRepositoryImpl(
                     UiText.StringResource(SetupR.string.add_server_error_no_id)
                 )
 
-        Timber.d("Connecting to server: ${serverInfo.serverName}")
+        Timber.i("Server connection succeeded: id=%s", serverInfo.id)
 
         val serverInDatabase = database.getServer(serverInfo.id!!)
 
@@ -214,6 +215,7 @@ class SetupRepositoryImpl(
         }
 
     override suspend fun login(username: String, password: String) {
+        Timber.i("Password login started")
         withContext(Dispatchers.IO) {
             val authenticationResult by
                 jellyfinApi.userApi.authenticateUserByName(
@@ -225,6 +227,7 @@ class SetupRepositoryImpl(
     }
 
     override suspend fun loginWithSecret(secret: String) {
+        Timber.i("Quick Connect login started")
         withContext(Dispatchers.IO) {
             val authenticationResult by
                 jellyfinApi.userApi.authenticateWithQuickConnect(
@@ -252,6 +255,7 @@ class SetupRepositoryImpl(
             api.update(accessToken = authenticationResult.accessToken)
             userId = authenticationResult.user?.id
         }
+        Timber.i("Login succeeded")
     }
 
     override suspend fun getUsers(serverId: String): List<User> {

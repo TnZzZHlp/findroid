@@ -8,6 +8,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dev.jdtech.jellyfin.api.JellyfinApi
 import dev.jdtech.jellyfin.database.ServerDatabaseDao
+import dev.jdtech.jellyfin.logging.NetworkDiagnostics
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
 import javax.inject.Singleton
 import kotlinx.coroutines.runBlocking
@@ -28,6 +29,7 @@ object ApiModule {
                 requestTimeout = appPreferences.getValue(appPreferences.requestTimeout),
                 connectTimeout = appPreferences.getValue(appPreferences.connectTimeout),
                 socketTimeout = appPreferences.getValue(appPreferences.socketTimeout),
+                apiClientFactory = NetworkDiagnostics.factory,
             )
 
         val serverId = appPreferences.getValue(appPreferences.currentServer) ?: return jellyfinApi

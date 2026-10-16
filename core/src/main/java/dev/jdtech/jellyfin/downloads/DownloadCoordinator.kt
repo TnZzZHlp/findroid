@@ -41,7 +41,7 @@ constructor(
                 prepare()
                 if (engine.refresh().any { engine.needsWork(it) }) scheduler.schedule()
             } catch (e: Exception) {
-                Timber.e("Unable to restore the download queue")
+                Timber.e("Unable to restore the download queue: %s", e.javaClass.simpleName)
             }
         }
     }
@@ -73,6 +73,8 @@ constructor(
                                     download.extras.getString("failure", "").isEmpty()
                             ) {
                                 val success = downloader.finalizeDownload(download.id.toLong())
+                                if (success) Timber.i("Download completed: id=%d", download.id)
+                                else Timber.e("Download finalization failed: id=%d", download.id)
                                 engine.extras(
                                     download,
                                     if (success) mapOf("finalized" to "true")
@@ -145,6 +147,12 @@ constructor(
         val retryAt = download.extras.getLong("retryAt", 0)
         if (transient && (attempts < 5 || retryAt > 0)) {
             if (retryAt == 0L) {
+                Timber.w(
+                    "Download retry scheduled: id=%d attempt=%d problem=%s",
+                    download.id,
+                    attempts + 1,
+                    problem,
+                )
                 engine.extras(
                     download,
                     mapOf(
@@ -158,6 +166,7 @@ constructor(
                 engine.retryAutomatically(download)
             }
         } else if (retryAt != 0L || download.extras.getString("failure", "").isEmpty()) {
+            Timber.e("Download failed: id=%d problem=%s", download.id, problem)
             engine.extras(
                 download,
                 mapOf("retryAt" to "0", "failure" to errorMessage(download, code)),

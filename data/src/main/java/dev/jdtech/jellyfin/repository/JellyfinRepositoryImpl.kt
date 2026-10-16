@@ -580,7 +580,7 @@ class JellyfinRepositoryImpl(
     }
 
     override suspend fun postPlaybackStart(itemId: UUID) {
-        Timber.d("Sending start $itemId")
+        Timber.i("Reporting playback start: item=%s", itemId)
         withContext(Dispatchers.IO) {
             jellyfinApi.playStateApi.reportPlaybackStart(
                 PlaybackStartInfo(
@@ -601,7 +601,7 @@ class JellyfinRepositoryImpl(
         positionTicks: Long,
         playedPercentage: Int,
     ) {
-        Timber.d("Sending stop $itemId")
+        Timber.i("Reporting playback stop: item=%s", itemId)
         withContext(Dispatchers.IO) {
             when {
                 playedPercentage < 10 -> {
@@ -621,7 +621,12 @@ class JellyfinRepositoryImpl(
                 jellyfinApi.playStateApi.reportPlaybackStopped(
                     PlaybackStopInfo(itemId = itemId, positionTicks = positionTicks, failed = false)
                 )
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                Timber.w(
+                    "Playback stop synchronization deferred: item=%s failure=%s",
+                    itemId,
+                    e.javaClass.simpleName,
+                )
                 database.setUserDataToBeSynced(jellyfinApi.userId!!, itemId, true)
             }
         }

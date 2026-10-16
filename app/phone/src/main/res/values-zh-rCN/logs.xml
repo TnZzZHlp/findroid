@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="logs_title">日志</string>
+    <string name="logs_back">返回</string>
+    <string name="logs_enabled">采集诊断日志</string>
+    <string name="logs_detailed">包含详细调试日志</string>
+    <string name="logs_retention">仅本地保存，最多 7 天、10 MB，不自动上传。不捕获原生崩溃、ANR 或系统强杀。</string>
+    <string name="logs_privacy">过滤凭据、完整网址和文件路径，可能保留服务器主机及媒体标题或标识。</string>
+    <string name="logs_disabled">采集已关闭。已有日志仍可查看，直到手动清空或自动过期。</string>
+    <string name="logs_search">搜索近期日志</string>
+    <string name="logs_all_levels">全部等级</string>
+    <string name="logs_recent">最近 500 条日志中有 %1$d 条匹配。导出包含全部保留日志，不受搜索及等级筛选影响。</string>
+    <string name="logs_empty">暂无匹配日志。</string>
+    <string name="logs_clear">清空日志</string>
+    <string name="logs_clear_confirmation">删除本地日志和临时导出文件？采集开启时可能继续出现新事件。已保存或分享至其他应用的文件无法在此删除。</string>
+    <string name="logs_export">导出日志</string>
+    <string name="logs_export_confirmation">导出全部保留日志？凭据及路径已过滤，但可能包含服务器主机和媒体信息。请仅与信任的人分享。</string>
+    <string name="logs_save">保存文件</string>
+    <string name="logs_copy">复制</string>
+    <string name="logs_copied">日志已复制</string>
+    <string name="logs_saved">日志已保存</string>
+    <string name="logs_operation_failed">无法完成日志操作，请检查可用存储空间或尝试其他应用。</string>
+    <string name="logs_storage_error">无法读写诊断日志，请检查可用存储空间。</string>
+    <string name="logs_dropped">日志队列已满，已跳过 %1$d 条日志事件。</string>
+</resources>

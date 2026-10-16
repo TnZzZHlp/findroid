@@ -81,6 +81,7 @@ class DownloaderImpl(
         sourceId: String,
         storageIndex: Int,
     ): Pair<Long, UiText?> {
+        Timber.i("Media download requested: item=%s", item.id)
         legacyCleanup.run()
         var enqueuedDownloadId: Long? = null
         try {
@@ -207,7 +208,11 @@ class DownloaderImpl(
                     ?.toFindroidSource(database)
                     ?.let { deleteItem(item, it) }
             } catch (_: Exception) {}
-            Timber.e("Unable to prepare a media download")
+            Timber.e(
+                "Unable to prepare a media download: item=%s failure=%s",
+                item.id,
+                e.javaClass.simpleName,
+            )
             return Pair(-1, UiText.StringResource(CoreR.string.downloading_error))
         }
     }

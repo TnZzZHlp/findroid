@@ -56,6 +56,7 @@ import dev.jdtech.jellyfin.presentation.film.ShowScreen
 import dev.jdtech.jellyfin.presentation.settings.AboutScreen
 import dev.jdtech.jellyfin.presentation.settings.SettingsFileEditScreen
 import dev.jdtech.jellyfin.presentation.settings.SettingsScreen
+import dev.jdtech.jellyfin.presentation.settings.logs.LogsScreen
 import dev.jdtech.jellyfin.presentation.setup.addresses.ServerAddressesScreen
 import dev.jdtech.jellyfin.presentation.setup.addserver.AddServerScreen
 import dev.jdtech.jellyfin.presentation.setup.login.LoginScreen
@@ -109,6 +110,8 @@ data class LibraryRoute(
 @Serializable data class SettingsFileEditRoute(val filePath: String)
 
 @Serializable data object AboutRoute
+
+@Serializable data object LogsRoute
 
 data class TabBarItem(
     @param:StringRes val title: Int,
@@ -487,6 +490,7 @@ fun NavigationRoot(
                             navigateToServers = { navController.safeNavigate(ServersRoute) },
                             navigateToUsers = { navController.safeNavigate(UsersRoute) },
                             navigateToAbout = { navController.safeNavigate(AboutRoute) },
+                            navigateToLogs = { navController.safeNavigate(LogsRoute) },
                             navigateBack = { navController.safePopBackStack() },
                         )
                     }
@@ -498,6 +502,11 @@ fun NavigationRoot(
                             filePath = route.filePath,
                             navigateBack = { navController.safePopBackStack() },
                         )
+                    }
+                }
+                composable<LogsRoute> {
+                    ContainerTransformScreen(consumePendingTransform = true) {
+                        LogsScreen(navigateBack = { navController.safePopBackStack() })
                     }
                 }
                 composable<AboutRoute> {

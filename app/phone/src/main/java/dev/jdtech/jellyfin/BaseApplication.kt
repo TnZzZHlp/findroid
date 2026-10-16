@@ -23,6 +23,8 @@ import coil3.svg.SvgDecoder
 import com.google.android.material.color.DynamicColors
 import dagger.hilt.android.HiltAndroidApp
 import dev.jdtech.jellyfin.downloads.DownloadCoordinator
+import dev.jdtech.jellyfin.logging.DiagnosticsLogger
+import dev.jdtech.jellyfin.logging.SanitizedDebugTree
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
 import dev.jdtech.jellyfin.work.MpvCleanupWorker
 import dev.jdtech.jellyfin.work.SyncWorker
@@ -39,15 +41,16 @@ class BaseApplication : Application(), Configuration.Provider, SingletonImageLoa
 
     @Inject lateinit var downloadCoordinator: DownloadCoordinator
 
+    @Inject lateinit var diagnosticsLogger: DiagnosticsLogger
+
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder().setWorkerFactory(workerFactory).build()
 
     override fun onCreate() {
         super.onCreate()
 
-        if (BuildConfig.DEBUG) {
-            Timber.plant(Timber.DebugTree())
-        }
+        if (BuildConfig.DEBUG) Timber.plant(SanitizedDebugTree())
+        diagnosticsLogger.start("${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
             val mode =

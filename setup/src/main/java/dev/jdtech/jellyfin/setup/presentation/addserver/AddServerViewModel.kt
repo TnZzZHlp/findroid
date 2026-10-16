@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 @HiltViewModel
 class AddServerViewModel
@@ -56,10 +57,13 @@ constructor(private val repository: SetupRepository, private val appPreferences:
                 _state.emit(_state.value.copy(isLoading = false, error = null))
                 eventsChannel.send(AddServerEvent.Success)
             } catch (_: CancellationException) {} catch (e: ExceptionUiText) {
+                Timber.w("Server connection failed: %s", e.javaClass.simpleName)
                 _state.emit(_state.value.copy(isLoading = false, error = listOf(e.uiText)))
             } catch (e: ExceptionUiTexts) {
+                Timber.w("Server connection failed: %s", e.javaClass.simpleName)
                 _state.emit(_state.value.copy(isLoading = false, error = e.uiTexts))
             } catch (e: Exception) {
+                Timber.w("Server connection failed: %s", e.javaClass.simpleName)
                 _state.emit(
                     _state.value.copy(
                         isLoading = false,

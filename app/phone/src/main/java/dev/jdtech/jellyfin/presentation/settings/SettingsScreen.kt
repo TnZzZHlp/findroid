@@ -33,8 +33,10 @@ import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import dev.jdtech.jellyfin.R
 import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.film.presentation.media.MediaViewModel
+import dev.jdtech.jellyfin.presentation.settings.components.SettingsCategoryCard
 import dev.jdtech.jellyfin.presentation.settings.components.SettingsGroupCard
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.presentation.theme.spacings
@@ -58,6 +60,7 @@ fun SettingsScreen(
     navigateToServers: () -> Unit,
     navigateToUsers: () -> Unit,
     navigateToAbout: () -> Unit,
+    navigateToLogs: () -> Unit,
     navigateBack: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
@@ -127,6 +130,7 @@ fun SettingsScreen(
     SettingsScreenLayout(
         title = indexes.last(),
         state = state,
+        navigateToLogs = navigateToLogs,
         onAction = { action ->
             when (action) {
                 is SettingsAction.OnBackClick -> navigateBack()
@@ -144,6 +148,7 @@ fun SettingsScreen(
 private fun SettingsScreenLayout(
     @StringRes title: Int,
     state: SettingsState,
+    navigateToLogs: () -> Unit = {},
     onAction: (SettingsAction) -> Unit,
 ) {
     val contentPadding = PaddingValues(all = MaterialTheme.spacings.default)
@@ -176,6 +181,19 @@ private fun SettingsScreenLayout(
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.medium),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
+            if (title == SettingsR.string.title_settings) {
+                item {
+                    SettingsCategoryCard(
+                        preference =
+                            PreferenceCategory(
+                                nameStringResource = R.string.logs_title,
+                                iconDrawableId = CoreR.drawable.ic_logs,
+                                onClick = { navigateToLogs() },
+                            ),
+                        modifier = Modifier.widthIn(max = 640.dp),
+                    )
+                }
+            }
             items(state.preferenceGroups) { group ->
                 SettingsGroupCard(
                     group = group,

@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import timber.log.Timber
 
 @Singleton
 class FetchDownloadEngine
@@ -162,12 +163,14 @@ constructor(
             fetch.enqueue(request, { success(Unit) }, { failure(it) })
         }
         refresh()
+        Timber.i("Download enqueued: id=%d", request.id)
         return request.id.toLong()
     }
 
     suspend fun pause(id: Long) = controlMutex.withLock {
         val download = downloads().firstOrNull { it.id.toLong() == id } ?: return@withLock
         val updated = extras(download, mapOf("paused" to "true")) ?: return@withLock
+        Timber.i("Download paused: id=%d", id)
         if (updated.status in listOf(Status.QUEUED, Status.DOWNLOADING)) {
             await<Download> { success, failure -> fetch.pause(id.toInt(), success, failure) }
         }
@@ -178,6 +181,7 @@ constructor(
     suspend fun resume(id: Long) = controlMutex.withLock {
         val download = downloads().firstOrNull { it.id.toLong() == id } ?: return@withLock
         extras(download, mapOf("paused" to "false"))
+        Timber.i("Download resumed: id=%d", id)
         refresh()
         Unit
     }
@@ -185,6 +189,7 @@ constructor(
     suspend fun retry(id: Long) = controlMutex.withLock {
         val download = downloads().firstOrNull { it.id.toLong() == id } ?: return@withLock
         http.clearProblem(download.id)
+        Timber.i("Download retry requested: id=%d", id)
         if (download.status == Status.COMPLETED) {
             val temporary = java.io.File(download.file)
             val final = java.io.File(download.file.removeSuffix(".download"))
@@ -215,7 +220,10 @@ constructor(
         Unit
     }
 
-    suspend fun delete(id: Long) = controlMutex.withLock { deleteInternal(id) }
+    suspend fun delete(id: Long) = controlMutex.withLock {
+        deleteInternal(id)
+        Timber.i("Download removed: id=%d", id)
+    }
 
     private suspend fun deleteInternal(id: Long) {
         apiMutex.withLock {
