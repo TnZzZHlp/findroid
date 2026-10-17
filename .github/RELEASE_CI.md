@@ -4,7 +4,7 @@
 Gradle build scripts, ProGuard rules, Gradle dependencies/wrapper configuration,
 or the release signing script. Documentation-only and workflow-only changes do
 not trigger it. It can also be run manually from the Actions page on `main`.
-It builds the phone and TV Libre Release variants with JDK 21
+It builds the phone Libre Release variant with JDK 21
 and the Android SDK versions declared in `buildSrc/src/main/kotlin/Versions.kt`.
 It does not publish a GitHub Release or upload to Google Play.
 
@@ -62,12 +62,12 @@ unset SIGNING_KEY_ALIAS SIGNING_STORE_PASSWORD SIGNING_KEY_PASSWORD fingerprint
 ## Outputs and verification
 
 The workflow preserves unsigned APKs and writes `-signed.apk` files for
-`arm64-v8a`, `armeabi-v7a`, `x86_64`, and `x86` in each app variant. Every APK is
+`arm64-v8a`, `armeabi-v7a`, `x86_64`, and `x86` in the phone app. Every APK is
 verified with `apksigner verify --verbose --print-certs`, including a check
 against `SIGNING_CERT_SHA256`. A missing APK, failed verification, or mismatched
 certificate fails the job before artifact upload; no debug-key fallback is used.
 
-Each of the eight signed APKs is uploaded as its own artifact using
+Each of the four signed APKs is uploaded as its own artifact using
 `archive: false`, named after the APK file, for example
 `phone-libre-arm64-v8a-release-signed.apk`. Downloading an individual artifact
 returns the APK directly, not a ZIP bundle. Artifacts are retained for 14 days

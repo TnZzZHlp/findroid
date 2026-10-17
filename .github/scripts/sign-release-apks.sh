@@ -17,31 +17,29 @@ if [[ ! "$expected_fingerprint" =~ ^[a-f0-9]{64}$ ]]; then
     exit 1
 fi
 
-for variant in phone tv; do
-    for abi in arm64-v8a armeabi-v7a x86_64 x86; do
-        apk="app/$variant/build/outputs/apk/libre/release/$variant-libre-$abi-release-unsigned.apk"
-        if [[ ! -s "$apk" ]]; then
-            echo "Missing or empty unsigned APK: $apk" >&2
-            exit 1
-        fi
-        signed="${apk%-unsigned.apk}-signed.apk"
-        report="${signed%.apk}-verification.txt"
-        "$signer" sign \
-            --ks "$SIGNING_KEYSTORE_PATH" \
-            --ks-key-alias "$SIGNING_KEY_ALIAS" \
-            --ks-pass env:SIGNING_STORE_PASSWORD \
-            --key-pass env:SIGNING_KEY_PASSWORD \
-            --out "$signed" "$apk"
-        "$signer" verify --verbose --print-certs "$signed" > "$report"
-        mapfile -t fingerprints < <(
-            awk '/certificate SHA-256 digest:/ { print tolower($NF) }' "$report"
-        )
-        if [[ ${#fingerprints[@]} -ne 1 || "${fingerprints[0]:-}" != "$expected_fingerprint" ]]; then
-            echo "Release certificate mismatch: $signed" >&2
-            exit 1
-        fi
-        echo "Verified: $signed"
-    done
+for abi in arm64-v8a armeabi-v7a x86_64 x86; do
+    apk="app/phone/build/outputs/apk/libre/release/phone-libre-$abi-release-unsigned.apk"
+    if [[ ! -s "$apk" ]]; then
+        echo "Missing or empty unsigned APK: $apk" >&2
+        exit 1
+    fi
+    signed="${apk%-unsigned.apk}-signed.apk"
+    report="${signed%.apk}-verification.txt"
+    "$signer" sign \
+        --ks "$SIGNING_KEYSTORE_PATH" \
+        --ks-key-alias "$SIGNING_KEY_ALIAS" \
+        --ks-pass env:SIGNING_STORE_PASSWORD \
+        --key-pass env:SIGNING_KEY_PASSWORD \
+        --out "$signed" "$apk"
+    "$signer" verify --verbose --print-certs "$signed" > "$report"
+    mapfile -t fingerprints < <(
+        awk '/certificate SHA-256 digest:/ { print tolower($NF) }' "$report"
+    )
+    if [[ ${#fingerprints[@]} -ne 1 || "${fingerprints[0]:-}" != "$expected_fingerprint" ]]; then
+        echo "Release certificate mismatch: $signed" >&2
+        exit 1
+    fi
+    echo "Verified: $signed"
 done
 
-echo "All 8 release APKs use the expected signing certificate."
+echo "All 4 release APKs use the expected signing certificate."

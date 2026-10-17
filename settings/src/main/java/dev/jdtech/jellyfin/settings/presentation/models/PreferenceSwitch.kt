@@ -11,7 +11,7 @@ data class PreferenceSwitch(
     @param:DrawableRes override val iconDrawableId: Int? = null,
     override val enabled: Boolean = true,
     override val dependencies: List<PreferenceBackend<Boolean>> = emptyList(),
-    override val supportedDeviceTypes: List<DeviceType> = listOf(DeviceType.PHONE, DeviceType.TV),
+    override val supportedDeviceTypes: List<DeviceType> = listOf(DeviceType.PHONE),
     val onClick: (PreferenceSwitch) -> Unit = {},
     val backendPreference: PreferenceBackend<Boolean>,
     val value: Boolean = false,

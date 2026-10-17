@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Findroid is a third-party Android Jellyfin client with two app variants: `app:phone` and `app:tv`. The codebase is a multi-module Gradle/Kotlin project using Jetpack Compose and Hilt.
+Findroid is a third-party Android Jellyfin client with a phone app module: `app:phone`. The codebase is a multi-module Gradle/Kotlin project using Jetpack Compose and Hilt.
 
 ## Build Commands
 
@@ -10,9 +10,8 @@ Findroid is a third-party Android Jellyfin client with two app variants: `app:ph
 # Build debug APK (default flavor: libre)
 ./gradlew assembleDebug
 
-# Build specific app variant
+# Build the phone app
 ./gradlew :app:phone:assembleLibreDebug
-./gradlew :app:tv:assembleLibreDebug
 
 # Clean build
 ./gradlew clean assembleDebug
@@ -41,7 +40,6 @@ ktfmt is applied to all subprojects with `kotlinLangStyle()`.
 | Module | Purpose |
 |--------|---------|
 | `app:phone` | Phone app entry point |
-| `app:tv` | Android TV app entry point |
 | `core` | ViewModels, DI, WorkManager workers, utils |
 | `data` | Room database, Jellyfin API integration |
 | `player:core` | Player interfaces |
@@ -61,7 +59,6 @@ ktfmt is applied to all subprojects with `kotlinLangStyle()`.
 Debug APKs are split by ABI:
 ```
 app/phone/build/outputs/apk/libre/debug/phone-libre-{abi}-debug.apk
-app/tv/build/outputs/apk/libre/debug/tv-libre-{abi}-debug.apk
 ```
 Where `{abi}` is one of: `arm64-v8a`, `armeabi-v7a`, `x86_64`, `x86`.
 
@@ -87,5 +84,5 @@ Requires signing keystore and Play API credentials as environment variables.
 - For local signed release requests, use the existing gitignored `release-signing.p12` keystore and the credentials in the gitignored `.env` file.
 - `.env` defines `SIGNING_KEYSTORE_PATH`, `SIGNING_KEY_ALIAS`, `SIGNING_STORE_PASSWORD`, and `SIGNING_KEY_PASSWORD`.
 - Never print signing credentials, commit `.env` or the keystore, generate a replacement key, or fall back to the Android debug keystore unless the user explicitly requests a test signature.
-- Build both variants with `:app:phone:assembleLibreRelease` and `:app:tv:assembleLibreRelease`, sign each ABI APK with Android SDK `apksigner`, and verify every signed APK with `apksigner verify --verbose --print-certs`.
+- Build the phone app with `:app:phone:assembleLibreRelease`, sign each ABI APK with Android SDK `apksigner`, and verify every signed APK with `apksigner verify --verbose --print-certs`.
 - Keep unsigned APKs intact and write signed outputs with the `-signed.apk` suffix. Confirm that all signed APKs use the same release certificate fingerprint.

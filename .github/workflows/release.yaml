@@ -24,7 +24,7 @@ concurrency:
 
 jobs:
   release:
-    name: Build and sign phone and TV
+    name: Build and sign phone
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     timeout-minutes: 60
@@ -90,7 +90,7 @@ jobs:
           sdkmanager "$platform" "build-tools;$BUILD_TOOLS"
 
       - name: Build unsigned release APKs
-        run: ./gradlew :app:phone:assembleLibreRelease :app:tv:assembleLibreRelease --console=plain
+        run: ./gradlew :app:phone:assembleLibreRelease --console=plain
 
       - name: Sign and verify all release APKs
         env:
@@ -143,38 +143,6 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           path: app/phone/build/outputs/apk/libre/release/phone-libre-x86-release-signed.apk
-          archive: false
-          if-no-files-found: error
-          retention-days: 14
-
-      - name: Upload TV arm64-v8a APK
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          path: app/tv/build/outputs/apk/libre/release/tv-libre-arm64-v8a-release-signed.apk
-          archive: false
-          if-no-files-found: error
-          retention-days: 14
-
-      - name: Upload TV armeabi-v7a APK
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          path: app/tv/build/outputs/apk/libre/release/tv-libre-armeabi-v7a-release-signed.apk
-          archive: false
-          if-no-files-found: error
-          retention-days: 14
-
-      - name: Upload TV x86_64 APK
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          path: app/tv/build/outputs/apk/libre/release/tv-libre-x86_64-release-signed.apk
-          archive: false
-          if-no-files-found: error
-          retention-days: 14
-
-      - name: Upload TV x86 APK
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          path: app/tv/build/outputs/apk/libre/release/tv-libre-x86-release-signed.apk
           archive: false
           if-no-files-found: error
           retention-days: 14

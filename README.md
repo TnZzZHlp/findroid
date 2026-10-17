@@ -45,7 +45,6 @@ I am developing this application in my spare time.
   - Auto skip
 
 ## Planned features
-- Android TV
 - Websocket connection (Syncplay)
 - Chromecast support
 
