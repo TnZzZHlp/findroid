@@ -128,36 +128,48 @@
             tools:ignore="ContentDescription" />
     </LinearLayout>
 
-    <LinearLayout
-        android:id="@+id/gesture_speed_layout"
-        android:layout_width="wrap_content"
-        android:layout_height="64dp"
-        android:layout_gravity="center_horizontal|top"
-        android:layout_margin="16dp"
-        android:background="@drawable/overlay_background"
+    <FrameLayout
+        android:id="@+id/gesture_speed_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:clickable="false"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:visibility="gone"
-        tools:visibility="visible">
+        android:focusable="false">
 
-        <TextView
-            android:id="@+id/gesture_speed_text"
+        <LinearLayout
+            android:id="@+id/gesture_speed_layout"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
+            android:layout_height="36dp"
+            android:layout_gravity="center_horizontal|top"
+            android:layout_margin="16dp"
+            android:background="@drawable/speed_boost_background"
+            android:clickable="false"
             android:gravity="center"
-            android:textSize="20sp"
-            android:textColor="@android:color/white" />
+            android:orientation="horizontal"
+            android:paddingHorizontal="14dp"
+            android:visibility="gone"
+            tools:visibility="visible">
 
-        <ImageView
-            android:id="@+id/gesture_speed_image"
-            android:layout_width="36dp"
-            android:layout_height="24dp"
-            android:layout_marginHorizontal="16dp"
-            android:src="@drawable/ic_speed_forward"
-            tools:ignore="ContentDescription" />
-    </LinearLayout>
+            <TextView
+                android:id="@+id/gesture_speed_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:text="@string/player_speed_boost"
+                android:textColor="@android:color/white"
+                android:textSize="14sp" />
+
+            <ImageView
+                android:id="@+id/gesture_speed_image"
+                android:layout_width="27dp"
+                android:layout_height="18dp"
+                android:layout_marginStart="6dp"
+                android:contentDescription="@null"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_speed_forward" />
+        </LinearLayout>
+    </FrameLayout>
 
     <ImageView
         android:id="@+id/image_ffwd_animation_ripple"

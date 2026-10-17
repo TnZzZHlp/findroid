@@ -31,6 +31,7 @@ import dev.jdtech.jellyfin.isControlsLocked
 import dev.jdtech.jellyfin.player.core.domain.models.PlayerChapter
 import dev.jdtech.jellyfin.player.core.domain.models.Trickplay
 import dev.jdtech.jellyfin.player.local.mpv.MPVPlayer
+import dev.jdtech.jellyfin.presentation.player.SpeedBoostOverlay
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
 import kotlin.math.abs
 import kotlinx.coroutines.Dispatchers
@@ -65,6 +66,11 @@ class PlayerGestureHelper(
 
     private var playbackSpeedIncrease: Float = 2f
     private var lastPlaybackSpeed: Float = 0f
+    private val speedBoostOverlay =
+        SpeedBoostOverlay(
+            activity.binding.gestureSpeedContainer,
+            activity.binding.gestureSpeedLayout,
+        )
 
     private val screenWidth = Resources.getSystem().displayMetrics.widthPixels
     private val screenHeight = Resources.getSystem().displayMetrics.heightPixels
@@ -134,14 +140,12 @@ class PlayerGestureHelper(
             },
         )
 
-    @SuppressLint("SetTextI18n")
     private fun enableSpeedIncrease() {
         playerView.player?.let {
             if (it.isPlaying) {
                 lastPlaybackSpeed = it.playbackParameters.speed
                 it.setPlaybackSpeed(playbackSpeedIncrease)
-                activity.binding.gestureSpeedText.text = playbackSpeedIncrease.toString() + "x"
-                activity.binding.gestureSpeedLayout.visibility = View.VISIBLE
+                speedBoostOverlay.show()
             }
         }
     }
@@ -500,7 +504,7 @@ class PlayerGestureHelper(
         ) {
             playerView.player?.setPlaybackSpeed(lastPlaybackSpeed)
             lastPlaybackSpeed = 0f
-            activity.binding.gestureSpeedLayout.visibility = View.GONE
+            speedBoostOverlay.hide()
         }
     }
 
