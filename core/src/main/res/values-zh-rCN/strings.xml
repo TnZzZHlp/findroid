@@ -120,4 +120,9 @@
     <string name="download_error_storage">存储空间不足。</string>
     <string name="download_error_permission">无法写入所选存储位置。</string>
     <string name="download_error_content">服务器返回了网页或错误响应，而非所需的媒体文件。请检查服务器配置。</string>
+    <string name="navigate_back">返回</string>
+    <string name="clear_search">清空搜索</string>
+    <string name="play_from_beginning">从头播放</string>
+    <string name="expand_overview">展开简介</string>
+    <string name="collapse_overview">收起简介</string>
 </resources>

@@ -15,6 +15,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -26,9 +30,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyEpisode
+import dev.jdtech.jellyfin.core.presentation.utils.ContainerTransformImage
+import dev.jdtech.jellyfin.core.presentation.utils.ContainerTransformText
 import dev.jdtech.jellyfin.core.presentation.utils.containerTransform
 import dev.jdtech.jellyfin.core.presentation.utils.containerTransformOnClick
 import dev.jdtech.jellyfin.core.presentation.utils.rememberContainerTransformKey
+import dev.jdtech.jellyfin.core.presentation.utils.sharedTransformText
 import dev.jdtech.jellyfin.models.FindroidEpisode
 import dev.jdtech.jellyfin.models.isDownloaded
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
@@ -38,7 +45,14 @@ import dev.jdtech.jellyfin.presentation.theme.spacings
 fun EpisodeCard(episode: FindroidEpisode, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val backgroundColor = MaterialTheme.colorScheme.background
     val transformKey = rememberContainerTransformKey(episode.id)
-    val transformedOnClick = containerTransformOnClick(transformKey, onClick)
+    var transitionImage by remember(episode.id) { mutableStateOf<ContainerTransformImage?>(null) }
+    val transformedOnClick =
+        containerTransformOnClick(
+            transformKey,
+            transitionImage,
+            ContainerTransformText(episode.id, episode.name),
+            onClick,
+        )
 
     Row(
         modifier =
@@ -53,6 +67,8 @@ fun EpisodeCard(episode: FindroidEpisode, onClick: () -> Unit, modifier: Modifie
             ItemPoster(
                 item = episode,
                 direction = Direction.HORIZONTAL,
+                transformKey = transformKey,
+                onImageReady = { transitionImage = it },
                 modifier = Modifier.clip(MaterialTheme.shapes.small),
             )
             Row(
@@ -73,6 +89,7 @@ fun EpisodeCard(episode: FindroidEpisode, onClick: () -> Unit, modifier: Modifie
                             episode.indexNumber,
                             episode.name,
                         ),
+                    modifier = Modifier.sharedTransformText(episode.id, sourceKey = transformKey),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.bodyMedium,

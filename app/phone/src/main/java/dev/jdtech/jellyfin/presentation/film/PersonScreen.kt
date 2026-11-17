@@ -16,8 +16,8 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
@@ -26,22 +26,25 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.window.core.layout.WindowSizeClass
-import coil3.compose.AsyncImage
 import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyMovies
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyPersonDetail
+import dev.jdtech.jellyfin.core.presentation.utils.sharedTransformText
 import dev.jdtech.jellyfin.film.presentation.person.PersonAction
 import dev.jdtech.jellyfin.film.presentation.person.PersonState
 import dev.jdtech.jellyfin.film.presentation.person.PersonViewModel
 import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.models.FindroidPerson
+import dev.jdtech.jellyfin.presentation.components.DetailSkeleton
+import dev.jdtech.jellyfin.presentation.film.components.DetailTransitionImage
 import dev.jdtech.jellyfin.presentation.film.components.Direction
 import dev.jdtech.jellyfin.presentation.film.components.ItemCard
 import dev.jdtech.jellyfin.presentation.film.components.ItemTopBar
@@ -81,7 +84,7 @@ private fun PersonScreenLayout(state: PersonState, onAction: (PersonAction) -> U
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
 
     val paddingStart = safePadding.start + MaterialTheme.spacings.default
-    val paddingTop = safePadding.top + MaterialTheme.spacings.default
+    val paddingTop = safePadding.top + 72.dp
     val paddingEnd = safePadding.end + MaterialTheme.spacings.default
     val paddingBottom = safePadding.bottom + MaterialTheme.spacings.default
 
@@ -91,58 +94,75 @@ private fun PersonScreenLayout(state: PersonState, onAction: (PersonAction) -> U
         state.person?.let { person ->
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 Spacer(Modifier.height(paddingTop))
-                when {
-                    windowSizeClass.isWidthAtLeastBreakpoint(
-                        WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND
-                    ) -> {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(itemsPadding),
-                            horizontalArrangement =
-                                Arrangement.spacedBy(MaterialTheme.spacings.default),
-                        ) {
-                            PersonImage(person)
-                            Column(
-                                verticalArrangement =
-                                    Arrangement.spacedBy(MaterialTheme.spacings.medium)
+                Surface(
+                    modifier = Modifier.padding(itemsPadding),
+                    shape = MaterialTheme.shapes.extraLarge,
+                    color = MaterialTheme.colorScheme.surfaceContainerLow,
+                ) {
+                    when {
+                        windowSizeClass.isWidthAtLeastBreakpoint(
+                            WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND
+                        ) -> {
+                            Row(
+                                modifier =
+                                    Modifier.fillMaxWidth().padding(MaterialTheme.spacings.medium),
+                                horizontalArrangement =
+                                    Arrangement.spacedBy(MaterialTheme.spacings.default),
                             ) {
-                                Text(
-                                    text = person.name,
-                                    style = MaterialTheme.typography.headlineMedium,
-                                )
-                                if (person.overview.isNotBlank()) {
-                                    OverviewText(text = person.overview, maxCollapsedLines = 12)
+                                PersonImage(person)
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                    verticalArrangement =
+                                        Arrangement.spacedBy(MaterialTheme.spacings.medium),
+                                ) {
+                                    Text(
+                                        text = person.name,
+                                        modifier =
+                                            Modifier.sharedTransformText(person.id).semantics {
+                                                heading()
+                                            },
+                                        style = MaterialTheme.typography.headlineMedium,
+                                    )
+                                    if (person.overview.isNotBlank()) {
+                                        OverviewText(text = person.overview, maxCollapsedLines = 12)
+                                    }
                                 }
                             }
                         }
-                    }
-                    else -> {
-                        Column(
-                            modifier = Modifier.fillMaxWidth().padding(itemsPadding),
-                            verticalArrangement =
-                                Arrangement.spacedBy(MaterialTheme.spacings.medium),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                        ) {
-                            PersonImage(person)
-                            Text(
-                                text = person.name,
-                                style = MaterialTheme.typography.headlineMedium,
-                            )
-                            if (person.overview.isNotBlank()) {
-                                OverviewText(text = person.overview, maxCollapsedLines = 4)
+                        else -> {
+                            Column(
+                                modifier =
+                                    Modifier.fillMaxWidth().padding(MaterialTheme.spacings.medium),
+                                verticalArrangement =
+                                    Arrangement.spacedBy(MaterialTheme.spacings.medium),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+                                PersonImage(person)
+                                Text(
+                                    text = person.name,
+                                    modifier =
+                                        Modifier.sharedTransformText(person.id).semantics {
+                                            heading()
+                                        },
+                                    style = MaterialTheme.typography.headlineMedium,
+                                )
+                                if (person.overview.isNotBlank()) {
+                                    OverviewText(text = person.overview, maxCollapsedLines = 4)
+                                }
                             }
                         }
                     }
                 }
 
-                Spacer(Modifier.height(MaterialTheme.spacings.default))
+                Spacer(Modifier.height(MaterialTheme.spacings.large))
 
                 Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.default)) {
                     if (state.starredInMovies.isNotEmpty()) {
                         Column {
                             Text(
                                 text = stringResource(CoreR.string.movies_label),
-                                modifier = Modifier.padding(itemsPadding),
-                                style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier.padding(itemsPadding).semantics { heading() },
+                                style = MaterialTheme.typography.titleLarge,
                             )
                             Spacer(modifier = Modifier.height(MaterialTheme.spacings.extraSmall))
                             LazyRow(
@@ -165,8 +185,8 @@ private fun PersonScreenLayout(state: PersonState, onAction: (PersonAction) -> U
                         Column {
                             Text(
                                 text = stringResource(CoreR.string.shows_label),
-                                modifier = Modifier.padding(itemsPadding),
-                                style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier.padding(itemsPadding).semantics { heading() },
+                                style = MaterialTheme.typography.titleLarge,
                             )
                             Spacer(modifier = Modifier.height(MaterialTheme.spacings.extraSmall))
                             LazyRow(
@@ -188,7 +208,7 @@ private fun PersonScreenLayout(state: PersonState, onAction: (PersonAction) -> U
 
                 Spacer(Modifier.height(paddingBottom))
             }
-        } ?: CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+        } ?: DetailSkeleton(person = true)
 
         ItemTopBar(
             hasBackButton = true,
@@ -201,13 +221,12 @@ private fun PersonScreenLayout(state: PersonState, onAction: (PersonAction) -> U
 
 @Composable
 private fun PersonImage(person: FindroidPerson, modifier: Modifier = Modifier) {
-    AsyncImage(
+    DetailTransitionImage(
+        identity = person.id,
         model = person.images.primary,
-        contentDescription = null,
-        contentScale = ContentScale.Crop,
         modifier =
             modifier
-                .height(320.dp)
+                .height(240.dp)
                 .aspectRatio(0.66f)
                 .clip(MaterialTheme.shapes.extraLarge)
                 .background(MaterialTheme.colorScheme.surfaceContainer),

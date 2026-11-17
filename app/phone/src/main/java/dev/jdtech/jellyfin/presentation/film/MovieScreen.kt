@@ -5,6 +5,7 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,7 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -24,14 +24,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
-import androidx.core.graphics.toColorInt
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jdtech.jellyfin.PlayerActivity
@@ -42,9 +42,11 @@ import dev.jdtech.jellyfin.core.presentation.downloader.DownloaderState
 import dev.jdtech.jellyfin.core.presentation.downloader.DownloaderViewModel
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyMovie
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyVideoMetadata
+import dev.jdtech.jellyfin.core.presentation.utils.sharedTransformText
 import dev.jdtech.jellyfin.film.presentation.movie.MovieAction
 import dev.jdtech.jellyfin.film.presentation.movie.MovieState
 import dev.jdtech.jellyfin.film.presentation.movie.MovieViewModel
+import dev.jdtech.jellyfin.presentation.components.DetailSkeleton
 import dev.jdtech.jellyfin.presentation.film.components.ActorsRow
 import dev.jdtech.jellyfin.presentation.film.components.ExtraInfoText
 import dev.jdtech.jellyfin.presentation.film.components.InfoText
@@ -148,6 +150,8 @@ private fun MovieScreenLayout(
                         ) {
                             Text(
                                 text = movie.name,
+                                modifier =
+                                    Modifier.sharedTransformText(movie.id).semantics { heading() },
                                 overflow = TextOverflow.Ellipsis,
                                 maxLines = 3,
                                 style = MaterialTheme.typography.headlineMedium,
@@ -167,10 +171,10 @@ private fun MovieScreenLayout(
                 )
                 Column(modifier = Modifier.padding(start = paddingStart, end = paddingEnd)) {
                     Spacer(Modifier.height(MaterialTheme.spacings.small))
-                    Row(
+                    FlowRow(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.small),
-                        verticalAlignment = Alignment.Bottom,
+                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.medium),
+                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.small),
                     ) {
                         movie.premiereDate?.let { premiereDate ->
                             Text(
@@ -194,7 +198,7 @@ private fun MovieScreenLayout(
                                 Icon(
                                     painter = painterResource(CoreR.drawable.ic_star),
                                     contentDescription = null,
-                                    tint = Color("#F2C94C".toColorInt()),
+                                    tint = MaterialTheme.colorScheme.primary,
                                 )
                                 Spacer(Modifier.width(MaterialTheme.spacings.extraSmall))
                                 Text(
@@ -273,7 +277,7 @@ private fun MovieScreenLayout(
                 }
                 Spacer(Modifier.height(paddingBottom))
             }
-        } ?: CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+        } ?: DetailSkeleton()
 
         ItemTopBar(
             hasBackButton = true,

@@ -6,9 +6,10 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
-import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteItem
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffoldDefaults
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType
 import androidx.compose.material3.adaptive.navigationsuite.rememberNavigationSuiteScaffoldState
@@ -20,6 +21,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.NavOptions
@@ -42,6 +45,7 @@ import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.models.FindroidMovie
 import dev.jdtech.jellyfin.models.FindroidSeason
 import dev.jdtech.jellyfin.models.FindroidShow
+import dev.jdtech.jellyfin.presentation.components.FindroidNavigationScaffold
 import dev.jdtech.jellyfin.presentation.film.CollectionScreen
 import dev.jdtech.jellyfin.presentation.film.DownloadsScreen
 import dev.jdtech.jellyfin.presentation.film.EpisodeScreen
@@ -172,16 +176,17 @@ fun NavigationRoot(
                     WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND
                 )
             ) {
-                NavigationSuiteType.NavigationRail
+                NavigationSuiteType.WideNavigationRailCollapsed
             } else {
-                NavigationSuiteScaffoldDefaults.calculateFromAdaptiveInfo(this)
+                NavigationSuiteScaffoldDefaults.navigationSuiteType(this)
             }
         }
 
-    NavigationSuiteScaffold(
-        navigationSuiteItems = {
+    FindroidNavigationScaffold(
+        navigationItems = {
             navigationItems.forEach { item ->
-                item(
+                NavigationSuiteItem(
+                    navigationSuiteType = customNavSuiteType,
                     selected = currentRoute == item.route::class.qualifiedName,
                     onClick = {
                         if (
@@ -200,11 +205,21 @@ fun NavigationRoot(
                     icon = {
                         Icon(
                             painter = painterResource(item.icon),
-                            contentDescription = stringResource(item.title),
+                            contentDescription = null,
                         )
                     },
                     enabled = item.enabled,
-                    label = { Text(text = stringResource(item.title)) },
+                    label = {
+                        Text(
+                            text = stringResource(item.title),
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight =
+                                if (currentRoute == item.route::class.qualifiedName) FontWeight.Bold
+                                else FontWeight.Medium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    },
                 )
             }
         },

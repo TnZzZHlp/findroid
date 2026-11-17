@@ -29,7 +29,7 @@ fun FindroidTheme(
             else -> lightScheme
         }
 
-    MaterialTheme(colorScheme = colorScheme, shapes = shapes) {
+    MaterialTheme(colorScheme = colorScheme, shapes = shapes, typography = typography) {
         CompositionLocalProvider(
             LocalContentColor provides contentColorFor(MaterialTheme.colorScheme.background),
             LocalSpacings provides Spacings,

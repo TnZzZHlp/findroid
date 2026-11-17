@@ -2,10 +2,12 @@ package dev.jdtech.jellyfin.presentation.film
 
 import android.content.Intent
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -25,26 +27,32 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.toColorInt
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jdtech.jellyfin.PlayerActivity
 import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyShow
+import dev.jdtech.jellyfin.core.presentation.utils.ContainerTransformImage
+import dev.jdtech.jellyfin.core.presentation.utils.ContainerTransformText
 import dev.jdtech.jellyfin.core.presentation.utils.containerTransform
 import dev.jdtech.jellyfin.core.presentation.utils.containerTransformOnClick
 import dev.jdtech.jellyfin.core.presentation.utils.rememberContainerTransformKey
+import dev.jdtech.jellyfin.core.presentation.utils.sharedTransformText
 import dev.jdtech.jellyfin.film.presentation.show.ShowAction
 import dev.jdtech.jellyfin.film.presentation.show.ShowState
 import dev.jdtech.jellyfin.film.presentation.show.ShowViewModel
@@ -134,6 +142,8 @@ private fun ShowScreenLayout(state: ShowState, onAction: (ShowAction) -> Unit) {
                         ) {
                             Text(
                                 text = show.name,
+                                modifier =
+                                    Modifier.sharedTransformText(show.id).semantics { heading() },
                                 overflow = TextOverflow.Ellipsis,
                                 maxLines = 3,
                                 style = MaterialTheme.typography.headlineMedium,
@@ -153,10 +163,10 @@ private fun ShowScreenLayout(state: ShowState, onAction: (ShowAction) -> Unit) {
                 )
                 Column(modifier = Modifier.padding(start = paddingStart, end = paddingEnd)) {
                     Spacer(Modifier.height(MaterialTheme.spacings.small))
-                    Row(
+                    FlowRow(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.small),
-                        verticalAlignment = Alignment.Bottom,
+                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.medium),
+                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.small),
                     ) {
                         Text(
                             text = getShowDateString(show),
@@ -178,7 +188,7 @@ private fun ShowScreenLayout(state: ShowState, onAction: (ShowAction) -> Unit) {
                                 Icon(
                                     painter = painterResource(CoreR.drawable.ic_star),
                                     contentDescription = null,
-                                    tint = Color("#F2C94C".toColorInt()),
+                                    tint = MaterialTheme.colorScheme.primary,
                                 )
                                 Spacer(Modifier.width(MaterialTheme.spacings.extraSmall))
                                 Text(
@@ -213,7 +223,7 @@ private fun ShowScreenLayout(state: ShowState, onAction: (ShowAction) -> Unit) {
                         modifier = Modifier.fillMaxWidth(),
                         canPlay = state.seasons.isNotEmpty(),
                     )
-                    Spacer(Modifier.height(MaterialTheme.spacings.small))
+                    Spacer(Modifier.height(MaterialTheme.spacings.medium))
                     OverviewText(text = show.overview, maxCollapsedLines = 3)
                     Spacer(Modifier.height(MaterialTheme.spacings.medium))
                     InfoText(
@@ -224,25 +234,38 @@ private fun ShowScreenLayout(state: ShowState, onAction: (ShowAction) -> Unit) {
                     Spacer(Modifier.height(MaterialTheme.spacings.medium))
                     state.nextUp?.let { nextUp ->
                         val transformKey = rememberContainerTransformKey(nextUp.id)
+                        var transitionImage by
+                            remember(nextUp.id) { mutableStateOf<ContainerTransformImage?>(null) }
                         val onNextUpClick =
-                            containerTransformOnClick(transformKey) {
+                            containerTransformOnClick(
+                                transformKey,
+                                transitionImage,
+                                ContainerTransformText(nextUp.id, nextUp.name),
+                            ) {
                                 onAction(ShowAction.NavigateToItem(nextUp))
                             }
                         Text(
                             text = stringResource(CoreR.string.next_up),
-                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.semantics { heading() },
+                            style = MaterialTheme.typography.titleLarge,
                         )
                         Spacer(Modifier.height(MaterialTheme.spacings.small))
                         Column(
                             modifier =
                                 Modifier.widthIn(max = 420.dp)
                                     .containerTransform(transformKey)
-                                    .clip(MaterialTheme.shapes.small)
-                                    .clickable(onClick = onNextUpClick)
+                                    .clip(MaterialTheme.shapes.large)
+                                    .background(MaterialTheme.colorScheme.surfaceContainerLow)
+                                    .clickable(
+                                        onClickLabel = stringResource(CoreR.string.view_details),
+                                        onClick = onNextUpClick,
+                                    )
                         ) {
                             ItemPoster(
                                 item = nextUp,
                                 direction = Direction.HORIZONTAL,
+                                transformKey = transformKey,
+                                onImageReady = { transitionImage = it },
                                 modifier = Modifier.clip(MaterialTheme.shapes.medium),
                             )
                             Spacer(Modifier.height(MaterialTheme.spacings.extraSmall))
@@ -254,7 +277,10 @@ private fun ShowScreenLayout(state: ShowState, onAction: (ShowAction) -> Unit) {
                                         nextUp.indexNumber,
                                         nextUp.name,
                                     ),
-                                style = MaterialTheme.typography.bodyMedium,
+                                modifier =
+                                    Modifier.padding(MaterialTheme.spacings.medium)
+                                        .sharedTransformText(nextUp.id, sourceKey = transformKey),
+                                style = MaterialTheme.typography.titleMedium,
                             )
                         }
                         Spacer(Modifier.height(MaterialTheme.spacings.medium))
@@ -265,7 +291,8 @@ private fun ShowScreenLayout(state: ShowState, onAction: (ShowAction) -> Unit) {
                     Column(modifier = Modifier.padding(start = paddingStart, end = paddingEnd)) {
                         Text(
                             text = stringResource(CoreR.string.seasons),
-                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.semantics { heading() },
+                            style = MaterialTheme.typography.titleLarge,
                         )
                         Spacer(Modifier.height(MaterialTheme.spacings.small))
                     }

@@ -5,29 +5,31 @@ import android.os.StatFs
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.window.core.layout.WindowSizeClass
 import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.core.presentation.downloader.DownloaderState
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyEpisode
@@ -58,7 +60,6 @@ fun ItemButtonsBar(
 ) {
     val context = LocalContext.current
     val startDownload = rememberDownloadStart(onDownloadClick)
-    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
 
     val trailerUri =
         when (item) {
@@ -78,95 +79,101 @@ fun ItemButtonsBar(
     var selectedStorageIndex by remember { mutableIntStateOf(0) }
     var storageLocations = remember { context.getExternalFilesDirs(null) }
 
-    CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
+    Surface(
+        modifier = modifier,
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+    ) {
         Column(
-            modifier = modifier,
+            modifier = Modifier.padding(MaterialTheme.spacings.medium),
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.small),
         ) {
-            if (
-                !windowSizeClass.isWidthAtLeastBreakpoint(
-                    WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND
-                )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.small),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.small)) {
-                    PlayButton(
-                        item = item,
-                        onClick = { onPlayClick(false) },
-                        modifier = Modifier.weight(weight = 1f, fill = true),
-                        enabled = item.canPlay && canPlay,
-                    )
-                    if (item.playbackPositionTicks.div(600000000) > 0) {
-                        FilledTonalIconButton(onClick = { onPlayClick(true) }) {
-                            Icon(
-                                painter = painterResource(CoreR.drawable.ic_rotate_ccw),
-                                contentDescription = null,
-                            )
-                        }
-                    }
-                }
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.small)) {
-                if (
-                    windowSizeClass.isWidthAtLeastBreakpoint(
-                        WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND
-                    )
-                ) {
-                    PlayButton(
-                        item = item,
-                        onClick = { onPlayClick(false) },
-                        enabled = item.canPlay && canPlay,
-                    )
-                    if (item.playbackPositionTicks.div(600000000) > 0) {
-                        FilledTonalIconButton(onClick = { onPlayClick(true) }) {
-                            Icon(
-                                painter = painterResource(CoreR.drawable.ic_rotate_ccw),
-                                contentDescription = null,
-                            )
-                        }
-                    }
-                }
-                trailerUri?.let { uri ->
-                    FilledTonalIconButton(onClick = { onTrailerClick(uri) }) {
+                PlayButton(
+                    item = item,
+                    onClick = { onPlayClick(false) },
+                    modifier = Modifier.weight(1f),
+                    enabled = item.canPlay && canPlay,
+                )
+                if (item.playbackPositionTicks.div(600000000) > 0) {
+                    FilledTonalIconButton(
+                        onClick = { onPlayClick(true) },
+                        modifier = Modifier.heightIn(min = 48.dp),
+                    ) {
                         Icon(
-                            painter = painterResource(CoreR.drawable.ic_film),
-                            contentDescription = null,
+                            painter = painterResource(CoreR.drawable.ic_rotate_ccw),
+                            contentDescription = stringResource(CoreR.string.play_from_beginning),
                         )
                     }
                 }
-                FilledTonalIconButton(onClick = onMarkAsPlayedClick) {
-                    Icon(
-                        painter = painterResource(CoreR.drawable.ic_check),
-                        contentDescription = null,
-                        tint = if (item.played) Color.Red else LocalContentColor.current,
-                    )
-                }
-                FilledTonalIconButton(onClick = onMarkAsFavoriteClick) {
-                    when (item.favorite) {
-                        true -> {
-                            Icon(
-                                painter = painterResource(CoreR.drawable.ic_heart_filled),
-                                contentDescription = null,
-                                tint = Color.Red,
+            }
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.small),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.extraSmall),
+            ) {
+                FilterChip(
+                    selected = item.played,
+                    onClick = onMarkAsPlayedClick,
+                    label = {
+                        Text(
+                            stringResource(
+                                if (item.played) CoreR.string.unmark_as_played
+                                else CoreR.string.mark_as_played
                             )
-                        }
-                        false -> {
-                            Icon(
-                                painter = painterResource(CoreR.drawable.ic_heart),
-                                contentDescription = null,
+                        )
+                    },
+                    leadingIcon = {
+                        Icon(painterResource(CoreR.drawable.ic_check), contentDescription = null)
+                    },
+                )
+                FilterChip(
+                    selected = item.favorite,
+                    onClick = onMarkAsFavoriteClick,
+                    label = {
+                        Text(
+                            stringResource(
+                                if (item.favorite) CoreR.string.remove_from_favorites
+                                else CoreR.string.add_to_favorites
                             )
-                        }
+                        )
+                    },
+                    leadingIcon = {
+                        Icon(
+                            painterResource(
+                                if (item.favorite) CoreR.drawable.ic_heart_filled
+                                else CoreR.drawable.ic_heart
+                            ),
+                            contentDescription = null,
+                        )
+                    },
+                )
+                trailerUri?.let { uri ->
+                    FilledTonalButton(onClick = { onTrailerClick(uri) }) {
+                        Icon(painterResource(CoreR.drawable.ic_film), contentDescription = null)
+                        Text(
+                            stringResource(CoreR.string.watch_trailer),
+                            modifier = Modifier.padding(start = MaterialTheme.spacings.small),
+                        )
                     }
                 }
                 if (downloaderState != null && !downloaderState.isDownloading) {
                     if (item.isDownloaded()) {
-                        FilledTonalIconButton(onClick = { deleteDownloadDialogOpen = true }) {
+                        FilledTonalButton(onClick = { deleteDownloadDialogOpen = true }) {
                             Icon(
-                                painter = painterResource(CoreR.drawable.ic_trash),
+                                painterResource(CoreR.drawable.ic_trash),
                                 contentDescription = null,
+                            )
+                            Text(
+                                stringResource(CoreR.string.delete_download),
+                                modifier = Modifier.padding(start = MaterialTheme.spacings.small),
                             )
                         }
                     } else if (item.canDownload) {
-                        FilledTonalIconButton(
+                        FilledTonalButton(
                             onClick = {
                                 storageLocations = context.getExternalFilesDirs(null)
                                 if (storageLocations.size > 1) {
@@ -178,8 +185,12 @@ fun ItemButtonsBar(
                             }
                         ) {
                             Icon(
-                                painter = painterResource(CoreR.drawable.ic_download),
+                                painterResource(CoreR.drawable.ic_download),
                                 contentDescription = null,
+                            )
+                            Text(
+                                stringResource(CoreR.string.download_button_description),
+                                modifier = Modifier.padding(start = MaterialTheme.spacings.small),
                             )
                         }
                     }
@@ -187,60 +198,57 @@ fun ItemButtonsBar(
             }
             if (downloaderState != null) {
                 AnimatedVisibility(downloaderState.isDownloading) {
-                    Column {
-                        DownloaderCard(
-                            state = downloaderState,
-                            onCancelClick = { cancelDownloadDialogOpen = true },
-                            onRetryClick = onDownloadRetryClick,
-                            onPauseClick = onDownloadPauseClick,
-                            onResumeClick = onDownloadResumeClick,
-                        )
-                        Spacer(Modifier.height(MaterialTheme.spacings.small))
-                    }
+                    DownloaderCard(
+                        state = downloaderState,
+                        onCancelClick = { cancelDownloadDialogOpen = true },
+                        onRetryClick = onDownloadRetryClick,
+                        onPauseClick = onDownloadPauseClick,
+                        onResumeClick = onDownloadResumeClick,
+                    )
                 }
             }
         }
-        if (storageSelectionDialogOpen) {
-            val locations = remember {
-                storageLocations.map { dir ->
-                    val locationStringRes =
-                        if (Environment.isExternalStorageRemovable(dir)) CoreR.string.external
-                        else CoreR.string.internal
-                    val locationString = context.getString(locationStringRes)
+    }
+    if (storageSelectionDialogOpen) {
+        val locations = remember {
+            storageLocations.map { dir ->
+                val locationStringRes =
+                    if (Environment.isExternalStorageRemovable(dir)) CoreR.string.external
+                    else CoreR.string.internal
+                val locationString = context.getString(locationStringRes)
 
-                    val stat = StatFs(dir.path)
-                    val availableMegaBytes = stat.availableBytes.div(1000000)
-                    context.getString(CoreR.string.storage_name, locationString, availableMegaBytes)
-                }
+                val stat = StatFs(dir.path)
+                val availableMegaBytes = stat.availableBytes.div(1000000)
+                context.getString(CoreR.string.storage_name, locationString, availableMegaBytes)
             }
-            StorageSelectionDialog(
-                storageLocations = locations,
-                onSelect = { storageIndex ->
-                    selectedStorageIndex = storageIndex
-                    startDownload(selectedStorageIndex)
-                    storageSelectionDialogOpen = false
-                },
-                onDismiss = { storageSelectionDialogOpen = false },
-            )
         }
-        if (cancelDownloadDialogOpen) {
-            CancelDownloadDialog(
-                onCancel = {
-                    onDownloadCancelClick()
-                    cancelDownloadDialogOpen = false
-                },
-                onDismiss = { cancelDownloadDialogOpen = false },
-            )
-        }
-        if (deleteDownloadDialogOpen) {
-            DeleteDownloadDialog(
-                onDelete = {
-                    onDownloadDeleteClick()
-                    deleteDownloadDialogOpen = false
-                },
-                onDismiss = { deleteDownloadDialogOpen = false },
-            )
-        }
+        StorageSelectionDialog(
+            storageLocations = locations,
+            onSelect = { storageIndex ->
+                selectedStorageIndex = storageIndex
+                startDownload(selectedStorageIndex)
+                storageSelectionDialogOpen = false
+            },
+            onDismiss = { storageSelectionDialogOpen = false },
+        )
+    }
+    if (cancelDownloadDialogOpen) {
+        CancelDownloadDialog(
+            onCancel = {
+                onDownloadCancelClick()
+                cancelDownloadDialogOpen = false
+            },
+            onDismiss = { cancelDownloadDialogOpen = false },
+        )
+    }
+    if (deleteDownloadDialogOpen) {
+        DeleteDownloadDialog(
+            onDelete = {
+                onDownloadDeleteClick()
+                deleteDownloadDialogOpen = false
+            },
+            onDismiss = { deleteDownloadDialogOpen = false },
+        )
     }
 }
 

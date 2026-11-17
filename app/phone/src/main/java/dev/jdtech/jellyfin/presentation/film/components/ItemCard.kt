@@ -13,6 +13,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,9 +27,12 @@ import androidx.compose.ui.unit.dp
 import dev.jdtech.jellyfin.core.R
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyEpisode
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyMovie
+import dev.jdtech.jellyfin.core.presentation.utils.ContainerTransformImage
+import dev.jdtech.jellyfin.core.presentation.utils.ContainerTransformText
 import dev.jdtech.jellyfin.core.presentation.utils.containerTransform
 import dev.jdtech.jellyfin.core.presentation.utils.containerTransformOnClick
 import dev.jdtech.jellyfin.core.presentation.utils.rememberContainerTransformKey
+import dev.jdtech.jellyfin.core.presentation.utils.sharedTransformText
 import dev.jdtech.jellyfin.models.FindroidEpisode
 import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.models.isDownloaded
@@ -41,7 +48,15 @@ fun ItemCard(
     containerTransformKey: Any = item.id,
 ) {
     val transformKey = rememberContainerTransformKey(containerTransformKey)
-    val transformedOnClick = containerTransformOnClick(transformKey) { onClick(item) }
+    var transitionImage by remember(item.id) { mutableStateOf<ContainerTransformImage?>(null) }
+    val transformedOnClick =
+        containerTransformOnClick(
+            transformKey,
+            transitionImage,
+            ContainerTransformText(item.id, item.name),
+        ) {
+            onClick(item)
+        }
     val width =
         when (direction) {
             Direction.HORIZONTAL -> 260
@@ -59,7 +74,12 @@ fun ItemCard(
             modifier = Modifier.containerTransform(transformKey),
         ) {
             Box {
-                ItemPoster(item = item, direction = direction)
+                ItemPoster(
+                    item = item,
+                    direction = direction,
+                    transformKey = transformKey,
+                    onImageReady = { transitionImage = it },
+                )
                 Row(
                     modifier =
                         Modifier.align(Alignment.TopEnd).padding(MaterialTheme.spacings.small),
@@ -83,6 +103,9 @@ fun ItemCard(
         Spacer(modifier = Modifier.height(MaterialTheme.spacings.extraSmall))
         Text(
             text = if (item is FindroidEpisode) item.seriesName else item.name,
+            modifier =
+                if (item is FindroidEpisode) Modifier
+                else Modifier.sharedTransformText(item.id, sourceKey = transformKey),
             style = MaterialTheme.typography.bodyMedium,
             maxLines = if (item is FindroidEpisode) 1 else 2,
             overflow = TextOverflow.Ellipsis,
@@ -96,6 +119,7 @@ fun ItemCard(
                         item.indexNumber,
                         item.name,
                     ),
+                modifier = Modifier.sharedTransformText(item.id, sourceKey = transformKey),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
                 maxLines = 1,

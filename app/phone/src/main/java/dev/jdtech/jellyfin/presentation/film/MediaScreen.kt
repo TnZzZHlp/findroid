@@ -4,6 +4,7 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -12,6 +13,7 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -20,11 +22,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.window.core.layout.WindowSizeClass
+import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyCollections
 import dev.jdtech.jellyfin.film.presentation.media.MediaAction
 import dev.jdtech.jellyfin.film.presentation.media.MediaState
@@ -34,12 +41,12 @@ import dev.jdtech.jellyfin.film.presentation.search.SearchState
 import dev.jdtech.jellyfin.film.presentation.search.SearchViewModel
 import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.presentation.components.ErrorDialog
-import dev.jdtech.jellyfin.presentation.film.components.Direction
+import dev.jdtech.jellyfin.presentation.components.SkeletonBlock
 import dev.jdtech.jellyfin.presentation.film.components.DownloadsCard
 import dev.jdtech.jellyfin.presentation.film.components.ErrorCard
 import dev.jdtech.jellyfin.presentation.film.components.FavoritesCard
 import dev.jdtech.jellyfin.presentation.film.components.FilmSearchBar
-import dev.jdtech.jellyfin.presentation.film.components.ItemCard
+import dev.jdtech.jellyfin.presentation.film.components.MediaLibraryCard
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.presentation.theme.spacings
 import dev.jdtech.jellyfin.presentation.utils.rememberSafePadding
@@ -129,7 +136,7 @@ private fun MediaScreenLayout(
             expanded = searchExpanded,
             onExpand = onSearchExpand,
             onAction = onSearchAction,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().zIndex(1f),
             paddingStart = paddingStart,
             paddingEnd = paddingEnd,
         )
@@ -146,14 +153,35 @@ private fun MediaScreenLayout(
             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.default),
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.default),
         ) {
-            item(span = { GridItemSpan(maxLineSpan) }) {
+            item(key = "media_title", span = { GridItemSpan(maxLineSpan) }) {
+                Text(
+                    text = stringResource(CoreR.string.title_media),
+                    style = MaterialTheme.typography.headlineLarge,
+                    modifier = Modifier.semantics { heading() },
+                )
+            }
+            item(key = "favorites") {
                 FavoritesCard(onClick = { onAction(MediaAction.OnFavoritesClick) })
             }
-            item(span = { GridItemSpan(maxLineSpan) }) { DownloadsCard(onClick = onDownloadsClick) }
+            item(key = "downloads") { DownloadsCard(onClick = onDownloadsClick) }
+            if (state.libraries.isNotEmpty()) {
+                item(key = "libraries_title", span = { GridItemSpan(maxLineSpan) }) {
+                    Text(
+                        text = stringResource(CoreR.string.libraries),
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier =
+                            Modifier.padding(top = MaterialTheme.spacings.small).semantics {
+                                heading()
+                            },
+                    )
+                }
+            }
+            if (state.isLoading && state.libraries.isEmpty()) {
+                items(4) { SkeletonBlock(Modifier.fillMaxWidth().aspectRatio(1.4f)) }
+            }
             items(state.libraries, key = { it.id }) { library ->
-                ItemCard(
+                MediaLibraryCard(
                     item = library,
-                    direction = Direction.HORIZONTAL,
                     onClick = { onAction(MediaAction.OnItemClick(library)) },
                     modifier = Modifier.animateItem(),
                 )

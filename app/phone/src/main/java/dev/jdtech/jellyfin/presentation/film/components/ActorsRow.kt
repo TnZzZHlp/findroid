@@ -13,6 +13,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.models.FindroidItemPerson
 import dev.jdtech.jellyfin.presentation.theme.spacings
@@ -27,9 +29,10 @@ fun ActorsRow(
     Column(modifier = Modifier.padding(contentPadding)) {
         Text(
             text = stringResource(CoreR.string.cast_amp_crew),
-            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.semantics { heading() },
+            style = MaterialTheme.typography.titleLarge,
         )
-        Spacer(Modifier.height(MaterialTheme.spacings.small))
+        Spacer(Modifier.height(MaterialTheme.spacings.medium))
     }
     LazyRow(
         contentPadding = contentPadding,

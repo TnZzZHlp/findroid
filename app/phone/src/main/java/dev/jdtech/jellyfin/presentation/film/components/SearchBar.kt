@@ -2,15 +2,7 @@ package dev.jdtech.jellyfin.presentation.film.components
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -37,8 +29,6 @@ import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.film.R as FilmR
 import dev.jdtech.jellyfin.film.presentation.search.SearchAction
 import dev.jdtech.jellyfin.film.presentation.search.SearchState
-import dev.jdtech.jellyfin.presentation.theme.spacings
-import dev.jdtech.jellyfin.presentation.utils.GridCellsAdaptiveWithMinColumns
 import dev.jdtech.jellyfin.presentation.utils.rememberSafePadding
 import kotlinx.coroutines.delay
 
@@ -124,7 +114,7 @@ fun FilmSearchBar(
                             IconButton(onClick = { onExpand(false) }) {
                                 Icon(
                                     painter = painterResource(CoreR.drawable.ic_arrow_left),
-                                    contentDescription = null,
+                                    contentDescription = stringResource(CoreR.string.navigate_back),
                                 )
                             }
                         } else {
@@ -136,13 +126,11 @@ fun FilmSearchBar(
                     }
                 },
                 trailingIcon = {
-                    if (state.loading) {
-                        Box(modifier = Modifier.size(32.dp)) { CircularProgressIndicator() }
-                    } else if (query.isNotEmpty()) {
+                    if (query.isNotEmpty()) {
                         IconButton(onClick = { query = "" }) {
                             Icon(
                                 painter = painterResource(CoreR.drawable.ic_x),
-                                contentDescription = null,
+                                contentDescription = stringResource(CoreR.string.clear_search),
                             )
                         }
                     }
@@ -151,29 +139,12 @@ fun FilmSearchBar(
         },
         expanded = expanded,
         onExpandedChange = { onExpand(it) },
+        colors =
+            SearchBarDefaults.colors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+            ),
         modifier = modifier.padding(start = searchBarPaddingStart, end = searchBarPaddingEnd),
     ) {
-        LazyVerticalGrid(
-            columns = GridCellsAdaptiveWithMinColumns(minSize = 160.dp, minColumns = 2),
-            modifier = Modifier.fillMaxSize(),
-            contentPadding =
-                PaddingValues(
-                    start = safePadding.start + MaterialTheme.spacings.default,
-                    top = MaterialTheme.spacings.default,
-                    end = safePadding.end + MaterialTheme.spacings.default,
-                    bottom = safePadding.bottom + MaterialTheme.spacings.default,
-                ),
-            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.default),
-            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.default),
-        ) {
-            items(items = state.items, key = { it.id }) { item ->
-                ItemCard(
-                    item = item,
-                    direction = Direction.VERTICAL,
-                    onClick = { onAction(SearchAction.OnItemClick(item)) },
-                    modifier = Modifier.animateItem(),
-                )
-            }
-        }
+        SearchResults(state = state, hasQuery = query.isNotBlank(), onAction = onAction)
     }
 }

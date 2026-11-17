@@ -4,6 +4,7 @@ import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,8 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -24,15 +24,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.toColorInt
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jdtech.jellyfin.PlayerActivity
@@ -43,6 +42,7 @@ import dev.jdtech.jellyfin.core.presentation.downloader.DownloaderState
 import dev.jdtech.jellyfin.core.presentation.downloader.DownloaderViewModel
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyEpisode
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyVideoMetadata
+import dev.jdtech.jellyfin.core.presentation.utils.sharedTransformText
 import dev.jdtech.jellyfin.film.presentation.episode.EpisodeAction
 import dev.jdtech.jellyfin.film.presentation.episode.EpisodeState
 import dev.jdtech.jellyfin.film.presentation.episode.EpisodeViewModel
@@ -164,6 +164,10 @@ private fun EpisodeScreenLayout(
                             )
                             Text(
                                 text = episode.name,
+                                modifier =
+                                    Modifier.sharedTransformText(episode.id).semantics {
+                                        heading()
+                                    },
                                 overflow = TextOverflow.Ellipsis,
                                 maxLines = 3,
                                 style = MaterialTheme.typography.headlineMedium,
@@ -173,10 +177,10 @@ private fun EpisodeScreenLayout(
                 )
                 Column(modifier = Modifier.padding(start = paddingStart, end = paddingEnd)) {
                     Spacer(Modifier.height(MaterialTheme.spacings.small))
-                    Row(
+                    FlowRow(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.small),
-                        verticalAlignment = Alignment.Bottom,
+                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.medium),
+                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.small),
                     ) {
                         episode.premiereDate?.let { premiereDate ->
                             Text(
@@ -197,7 +201,7 @@ private fun EpisodeScreenLayout(
                                 Icon(
                                     painter = painterResource(CoreR.drawable.ic_star),
                                     contentDescription = null,
-                                    tint = Color("#F2C94C".toColorInt()),
+                                    tint = MaterialTheme.colorScheme.primary,
                                 )
                                 Spacer(Modifier.width(MaterialTheme.spacings.extraSmall))
                                 Text(
@@ -256,7 +260,7 @@ private fun EpisodeScreenLayout(
                         ExtraInfoText(videoMetadata = state.videoMetadata!!)
                         Spacer(Modifier.height(MaterialTheme.spacings.medium))
                     }
-                    OverviewText(text = episode.overview)
+                    OverviewText(text = episode.overview, maxCollapsedLines = 5)
                     Spacer(Modifier.height(MaterialTheme.spacings.medium))
                 }
                 if (state.actors.isNotEmpty()) {
@@ -285,22 +289,21 @@ private fun EpisodeScreenLayout(
         ) {
             Spacer(modifier = Modifier.width(4.dp))
             state.episode?.let { episode ->
-                Button(
+                FilledTonalButton(
                     onClick = { onAction(EpisodeAction.NavigateToSeason(episode.seasonId)) },
-                    modifier = Modifier.alpha(0.7f),
-                    colors =
-                        ButtonDefaults.buttonColors(
-                            containerColor = Color.Black,
-                            contentColor = Color.White,
-                        ),
+                    modifier = Modifier.weight(1f, fill = false),
                 ) {
-                    episode.seasonName?.let { seasonName -> Text(seasonName) }
+                    episode.seasonName?.let { seasonName ->
+                        Text(seasonName, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
                         ?: run {
                             Text(
                                 stringResource(
                                     CoreR.string.season_number,
                                     episode.parentIndexNumber,
-                                )
+                                ),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
                             )
                         }
                 }

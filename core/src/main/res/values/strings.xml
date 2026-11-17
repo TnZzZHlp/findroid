@@ -121,4 +121,9 @@
     <string name="download_error_storage">Not enough storage space.</string>
     <string name="download_error_permission">Cannot write to the selected storage.</string>
     <string name="download_error_content">The server returned a web page or error response instead of the requested media. Check the server configuration.</string>
+    <string name="navigate_back">Back</string>
+    <string name="clear_search">Clear search</string>
+    <string name="play_from_beginning">Play from beginning</string>
+    <string name="expand_overview">Expand overview</string>
+    <string name="collapse_overview">Collapse overview</string>
 </resources>

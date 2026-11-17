@@ -3,7 +3,7 @@ package dev.jdtech.jellyfin.presentation.film.components
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.fadeIn
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -37,6 +39,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -132,7 +135,10 @@ fun SortByDialog(
                 if (!isAtTop) {
                     HorizontalDivider()
                 }
-                LazyColumn(modifier = Modifier.fillMaxWidth(), state = lazyListState) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth().selectableGroup(),
+                    state = lazyListState,
+                ) {
                     items(options) { option ->
                         SortByDialogItem(
                             option = option,
@@ -159,13 +165,31 @@ private fun SortByDialogItem(
     Row(
         modifier =
             Modifier.fillMaxWidth()
-                .clickable { onSelect(option.first) }
-                .padding(horizontal = MaterialTheme.spacings.default),
+                .background(
+                    if (isSelected) MaterialTheme.colorScheme.secondaryContainer
+                    else Color.Transparent
+                )
+                .selectable(
+                    selected = isSelected,
+                    role = Role.RadioButton,
+                    onClick = { onSelect(option.first) },
+                )
+                .heightIn(min = 56.dp)
+                .padding(
+                    horizontal = MaterialTheme.spacings.default,
+                    vertical = MaterialTheme.spacings.small,
+                ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        RadioButton(selected = isSelected, onClick = { onSelect(option.first) })
+        RadioButton(selected = isSelected, onClick = null)
         Spacer(modifier = Modifier.width(MaterialTheme.spacings.medium))
-        Text(text = option.second)
+        Text(
+            text = option.second,
+            style = MaterialTheme.typography.bodyLarge,
+            color =
+                if (isSelected) MaterialTheme.colorScheme.onSecondaryContainer
+                else MaterialTheme.colorScheme.onSurface,
+        )
     }
 }
 

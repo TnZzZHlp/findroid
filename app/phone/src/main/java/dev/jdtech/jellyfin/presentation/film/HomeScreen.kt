@@ -3,7 +3,10 @@ package dev.jdtech.jellyfin.presentation.film
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -37,6 +40,8 @@ import dev.jdtech.jellyfin.film.presentation.home.HomeViewModel
 import dev.jdtech.jellyfin.models.FindroidCollection
 import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.presentation.components.ErrorDialog
+import dev.jdtech.jellyfin.presentation.components.PosterSkeleton
+import dev.jdtech.jellyfin.presentation.components.SkeletonBlock
 import dev.jdtech.jellyfin.presentation.film.components.HomeCarousel
 import dev.jdtech.jellyfin.presentation.film.components.HomeHeader
 import dev.jdtech.jellyfin.presentation.film.components.HomeSection
@@ -89,7 +94,8 @@ private fun HomeScreenLayout(state: HomeState, onAction: (HomeAction) -> Unit) {
 
     val itemsPadding = PaddingValues(start = paddingStart, end = paddingEnd)
 
-    val contentPaddingTop = safePadding.top + 88.dp
+    val contentPaddingTop =
+        safePadding.top + 88.dp + if (state.isLoading || state.error != null) 56.dp else 0.dp
 
     var showErrorDialog by rememberSaveable { mutableStateOf(false) }
     val showServerSelectionSheetState = rememberModalBottomSheetState()
@@ -100,8 +106,30 @@ private fun HomeScreenLayout(state: HomeState, onAction: (HomeAction) -> Unit) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize().semantics { traversalIndex = 1f },
                 contentPadding = PaddingValues(top = contentPaddingTop, bottom = paddingBottom),
-                verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.medium),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.large),
             ) {
+                if (
+                    state.isLoading &&
+                        state.suggestionsSection == null &&
+                        state.resumeSection == null &&
+                        state.nextUpSection == null &&
+                        state.views.isEmpty()
+                ) {
+                    item(key = "loading_featured") {
+                        SkeletonBlock(
+                            Modifier.padding(itemsPadding).fillMaxWidth().aspectRatio(1.77f)
+                        )
+                    }
+                    item(key = "loading_posters") {
+                        Row(
+                            modifier = Modifier.padding(itemsPadding),
+                            horizontalArrangement =
+                                Arrangement.spacedBy(MaterialTheme.spacings.default),
+                        ) {
+                            repeat(2) { PosterSkeleton(Modifier.weight(1f)) }
+                        }
+                    }
+                }
                 state.suggestionsSection?.let { section ->
                     item(key = section.id) {
                         HomeCarousel(

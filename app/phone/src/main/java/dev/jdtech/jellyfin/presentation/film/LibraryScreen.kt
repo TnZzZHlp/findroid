@@ -1,6 +1,7 @@
 package dev.jdtech.jellyfin.presentation.film
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -11,14 +12,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.recalculateWindowInsets
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -27,9 +30,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -47,6 +53,7 @@ import dev.jdtech.jellyfin.film.presentation.library.LibraryViewModel
 import dev.jdtech.jellyfin.models.CollectionType
 import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.presentation.components.ErrorDialog
+import dev.jdtech.jellyfin.presentation.components.PosterSkeleton
 import dev.jdtech.jellyfin.presentation.film.components.Direction
 import dev.jdtech.jellyfin.presentation.film.components.ErrorCard
 import dev.jdtech.jellyfin.presentation.film.components.ItemCard
@@ -54,7 +61,6 @@ import dev.jdtech.jellyfin.presentation.film.components.SortByDialog
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.presentation.theme.spacings
 import dev.jdtech.jellyfin.presentation.utils.GridCellsAdaptiveWithMinColumns
-import dev.jdtech.jellyfin.presentation.utils.plus
 import java.util.UUID
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
@@ -105,7 +111,7 @@ private fun LibraryScreenLayout(
 
     val items = state.items.collectAsLazyPagingItems()
 
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     var showSortByDialog by remember { mutableStateOf(false) }
 
@@ -115,21 +121,21 @@ private fun LibraryScreenLayout(
                 .recalculateWindowInsets()
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            TopAppBar(
-                title = { Text(libraryName) },
+            MediumTopAppBar(
+                title = { Text(libraryName, maxLines = 2, overflow = TextOverflow.Ellipsis) },
                 navigationIcon = {
                     IconButton(onClick = { onAction(LibraryAction.OnBackClick) }) {
                         Icon(
                             painter = painterResource(CoreR.drawable.ic_arrow_left),
-                            contentDescription = null,
+                            contentDescription = stringResource(CoreR.string.navigate_back),
                         )
                     }
                 },
                 actions = {
-                    IconButton(onClick = { showSortByDialog = true }) {
+                    FilledTonalIconButton(onClick = { showSortByDialog = true }) {
                         Icon(
                             painter = painterResource(CoreR.drawable.ic_arrow_down_up),
-                            contentDescription = null,
+                            contentDescription = stringResource(CoreR.string.sort_by),
                         )
                     }
                 },
@@ -138,19 +144,41 @@ private fun LibraryScreenLayout(
             )
         },
     ) { innerPadding ->
-        Column {
+        Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
             ErrorGroup(
                 loadStates = items.loadState,
                 onRefresh = { items.refresh() },
-                modifier = Modifier.fillMaxWidth().padding(contentPadding + innerPadding),
+                modifier = Modifier.fillMaxWidth().padding(contentPadding),
             )
             LazyVerticalGrid(
                 columns = GridCellsAdaptiveWithMinColumns(minSize = 160.dp, minColumns = 2),
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = contentPadding + innerPadding,
+                modifier = Modifier.fillMaxWidth().weight(1f),
+                contentPadding = contentPadding,
                 horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.default),
-                verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.default),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.medium),
             ) {
+                if (items.itemCount == 0 && items.loadState.refresh is LoadState.Loading) {
+                    items(8) { PosterSkeleton() }
+                } else if (items.itemCount == 0) {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        Box(
+                            modifier =
+                                Modifier.fillMaxWidth().padding(MaterialTheme.spacings.large),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            when (items.loadState.refresh) {
+                                is LoadState.Loading -> Unit
+                                is LoadState.NotLoading ->
+                                    Text(
+                                        text = stringResource(CoreR.string.collection_no_media),
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                is LoadState.Error -> Unit
+                            }
+                        }
+                    }
+                }
                 items(count = items.itemCount, key = items.itemKey { it.id }) {
                     val item = items[it]
                     item?.let { item ->

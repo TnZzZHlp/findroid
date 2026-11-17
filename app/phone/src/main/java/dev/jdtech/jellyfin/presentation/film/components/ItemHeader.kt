@@ -5,6 +5,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -17,7 +18,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -55,14 +55,12 @@ fun ItemHeader(
         item = item,
         showLogo = showLogo,
         backdropImage = {
-            AsyncImage(
+            DetailTransitionImage(
+                identity = item.id,
                 model = backdropUri,
-                contentDescription = null,
                 modifier =
                     Modifier.fillMaxSize()
                         .parallaxLayoutModifier(scrollState = scrollState, rate = 2),
-                placeholder = ColorPainter(MaterialTheme.colorScheme.surfaceContainer),
-                contentScale = ContentScale.Crop,
             )
         },
         content = content,
@@ -97,14 +95,12 @@ fun ItemHeader(
         item = item,
         showLogo = showLogo,
         backdropImage = {
-            AsyncImage(
+            DetailTransitionImage(
+                identity = item.id,
                 model = backdropUri,
-                contentDescription = null,
                 modifier =
                     Modifier.fillMaxSize()
                         .parallaxLayoutModifier(lazyListState = lazyListState, rate = 2),
-                placeholder = ColorPainter(MaterialTheme.colorScheme.surfaceContainer),
-                contentScale = ContentScale.Crop,
             )
         },
         content = content,
@@ -126,30 +122,31 @@ private fun ItemHeaderBase(
             else -> item.images.logo
         }
 
-    Box(modifier = Modifier.height(288.dp).clipToBounds()) {
-        backdropImage()
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            drawRect(Color.Black.copy(alpha = 0.1f))
-            drawRect(
-                brush =
-                    Brush.verticalGradient(
-                        colors = listOf(Color.Transparent, backgroundColor),
-                        startY = 0f,
-                    )
-            )
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Box(modifier = Modifier.fillMaxWidth().height(240.dp).clipToBounds()) {
+            backdropImage()
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                drawRect(Color.Black.copy(alpha = 0.1f))
+                drawRect(
+                    brush =
+                        Brush.verticalGradient(
+                            colors = listOf(Color.Transparent, Color.Transparent, backgroundColor)
+                        )
+                )
+            }
+            if (showLogo) {
+                AsyncImage(
+                    model = logoUri,
+                    contentDescription = null,
+                    modifier =
+                        Modifier.align(Alignment.BottomCenter)
+                            .padding(MaterialTheme.spacings.default)
+                            .height(100.dp)
+                            .fillMaxWidth(),
+                    contentScale = ContentScale.Fit,
+                )
+            }
         }
-        content()
-        if (showLogo) {
-            AsyncImage(
-                model = logoUri,
-                contentDescription = null,
-                modifier =
-                    Modifier.align(Alignment.BottomCenter)
-                        .padding(MaterialTheme.spacings.default)
-                        .height(100.dp)
-                        .fillMaxWidth(),
-                contentScale = ContentScale.Fit,
-            )
-        }
+        Box(modifier = Modifier.fillMaxWidth()) { content() }
     }
 }

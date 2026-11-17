@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -35,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import dev.jdtech.jellyfin.R
 import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.logging.LogsUiState
+import dev.jdtech.jellyfin.presentation.components.TextSkeleton
 import dev.jdtech.jellyfin.presentation.utils.plus
 import dev.jdtech.jellyfin.settings.domain.logging.LogEntry
 import dev.jdtech.jellyfin.settings.domain.logging.LogLevel
@@ -155,7 +155,7 @@ internal fun LogsContent(
                 }
             }
             if (busy || state.snapshot.loading) {
-                item { CircularProgressIndicator() }
+                item { TextSkeleton() }
             }
             if (state.snapshot.storageError) {
                 item {

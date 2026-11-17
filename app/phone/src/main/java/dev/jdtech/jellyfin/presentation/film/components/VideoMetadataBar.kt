@@ -3,8 +3,10 @@ package dev.jdtech.jellyfin.presentation.film.components
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -14,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyVideoMetadata
 import dev.jdtech.jellyfin.models.AudioCodec
@@ -24,7 +27,10 @@ import dev.jdtech.jellyfin.presentation.theme.spacings
 
 @Composable
 fun VideoMetadataBar(videoMetadata: VideoMetadata) {
-    Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.small)) {
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.small),
+        verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.small),
+    ) {
         videoMetadata.resolution.firstOrNull()?.apply { VideoMetadataBarItem(text = this.raw) }
         videoMetadata.videoCodecs.firstOrNull()?.apply { VideoMetadataBarItem(text = this.raw) }
         videoMetadata.displayProfiles.firstOrNull()?.apply {
@@ -63,7 +69,11 @@ fun VideoMetadataBarItem(text: String, @DrawableRes icon: Int? = null) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (icon != null) {
-            Icon(painter = painterResource(icon), contentDescription = null)
+            Icon(
+                painter = painterResource(icon),
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+            )
         }
         Text(text = text, style = MaterialTheme.typography.labelMedium)
     }

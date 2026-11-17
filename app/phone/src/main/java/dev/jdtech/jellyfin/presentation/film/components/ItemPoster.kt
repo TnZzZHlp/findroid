@@ -19,7 +19,14 @@ enum class Direction {
 }
 
 @Composable
-fun ItemPoster(item: FindroidItem, direction: Direction, modifier: Modifier = Modifier) {
+fun ItemPoster(
+    item: FindroidItem,
+    direction: Direction,
+    modifier: Modifier = Modifier,
+    transformKey: Any? = null,
+    onImageReady: (dev.jdtech.jellyfin.core.presentation.utils.ContainerTransformImage?) -> Unit =
+        {},
+) {
     val context = LocalContext.current
     var imageUri = item.images.primary
 
@@ -43,6 +50,17 @@ fun ItemPoster(item: FindroidItem, direction: Direction, modifier: Modifier = Mo
                 .build()
     }
 
+    if (transformKey != null) {
+        SourceTransitionImage(
+            model = imageUri,
+            identity = item.id,
+            transformKey = transformKey,
+            onImageReady = onImageReady,
+            modifier =
+                modifier.aspectRatio(if (direction == Direction.HORIZONTAL) 1.77f else 0.66f),
+        )
+        return
+    }
     AsyncImage(
         model = imageUri,
         contentDescription = null,

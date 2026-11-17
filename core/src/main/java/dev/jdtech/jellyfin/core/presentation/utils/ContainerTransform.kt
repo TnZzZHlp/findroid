@@ -15,23 +15,36 @@ import androidx.compose.ui.Modifier
 
 private data class ContainerTransformKey(val value: Any)
 
-private class ContainerTransformState {
-    private var pendingKey: Any? = null
+internal data class ContainerTransformTarget(
+    val key: Any,
+    val image: ContainerTransformImage?,
+    val text: ContainerTransformText? = null,
+)
 
-    fun prepare(key: Any) {
-        pendingKey = key
+private class ContainerTransformState {
+    private var pendingTarget: ContainerTransformTarget? = null
+
+    fun prepare(
+        key: Any,
+        image: ContainerTransformImage? = null,
+        text: ContainerTransformText? = null,
+    ) {
+        pendingTarget = ContainerTransformTarget(key, image, text)
     }
 
-    fun consume(): Any? = pendingKey.also { pendingKey = null }
+    fun consume(): ContainerTransformTarget? = pendingTarget.also { pendingTarget = null }
 }
 
 private val LocalContainerTransformState =
     staticCompositionLocalOf<ContainerTransformState?> { null }
 
-private val LocalSharedTransitionScope = staticCompositionLocalOf<SharedTransitionScope?> { null }
+internal val LocalSharedTransitionScope = staticCompositionLocalOf<SharedTransitionScope?> { null }
 
-private val LocalAnimatedVisibilityScope =
+internal val LocalAnimatedVisibilityScope =
     staticCompositionLocalOf<AnimatedVisibilityScope?> { null }
+
+internal val LocalContainerTransformTarget =
+    staticCompositionLocalOf<ContainerTransformTarget?> { null }
 
 @Composable
 fun rememberContainerTransformKey(value: Any): Any =
@@ -57,10 +70,11 @@ fun AnimatedVisibilityScope.ContainerTransformScreen(
 ) {
     val state = LocalContainerTransformState.current
     val sharedTransitionScope = LocalSharedTransitionScope.current
-    val transformKey =
+    val target =
         remember(state, consumePendingTransform) {
             if (consumePendingTransform) state?.consume() else null
         }
+    val transformKey = target?.key
     val transformModifier =
         if (sharedTransitionScope != null && transformKey != null) {
             with(sharedTransitionScope) {
@@ -74,7 +88,10 @@ fun AnimatedVisibilityScope.ContainerTransformScreen(
             Modifier
         }
 
-    CompositionLocalProvider(LocalAnimatedVisibilityScope provides this) {
+    CompositionLocalProvider(
+        LocalAnimatedVisibilityScope provides this,
+        LocalContainerTransformTarget provides target,
+    ) {
         Box(modifier = Modifier.fillMaxSize().then(transformModifier)) { content() }
     }
 }
@@ -98,13 +115,31 @@ fun Modifier.containerTransform(key: Any): Modifier {
 }
 
 @Composable
-fun containerTransformOnClick(key: Any, onClick: () -> Unit): () -> Unit {
+fun containerTransformOnClick(key: Any, onClick: () -> Unit): () -> Unit =
+    containerTransformOnClick(key = key, image = null, text = null, onClick = onClick)
+
+@Composable
+fun containerTransformOnClick(
+    key: Any,
+    image: ContainerTransformImage?,
+    onClick: () -> Unit,
+): () -> Unit = containerTransformOnClick(key = key, image = image, text = null, onClick = onClick)
+
+@Composable
+fun containerTransformOnClick(
+    key: Any,
+    image: ContainerTransformImage?,
+    text: ContainerTransformText?,
+    onClick: () -> Unit,
+): () -> Unit {
     val state = LocalContainerTransformState.current
     val currentOnClick = rememberUpdatedState(onClick)
+    val currentImage = rememberUpdatedState(image)
+    val currentText = rememberUpdatedState(text)
 
     return remember(key, state) {
         {
-            state?.prepare(key)
+            state?.prepare(key, currentImage.value, currentText.value)
             currentOnClick.value()
         }
     }

@@ -1,18 +1,19 @@
 package dev.jdtech.jellyfin.presentation.film.components
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
@@ -36,35 +37,38 @@ fun ItemTopBar(
                     start = safePadding.start + MaterialTheme.spacings.small,
                     top = safePadding.top + MaterialTheme.spacings.small,
                     end = safePadding.end + MaterialTheme.spacings.small,
-                )
+                ),
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.extraSmall),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         if (hasBackButton) {
-            IconButton(
+            FilledTonalIconButton(
                 onClick = onBackClick,
-                modifier = Modifier.alpha(0.7f),
                 colors =
-                    IconButtonDefaults.iconButtonColors(
-                        containerColor = Color.Black,
-                        contentColor = Color.White,
+                    IconButtonDefaults.filledTonalIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        contentColor = MaterialTheme.colorScheme.onSurface,
                     ),
             ) {
                 Icon(
                     painter = painterResource(CoreR.drawable.ic_arrow_left),
-                    contentDescription = null,
+                    contentDescription = stringResource(CoreR.string.navigate_back),
                 )
             }
         }
         if (hasHomeButton) {
-            IconButton(
+            FilledTonalIconButton(
                 onClick = onHomeClick,
-                modifier = Modifier.alpha(0.7f),
                 colors =
-                    IconButtonDefaults.iconButtonColors(
-                        containerColor = Color.Black,
-                        contentColor = Color.White,
+                    IconButtonDefaults.filledTonalIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        contentColor = MaterialTheme.colorScheme.onSurface,
                     ),
             ) {
-                Icon(painter = painterResource(CoreR.drawable.ic_home), contentDescription = null)
+                Icon(
+                    painter = painterResource(CoreR.drawable.ic_home),
+                    contentDescription = stringResource(CoreR.string.title_home),
+                )
             }
         }
         content()
